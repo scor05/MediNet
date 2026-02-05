@@ -5,7 +5,25 @@ hasta el lado de los pacientes. Lo que busca principalmente este proyecto es bri
 con cada cambio siendo procesado en tiempo real, asímismo proveyendo varias comodidades a los pacientes para facilidad de comunicación, almacenamiento de datos médicos y demás
 información que sea relevante al doctor/clínica que desee utilizar.
 
-## Fase #1 del Proyecto: Design Thinking y Empatía
-Para esta fase, se llevó a cabo todo el proceso de entender realmente qué problemática se estaba analizando para luego llegar al escenario descrito en el párrafo anterior. Para ello,
-se llenaron varias plantillas y se utilizaron varios métodos de empatía para poder entender las frustraciones de doctores y secretarias actuales como pacientes o personas que fueron
-pacientes. Todo esto se puede observar en el PDF adjunto en `docx/Fase #1`, también disponible en formato de documento (con todos los cambios visibles) en [este enlace](https://uvggt-my.sharepoint.com/:w:/g/personal/cor24472_uvg_edu_gt/IQDkE88WWI7zR4xc2Na3Jk5vAbRIdk-oDDeTDKqZyuG2ECA?e=cvApJB)
+## Organización de Documentos del Repositorio
+En este repositorio se encuentra una carpeta `docx`, dentro de la cual se encuentran todas las fases de realización de Design Thinking para el proyecto actual. La distribución de
+carpetas se mira de la siguiente forma:
+```
+docx
+    ├── Avances 1
+    ├── Avances 2
+    ├── Corte 1
+    ├── Corte 2
+    └── Scrum
+```
+A continuación se describe brevemente lo que hay en cada carpeta con explicaciones cortas:
+
+### `docx\Avances 1`
+Dentro de esta carpeta se encuentra un documento .pdf con los avances realizados antes de la fecha del primer corte para el proyecto. Dentro de ese PDF se encuentra: la definición
+del brief del proyecto y tema de interés, posibles usuarios, usuarios extremos, técnica "Qué Cómo y Por qué?" y realización del Framework A.E.I.O.U. dentro de sus diagramas respectivos
+adjuntos dentro del PDF (con links de visualización para cada uno).
+
+### `docx\Corte 1`
+Aquí se encuentra el archivo .pdf final que se entregó para el primer corte de este proyecto. Dentro de él se encuentra todo lo anteriormente mencionado para los avances #1 y aparte
+varias entrevistas realizadas a posibles usuarios con varias partes de análisis de ellas.
+
