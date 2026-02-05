@@ -27,3 +27,8 @@ adjuntos dentro del PDF (con links de visualización para cada uno).
 Aquí se encuentra el archivo .pdf final que se entregó para el primer corte de este proyecto. Dentro de él se encuentra todo lo anteriormente mencionado para los avances #1 y aparte
 varias entrevistas realizadas a posibles usuarios con varias partes de análisis de ellas.
 
+### `docx\Avances 2`
+Dentro de esta carpeta se pueden ver los avances realizados para los avances del segundo corte para el proyecto. Dentro se pueden encontrar (dentro del PDF) los pasos realizados de
+Design Studio junto con las ideas listadas por cada integrante del grupo, los sketches que realizó cada integrante y una lista de las ideas más votadas para incluír dentro del
+proyecto. Asímismo, se encuentra dentro del pdf una bitácora que detalla todos los cambios realizados por cada integrante del grupo hasta la fecha de entrega de estos avances.
+
