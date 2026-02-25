@@ -30,6 +30,9 @@ varias entrevistas realizadas a posibles usuarios con varias partes de análisis
 ### `docx\Avances 2`
 Dentro de esta carpeta se pueden ver los avances realizados para los avances del segundo corte para el proyecto. Dentro se pueden encontrar (dentro del PDF) los pasos realizados de
 Design Studio junto con las ideas listadas por cada integrante del grupo, los sketches que realizó cada integrante y una lista de las ideas más votadas para incluír dentro del
-proyecto. Asímismo, se encuentra dentro del pdf una bitácora que detalla todos los cambios realizados por cada integrante del grupo hasta la fecha de entrega de estos avances. Ambos
-documentos mencionados se pueden encontrar aquí: [pdf entrega](https://uvggt-my.sharepoint.com/:w:/g/personal/her24337_uvg_edu_gt/IQCoU9rFR4qMRpwIobKMLeRwAXxVbrqoXebHqniH9q5fTcM?e=rU9TQx) y [bitácora](https://uvggt-my.sharepoint.com/:w:/g/personal/her24337_uvg_edu_gt/IQDvQ7vJpVx4TYfsyUVtJx3xAQaQM_rs0wJzcyBe3PBUPsE?e=LKmvL8)
+proyecto. El documento en cuestión se puede encontrar aquí: [pdf entrega](https://uvggt-my.sharepoint.com/:w:/g/personal/her24337_uvg_edu_gt/IQCoU9rFR4qMRpwIobKMLeRwAXxVbrqoXebHqniH9q5fTcM?e=rU9TQx)
+
+### `docx\Corte 2`
+En esta carpeta se encuentra el PDF terminado para el segundo corte del proyecto, con los pasos de Design Studio, requisitos funcionales, mapa de historias de usuario, diagrama de casos de uso y varios otros
+diagramas/tablas. La versión con historial de este documento se puede encontrar en: [pdf corte #2](https://uvggt-my.sharepoint.com/:w:/g/personal/her24337_uvg_edu_gt/IQCoU9rFR4qMRpwIobKMLeRwAcxiv-y_UoJub-nrUbe8cFI?e=h3qts2)
 
