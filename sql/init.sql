@@ -12,21 +12,21 @@ CREATE TABLE users(
     name TEXT NOT NULL,
     password_hash TEXT NOT NULL,
     is_active BOOLEAN NOT NULL,
-    phone TEXT NOT NULL,
-    phone_aux TEXT NOT NULL,
-    email TEXT NOT NULL,
+    phone TEXT NOT NULL, 
+    phone_aux TEXT,
+    email TEXT NOT NULL UNIQUE,
     created_at DATE NOT NULL
 );
 
 CREATE TABLE patients(
     id_pac INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    id_user INTEGER NOT NULL,
+    id_user INTEGER NOT NULL UNIQUE,
     FOREIGN KEY (id_user) REFERENCES users(id_user)
 );
 
 CREATE TABLE doctors(
     id_doc INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    id_user INTEGER NOT NULL,
+    id_user INTEGER NOT NULL UNIQUE,
     FOREIGN KEY (id_user) REFERENCES users(id_user)
 );
 
@@ -46,6 +46,32 @@ CREATE TABLE doctor_specialty(
 
 CREATE TABLE secretaries(
     id_sec INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    id_user INTEGER NOT NULL,
+    id_user INTEGER NOT NULL UNIQUE,
     FOREIGN KEY (id_user) REFERENCES users(id_user)
 );
+
+CREATE TABLE clinic(
+    id_clinic INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name TEXT NOT NULL,
+    address TEXT NOT NULL,
+    phone TEXT NOT NULL UNIQUE,
+    email TEXT NOT NULL UNIQUE,
+    created_at DATE NOT NULL
+);
+
+CREATE TABLE notification(
+    id_notif INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_user INTEGER NOT NULL,
+    FOREIGN KEY (id_user) REFERENCES users(id_user),
+    type TEXT NOT NULL, -- TODO: implementar checks para esto
+    message TEXT NOT NULL,
+    sent_at DATE NOT NULL,
+    channel TEXT NOT NULL
+);
+
+CREATE TABLE notificationPreference(
+    id_user INTEGER NOT NULL,
+    channel TEXT NOT NULL,
+    PRIMARY KEY (id_user, channel)
+);
+
