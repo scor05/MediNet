@@ -5,7 +5,10 @@ services:
     ports:
       - "8067:8000"
     volumes:
-      - ./backend:/app
+      - ./backend/laravel:/app
       - /app/vendor
     env_file:
       - ./backend/.env
+    tty: true
+    stdin_open: true
+    restart: unless-stopped
