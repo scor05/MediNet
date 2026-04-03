@@ -12,32 +12,8 @@ CREATE TABLE users (
     email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
     phone TEXT,
-    role TEXT NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CHECK (role IN ('patient', 'doctor', 'secretary'))
-);
-
--- tabla pacientes
-CREATE TABLE patients (
-    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    id_user INTEGER NOT NULL UNIQUE,
-    birth_date DATE NOT NULL,
-    FOREIGN KEY (id_user) REFERENCES users(id)
-);
-
--- tabla doctores
-CREATE TABLE doctors (
-    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    id_user INTEGER NOT NULL UNIQUE,
-    FOREIGN KEY (id_user) REFERENCES users(id)
-);
-
--- tabla secretarias
-CREATE TABLE secretaries (
-    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    id_user INTEGER NOT NULL UNIQUE,
-    FOREIGN KEY (id_user) REFERENCES users(id)
 );
 
 -- tabla especialidades
@@ -51,7 +27,7 @@ CREATE TABLE doctor_specialty (
     id_doctor INTEGER NOT NULL,
     id_specialty INTEGER NOT NULL,
     PRIMARY KEY (id_doctor, id_specialty),
-    FOREIGN KEY (id_doctor) REFERENCES doctors(id),
+    FOREIGN KEY (id_doctor) REFERENCES users(id),
     FOREIGN KEY (id_specialty) REFERENCES specialties(id)
 );
 
@@ -65,28 +41,6 @@ CREATE TABLE clinics (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- tabla doctor_clinica
-CREATE TABLE doctor_clinic (
-    id_doctor INTEGER NOT NULL,
-    id_clinic INTEGER NOT NULL,
-    start_date DATE NOT NULL,
-    appointment_duration INTEGER NOT NULL,
-    PRIMARY KEY (id_doctor, id_clinic),
-    FOREIGN KEY (id_doctor) REFERENCES doctors(id),
-    FOREIGN KEY (id_clinic) REFERENCES clinics(id),
-    CHECK (appointment_duration > 0)
-);
-
--- tabla secretaria_clinica
-CREATE TABLE secretary_clinic (
-    id_secretary INTEGER NOT NULL,
-    id_clinic INTEGER NOT NULL,
-    start_date DATE NOT NULL,
-    PRIMARY KEY (id_secretary, id_clinic),
-    FOREIGN KEY (id_secretary) REFERENCES secretaries(id),
-    FOREIGN KEY (id_clinic) REFERENCES clinics(id)
-);
-
 -- tabla horarios
 CREATE TABLE schedules (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -95,10 +49,13 @@ CREATE TABLE schedules (
     day_of_week INTEGER NOT NULL,
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
-    FOREIGN KEY (id_doctor) REFERENCES doctors(id),
+    status INT NOT NULL,
+    duration INT NOT NULL,
+    FOREIGN KEY (id_doctor) REFERENCES user(id),
     FOREIGN KEY (id_clinic) REFERENCES clinics(id),
     CHECK (day_of_week BETWEEN 0 AND 6),
-    CHECK (start_time < end_time)
+    CHECK (start_time < end_time),
+    CHECK (status BETWEEN 0 AND 1)
 );
 
 -- tabla bloqueos_horario
@@ -112,49 +69,37 @@ CREATE TABLE schedule_blockades (
     CHECK (start_time < end_time)
 );
 
--- tabla solicitudes_cita
-CREATE TABLE appointment_requests (
-    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    id_patient INTEGER NOT NULL,
-    id_schedule INTEGER NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    status TEXT NOT NULL,
-    reason TEXT NOT NULL,
-    date DATE NOT NULL,
-    start_time TIME NOT NULL,
-    FOREIGN KEY (id_patient) REFERENCES patients(id),
-    FOREIGN KEY (id_schedule) REFERENCES schedules(id),
-    CHECK (status IN ('pending', 'approved', 'rejected', 'cancelled'))
-);
-
 -- tabla citas
 CREATE TABLE appointments (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id_schedule INTEGER NOT NULL,
-    id_request INTEGER NOT NULL UNIQUE,
     id_patient INTEGER NOT NULL,
     date DATE NOT NULL,
     status TEXT NOT NULL,
     start_time TIME NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by INTEGER NOT NULL,
+    last_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_updated_by INTEGER NOT NULL,
     FOREIGN KEY (id_schedule) REFERENCES schedules(id),
-    FOREIGN KEY (id_request) REFERENCES appointment_requests(id),
-    FOREIGN KEY (id_patient) REFERENCES patients(id),
-    CHECK (status IN ('scheduled', 'completed', 'cancelled', 'rescheduled'))
+    FOREIGN KEY (id_patient) REFERENCES users(id),
+    FOREIGN KEY (created_by) REFERENCES users(id),
+    FOREIGN KEY (last_updated_by) REFERENCES users(id),
+    CHECK (status IN ('requested', 'accepted', 'rejected', 'cancelled', 'rescheduled'))
 );
 
 -- tabla lista_espera
-CREATE TABLE waitlist (
+CREATE TABLE waitlists (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id_patient INTEGER NOT NULL,
     id_target_appointment INTEGER NOT NULL,
     id_fallback_appointment INTEGER NOT NULL,
     status TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_patient) REFERENCES patients(id),
+    FOREIGN KEY (id_patient) REFERENCES users(id),
     FOREIGN KEY (id_target_appointment) REFERENCES appointments(id),
     FOREIGN KEY (id_fallback_appointment) REFERENCES appointments(id),
-    CHECK (status IN ('active', 'notified', 'expired', 'fulfilled'))
+    CHECK (status IN ('active', 'notified', 'expired', 'fulfilled', 'cancelled'))
 );
 
 -- tabla notificaciones
@@ -177,4 +122,31 @@ CREATE TABLE notification_preferences (
     PRIMARY KEY (id_user, channel),
     FOREIGN KEY (id_user) REFERENCES users(id),
     CHECK (channel IN ('email', 'sms', 'push'))
+);
+
+-- tabla clientes
+CREATE TABLE clients (
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_admin INTEGER NOT NULL,
+    nit INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    FOREIGN KEY (id_admin) REFERENCES users(id)
+);
+
+-- tabla clientes_usuarios
+CREATE TABLE clients_users (
+    id_client INTEGER NOT NULL,
+    id_user INTEGER NOT NULL,
+    PRIMARY KEY (id_client, id_user),
+    FOREIGN KEY (id_client) REFERENCES clients(id),
+    FOREIGN KEY (id_user) REFERENCES users(id)
+);
+
+-- tabla clientes-clinicas
+CREATE TABLE clients_clinics (
+    id_client INTEGER NOT NULL,
+    id_clinic INTEGER NOT NULL,
+    PRIMARY KEY (id_client, id_clinic),
+    FOREIGN KEY (id_client) REFERENCES clients(id),
+    FOREIGN KEY (id_clinic) REFERENCES clinics(id)
 );
