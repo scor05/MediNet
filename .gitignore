@@ -1,0 +1,18 @@
+# Composer (por si acaso)
+vendor/
+
+# Node
+node_modules/
+
+# Env global
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Docker (opcional)
+docker-data/
