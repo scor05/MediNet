@@ -14,6 +14,7 @@ CREATE TABLE users (
     phone TEXT,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- tabla especialidades
@@ -38,7 +39,8 @@ CREATE TABLE clinics (
     address TEXT NOT NULL,
     phone TEXT NOT NULL UNIQUE,
     email TEXT NOT NULL UNIQUE,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- tabla horarios
@@ -49,13 +51,14 @@ CREATE TABLE schedules (
     day_of_week INTEGER NOT NULL,
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
-    status INT NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
     duration INT NOT NULL,
-    FOREIGN KEY (id_doctor) REFERENCES user(id),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_doctor) REFERENCES users(id),
     FOREIGN KEY (id_clinic) REFERENCES clinics(id),
     CHECK (day_of_week BETWEEN 0 AND 6),
     CHECK (start_time < end_time),
-    CHECK (status BETWEEN 0 AND 1)
 );
 
 -- tabla bloqueos_horario
@@ -79,12 +82,12 @@ CREATE TABLE appointments (
     start_time TIME NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by INTEGER NOT NULL,
-    last_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    last_updated_by INTEGER NOT NULL,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by INTEGER NOT NULL,
     FOREIGN KEY (id_schedule) REFERENCES schedules(id),
     FOREIGN KEY (id_patient) REFERENCES users(id),
     FOREIGN KEY (created_by) REFERENCES users(id),
-    FOREIGN KEY (last_updated_by) REFERENCES users(id),
+    FOREIGN KEY (updated_by) REFERENCES users(id),
     CHECK (status IN ('requested', 'accepted', 'rejected', 'cancelled', 'rescheduled'))
 );
 
@@ -96,6 +99,7 @@ CREATE TABLE waitlists (
     id_fallback_appointment INTEGER NOT NULL,
     status TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (id_patient) REFERENCES users(id),
     FOREIGN KEY (id_target_appointment) REFERENCES appointments(id),
     FOREIGN KEY (id_fallback_appointment) REFERENCES appointments(id),
@@ -111,7 +115,7 @@ CREATE TABLE notifications (
     sent_at TIMESTAMP NOT NULL,
     channel TEXT NOT NULL,
     FOREIGN KEY (id_user) REFERENCES users(id),
-    CHECK (type IN ('reminder', 'cancellation', 'reschedule', 'confirmation')),
+    CHECK (type IN ('reminder', 'cancellation', 'reschedule', 'acceptance', 'rejection')),
     CHECK (channel IN ('email', 'sms', 'push'))
 );
 
@@ -127,25 +131,31 @@ CREATE TABLE notification_preferences (
 -- tabla clientes
 CREATE TABLE clients (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    id_admin INTEGER NOT NULL,
     nit INTEGER NOT NULL,
     name TEXT NOT NULL,
-    FOREIGN KEY (id_admin) REFERENCES users(id)
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- tabla clientes_usuarios
-CREATE TABLE clients_users (
+CREATE TABLE client_users (
     id_client INTEGER NOT NULL,
     id_user INTEGER NOT NULL,
+    role INTEGER NOT NULL,
+    is_admin BOOLEAN NOT NULL DEFAULT FALSE,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
     PRIMARY KEY (id_client, id_user),
     FOREIGN KEY (id_client) REFERENCES clients(id),
-    FOREIGN KEY (id_user) REFERENCES users(id)
+    FOREIGN KEY (id_user) REFERENCES users(id),
+    CHECK (role IN (0, 1))
 );
 
 -- tabla clientes-clinicas
-CREATE TABLE clients_clinics (
+CREATE TABLE client_clinics (
     id_client INTEGER NOT NULL,
     id_clinic INTEGER NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
     PRIMARY KEY (id_client, id_clinic),
     FOREIGN KEY (id_client) REFERENCES clients(id),
     FOREIGN KEY (id_clinic) REFERENCES clinics(id)
