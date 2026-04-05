@@ -14,13 +14,13 @@ class ClientClinicRepository
             ->get();
     }
 
-    // Se crea una nueva clínica asignada a un cliente
+    // Se crea una nueva asignación de clínica a un cliente
     public function create($data)
     {
         return ClientClinic::create($data);
     }
 
-    // Se actualiza una clínica asignada a un cliente
+    // Se actualiza una asignación de clínica a un cliente
     public function update($clientId, $clinicId, $data)
     {
         $record = ClientClinic::where('id_client', $clientId)

@@ -14,13 +14,13 @@ class ClientUserRepository
             ->get();
     }
 
-    // Se crea un nuevo usuario asignado a un cliente
+    // Se crea una nueva asignación de usuario a un cliente
     public function create($data)
     {
         return ClientUser::create($data);
     }
 
-    // Se actualiza un usuario asignado a un cliente
+    // Se actualiza una asignación de usuario a un cliente
     public function update($clientId, $userId, $data)
     {
         $record = ClientUser::where('id_client', $clientId)
