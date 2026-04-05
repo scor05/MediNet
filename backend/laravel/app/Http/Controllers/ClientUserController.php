@@ -7,15 +7,18 @@ use App\Services\ClientUserService;
 
 class ClientUserController extends Controller
 {
+    // Se inyecta el servicio
     public function __construct(private ClientUserService $service)
     {
     }
 
+    // Se obtienen todos los usuarios asignados a un cliente
     public function index($clientId)
     {
         return response()->json($this->service->getByClient($clientId));
     }
 
+    // Se crea un nuevo usuario asignado a un cliente
     public function store(Request $request, $clientId)
     {
         $validated = $request->validate([
@@ -26,6 +29,7 @@ class ClientUserController extends Controller
         return response()->json($this->service->create($clientId, $validated), 201);
     }
 
+    // Se actualiza un usuario asignado a un cliente
     public function update(Request $request, $clientId, $userId)
     {
         $validated = $request->validate([
@@ -36,6 +40,7 @@ class ClientUserController extends Controller
         return response()->json($this->service->update($clientId, $userId, $validated));
     }
 
+    // Se elimina la asignación de un usuario a un cliente
     public function destroy($clientId, $userId)
     {
         $this->service->delete($clientId, $userId);
