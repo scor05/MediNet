@@ -3,49 +3,46 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Services\ClientService;
+use App\Services\SpecialtyService;
 
-class ClientController extends Controller
+class SpecialtyController extends Controller
 {
     // Se inyecta el servicio
-    public function __construct(private ClientService $service)
+    public function __construct(private SpecialtyService $service)
     {
     }
 
-    // Se obtienen todos los clientes
+    // Se obtienen todas las especialidades
     public function index()
     {
         return response()->json($this->service->getAll());
     }
 
-    // Se obtiene un cliente por su id
+    // Se obtiene una especialidad por su id
     public function show($id)
     {
         return response()->json($this->service->getById($id));
     }
 
-    // Se crea un nuevo cliente
+    // Se crea una nueva especialidad
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nit' => 'required|string|max:20',
-            'name' => 'required|string|max:255',
+            'specialty' => 'required|string|max:255',
         ]);
         return response()->json($this->service->create($validated), 201);
     }
 
-    // Se actualiza un cliente
+    // Se actualiza una especialidad
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'nit' => 'string|max:20',
-            'name' => 'string|max:255',
-            'is_active' => 'boolean',
+            'specialty' => 'string|max:255',
         ]);
         return response()->json($this->service->update($id, $validated));
     }
 
-    // Se elimina un cliente
+    // Se elimina una especialidad
     public function destroy($id)
     {
         $this->service->delete($id);
