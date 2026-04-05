@@ -12,7 +12,7 @@ class ClientController extends Controller
     {
     }
 
-    // Se obtiene todos los clientes
+    // Se obtienen todos los clientes
     public function index()
     {
         return response()->json($this->service->getAll());
