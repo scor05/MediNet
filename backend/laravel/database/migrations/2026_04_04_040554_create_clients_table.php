@@ -12,8 +12,8 @@ return new class extends Migration {
     {
         Schema::create('clients', function (Blueprint $table) {
             $table->id();
-            $table->integer('nit');
-            $table->text('name');
+            $table->text('nit');
+            $table->text('name', );
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
