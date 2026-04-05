@@ -18,7 +18,7 @@ class ClientClinicController extends Controller
         return response()->json($this->service->getByClient($clientId));
     }
 
-    // Se crea una nueva clínica asignada a un cliente
+    // Se crea una nueva asignación de clínica a un cliente
     public function store(Request $request, $clientId)
     {
         $validated = $request->validate([
@@ -27,7 +27,7 @@ class ClientClinicController extends Controller
         return response()->json($this->service->create($clientId, $validated), 201);
     }
 
-    // Se actualiza una clínica asignada a un cliente
+    // Se actualiza una asignación de clínica a un cliente
     public function update(Request $request, $clientId, $clinicId)
     {
         $validated = $request->validate([

@@ -17,7 +17,7 @@ class ClientClinicService
         return $this->repository->findByClient($clientId);
     }
 
-    // Se crea una nueva clínica asignada a un cliente
+    // Se crea una nueva asignación de clínica a un cliente
     public function create($clientId, $data)
     {
         return $this->repository->create([
@@ -27,7 +27,7 @@ class ClientClinicService
         ]);
     }
 
-    // Se actualiza una clínica asignada a un cliente
+    // Se actualiza una asignación de clínica a un cliente
     public function update($clientId, $clinicId, $data)
     {
         return $this->repository->update($clientId, $clinicId, $data);

@@ -18,7 +18,7 @@ class ClientUserController extends Controller
         return response()->json($this->service->getByClient($clientId));
     }
 
-    // Se crea un nuevo usuario asignado a un cliente
+    // Se crea una nueva asignación de un usuario a un cliente
     public function store(Request $request, $clientId)
     {
         $validated = $request->validate([
@@ -29,7 +29,7 @@ class ClientUserController extends Controller
         return response()->json($this->service->create($clientId, $validated), 201);
     }
 
-    // Se actualiza un usuario asignado a un cliente
+    // Se actualiza una asignación de un usuario a un cliente
     public function update(Request $request, $clientId, $userId)
     {
         $validated = $request->validate([
