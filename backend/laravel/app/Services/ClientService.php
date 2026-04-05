@@ -1,0 +1,43 @@
+<?php
+
+namespace App\Services;
+
+use App\Repositories\ClientRepository;
+
+class ClientService
+{
+    // Se inyecta el repositorio
+    public function __construct(private ClientRepository $repository)
+    {
+    }
+
+    // Se obtienen todos los clientes
+    public function getAll()
+    {
+        return $this->repository->findAll();
+    }
+
+    // Se obtiene un cliente por su id
+    public function getById($id)
+    {
+        return $this->repository->findById($id);
+    }
+
+    // Se crea un nuevo cliente
+    public function create($data)
+    {
+        return $this->repository->create($data);
+    }
+
+    // Se actualiza un cliente
+    public function update($id, $data)
+    {
+        return $this->repository->update($id, $data);
+    }
+
+    // Se elimina un cliente
+    public function delete($id)
+    {
+        $this->repository->delete($id);
+    }
+}
