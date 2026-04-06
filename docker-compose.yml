@@ -6,8 +6,12 @@ services:
       - "8067:8000"
     volumes:
       - ./backend/laravel:/app
+      - vendor_data:/app/vendor
     env_file:
       - ./backend/.env
     tty: true
     stdin_open: true
     restart: unless-stopped
+
+volumes:
+  vendor_data:
