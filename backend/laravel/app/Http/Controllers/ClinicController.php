@@ -41,10 +41,10 @@ class ClinicController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'name'    => 'sometimes|string|max:255',
-            'address' => 'sometimes|string',
-            'phone'   => 'sometimes|string|unique:clinics,phone,' . $id,
-            'email'   => 'sometimes|email|unique:clinics,email,' . $id,
+            'name'    => 'string|max:255',
+            'address' => 'string',
+            'phone'   => 'string|unique:clinics,phone,' . $id,
+            'email'   => 'email|unique:clinics,email,' . $id,
         ]);
 
         return response()->json($this->service->update($id, $validated));

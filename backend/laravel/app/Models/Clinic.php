@@ -6,8 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Clinic extends Model
 {
-    protected $table = 'clinics';
-
+    // Columnas de la tabla en la base de datos
     protected $fillable = [
         'name',
         'address',

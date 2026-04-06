@@ -28,10 +28,10 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'     => 'required|string',
+            'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
-            'phone'    => 'nullable|string',
+            'phone'    => 'nullable|string|max:20',
         ]);
 
         return response()->json($this->service->create($validated), 201);
@@ -41,11 +41,11 @@ class UserController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'name'      => 'sometimes|string',
-            'email'     => 'sometimes|email|unique:users,email,' . $id,
-            'password'  => 'sometimes|string|min:8',
-            'phone'     => 'nullable|string',
-            'is_active' => 'sometimes|boolean',
+            'name'      => 'string|max:255',
+            'email'     => 'email|unique:users,email,' . $id,
+            'password'  => 'string|min:8',
+            'phone'     => 'nullable|string|max:20',
+            'is_active' => 'boolean',
         ]);
 
         return response()->json($this->service->update($id, $validated));

@@ -12,4 +12,9 @@ class Client extends Model
         'name',
         'is_active',
     ];
+
+    // Columnas que deben ser convertidas a boolean
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
 }
