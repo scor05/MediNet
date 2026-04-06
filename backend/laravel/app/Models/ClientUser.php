@@ -24,6 +24,12 @@ class ClientUser extends Model
     // Definición de la llave primaria compuesta
     protected $primaryKey = ['id_client', 'id_user'];
 
+    // Columnas que deben ser convertidas a boolean
+    protected $casts = [
+        'is_admin' => 'boolean',
+        'is_active' => 'boolean',
+    ];
+
     // Definición de las relaciones
     public function client()
     {

@@ -22,6 +22,11 @@ class ClientClinic extends Model
     // Definición de la llave primaria compuesta
     protected $primaryKey = ['id_client', 'id_clinic'];
 
+    // Columnas que deben ser convertidas a boolean
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
+
     // Definición de las relaciones
     public function client()
     {

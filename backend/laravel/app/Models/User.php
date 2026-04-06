@@ -6,8 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class User extends Model
 {
-    protected $table = 'users';
-
+    // Columnas de la tabla en la base de datos
     protected $fillable = [
         'name',
         'email',
@@ -16,10 +15,12 @@ class User extends Model
         'is_active',
     ];
 
+    // Columnas que no son devueltas en la response JSON
     protected $hidden = [
         'password_hash',
     ];
 
+    // Columnas que deben ser convertidas a boolean
     protected $casts = [
         'is_active' => 'boolean',
     ];
