@@ -3,94 +3,72 @@
 namespace App\Services;
 
 use App\Models\Appointment;
-use Illuminate\Database\Eloquent\Collection;
+use App\Repositories\AppointmentRepository;
 
 class AppointmentService
 {
-    private array $blockingStatuses = ['requested', 'accepted'];
-
-    public function index(): Collection
+    // Se inyecta el repositorio
+    public function __construct(private AppointmentRepository $repository)
     {
-        return Appointment::orderBy('date')
-            ->orderBy('start_time')
-            ->get();
     }
 
-    public function show(int $id): ?Appointment
+    // Se obtienen todas las citas
+    public function getAll()
     {
-        return Appointment::find($id);
+        return $this->repository->findAll();
     }
 
-    public function store(array $data): Appointment
+    // Se obtiene una cita por su id
+    public function getById($id)
     {
-        $this->validateConflict($data['id_schedule'],$data['date'],$data['start_time']);
-
-        return Appointment::create($data);
+        return $this->repository->findById($id);
     }
 
+    // Se crea una nueva cita
+    public function create($data)
+    {
+        $this->validateConflict(
+            $data['id_schedule'],
+            $data['date'],
+            $data['start_time']
+        );
+        return $this->repository->create($data);
+    }
+
+    // Se actualiza una cita
     public function update(int $id, array $data): ?Appointment
     {
-        $appointment = Appointment::find($id);
-
-        if (!$appointment) {
-            return null;
-        }
-
-        $idSchedule = $data['id_schedule'] ?? $appointment->id_schedule;
-        $date = $data['date'] ?? $appointment->date;
-        $startTime = $data['start_time'] ?? $appointment->start_time;
-
         $this->validateConflict(
-            $idSchedule,
-            $date,
-            $startTime,
-            $appointment->id
+            $data['id_schedule'],
+            $data['date'],
+            $data['start_time'],
+            $id
         );
-
-        $appointment->update($data);
-        $appointment->refresh();
-
-        return $appointment;
+        return $this->repository->update($id, $data);
     }
 
-    public function cancel(int $id, int $updatedBy): ?Appointment
+    // Se elimina una cita
+    public function delete(int $id)
     {
-        $appointment = Appointment::find($id);
-
-        if (!$appointment) {
-            return null;
-        }
-
-        $appointment->update([
-            'status' => 'cancelled',
-            'updated_by' => $updatedBy,
-        ]);
-
-        $appointment->refresh();
-
-        return $appointment;
+        $this->repository->delete($id);
     }
 
+    // Se valida el conflicto de una cita (lógica pura, sin queries directos)
     private function validateConflict(
         int $idSchedule,
         string $date,
         string $startTime,
         ?int $ignoreAppointmentId = null
     ): void {
-        $query = Appointment::where('id_schedule', $idSchedule)
-            ->where('date', $date)
-            ->where('start_time', $startTime)
-            ->whereIn('status', $this->blockingStatuses);
+        $conflict = $this->repository->findConflict(
+            $idSchedule,
+            $date,
+            $startTime,
+            $ignoreAppointmentId
+        );
 
-        if ($ignoreAppointmentId !== null) {
-            $query->where('id', '!=', $ignoreAppointmentId);
-        }
-
-        $conflictingAppointment = $query->first();
-
-        if ($conflictingAppointment) {
+        if ($conflict) {
             throw new \RuntimeException('Ya existe una cita en ese horario');
         }
     }
 }
-
