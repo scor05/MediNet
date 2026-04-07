@@ -123,8 +123,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       validator: (v) {
                         if (v == null || v.isEmpty) return 'Ingresa tu nombre';
-                        if (v.trim().split(' ').length < 2)
+                        if (v.trim().split(' ').length < 2) {
                           return 'Ingresa nombre y apellido';
+                        }
                         return null;
                       },
                     ),
@@ -173,8 +174,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                       ),
                       validator: (v) {
-                        if (v == null || v.isEmpty)
+                        if (v == null || v.isEmpty) {
                           return 'Ingresa tu teléfono';
+                        }
                         return null;
                       },
                     ),
@@ -208,8 +210,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                       ),
                       validator: (v) {
-                        if (v == null || v.isEmpty)
+                        if (v == null || v.isEmpty) {
                           return 'Ingresa una contraseña';
+                        }
                         if (v.length < 6) return 'Mínimo 6 caracteres';
                         return null;
                       },
