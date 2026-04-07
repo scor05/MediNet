@@ -16,3 +16,5 @@ Thumbs.db
 
 # Docker (opcional)
 docker-data/
+#config de supabase
+lib/config/supabase_config.dart
