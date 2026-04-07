@@ -17,10 +17,10 @@ class CalendarRepository
     private function baseQuery()
     {
         return DB::table('appointments AS a')
-            ->join('schedules AS s',       's.id',       '=', 'a.id_schedule')
-            ->join('clinics AS cl',        'cl.id',      '=', 's.id_clinic')
-            ->join('users AS doctor',      'doctor.id',  '=', 's.id_doctor')
-            ->join('users AS patient',     'patient.id', '=', 'a.id_patient')
+            ->join('schedules AS s', 's.id', '=', 'a.id_schedule')
+            ->join('clinics AS cl', 'cl.id', '=', 's.id_clinic')
+            ->join('users AS doctor', 'doctor.id', '=', 's.id_doctor')
+            ->leftJoin('users AS patient', 'patient.id', '=', 'a.id_patient')
             ->select([
                 'a.id',
                 'a.id_schedule',
@@ -56,7 +56,7 @@ class CalendarRepository
             $query->whereExists(function ($sub) use ($doctorId, $clientId) {
                 $sub->select(DB::raw(1))
                     ->from('client_users AS cu')
-                    ->where('cu.id_user',   $doctorId)
+                    ->where('cu.id_user', $doctorId)
                     ->where('cu.id_client', $clientId)
                     ->whereRaw('cu.id_user = s.id_doctor');
             });
@@ -81,9 +81,9 @@ class CalendarRepository
         $query = $this->baseQuery()
             // Solo doctores (role = 1) que pertenezcan al mismo cliente
             ->join('client_users AS cu', function ($join) use ($clientId) {
-                $join->on('cu.id_user',   '=', 's.id_doctor')
-                     ->where('cu.id_client', '=', $clientId)
-                     ->where('cu.role',      '=', 1);   // 1 = doctor
+                $join->on('cu.id_user', '=', 's.id_doctor')
+                    ->where('cu.id_client', '=', $clientId)
+                    ->where('cu.role', '=', 1);   // 1 = doctor
             });
 
         if ($doctorId !== null) {
@@ -130,7 +130,7 @@ class CalendarRepository
     public function getClientIdForUser(int $userId): ?int
     {
         $row = DB::table('client_users')
-            ->where('id_user',   $userId)
+            ->where('id_user', $userId)
             ->where('is_active', true)
             ->first(['id_client']);
 

@@ -5,24 +5,26 @@ use App\Repositories\CalendarRepository;
 
 class CalendarService
 {
-    public function __construct(protected CalendarRepository $calendarRepository){}
+    public function __construct(protected CalendarRepository $calendarRepository)
+    {
+    }
     //get para doctor
 
     public function getDoctorCalendar(
         int $doctorId,
-        ?int $clinetId,
+        ?int $clientId,
         ?int $clinicId,
         ?string $dateFrom,
         ?string $dateTo
-    ): array{
+    ): array {
         $appointments = $this->calendarRepository->getAppointmentsForDoctor(
             doctorId: $doctorId,
-            clientId: $clinetId,
+            clientId: $clientId,
             clinicId: $clinicId,
             dateFrom: $dateFrom,
             dateTo: $dateTo
         );
-        return $this-> formatAppointments($appointments);
+        return $this->formatAppointments($appointments);
     }
     //get para secretaria
 
@@ -45,7 +47,7 @@ class CalendarService
             doctorId: $doctorId,
             clinicId: $clinicId,
             dateFrom: $dateFrom,
-            dateTo:   $dateTo,
+            dateTo: $dateTo,
         );
 
         return $this->formatAppointments($appointments);
@@ -60,16 +62,16 @@ class CalendarService
     ): array {
         $appointments = $this->calendarRepository->getAppointmentsForPatient(
             patientId: $patientId,
-            doctorId:  $doctorId,
-            clinicId:  $clinicId,
-            dateFrom:  $dateFrom,
-            dateTo:    $dateTo,
+            doctorId: $doctorId,
+            clinicId: $clinicId,
+            dateFrom: $dateFrom,
+            dateTo: $dateTo,
         );
 
         return $this->formatAppointments($appointments);
     }
 
-        // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
 
@@ -77,21 +79,21 @@ class CalendarService
     {
         return array_map(function ($appt) {
             return [
-                'id'          => $appt->id,
-                'date'        => $appt->date,
-                'start_time'  => $appt->start_time,
-                'status'      => $appt->status,
-                'doctor'      => [
-                    'id'   => $appt->doctor_id,
+                'id' => $appt->id,
+                'date' => $appt->date,
+                'start_time' => $appt->start_time,
+                'status' => $appt->status,
+                'doctor' => [
+                    'id' => $appt->doctor_id,
                     'name' => $appt->doctor_name,
                 ],
-                'patient'     => [
-                    'id'   => $appt->patient_id,
+                'patient' => [
+                    'id' => $appt->patient_id,
                     'name' => $appt->patient_name,
                 ],
-                'clinic'      => [
-                    'id'      => $appt->clinic_id,
-                    'name'    => $appt->clinic_name,
+                'clinic' => [
+                    'id' => $appt->clinic_id,
+                    'name' => $appt->clinic_name,
                     'address' => $appt->clinic_address,
                 ],
                 'schedule_id' => $appt->id_schedule,
