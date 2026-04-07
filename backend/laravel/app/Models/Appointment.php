@@ -6,8 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Appointment extends Model
 {
-    protected $table = 'appointments';
-
     protected $fillable = [
         'id_schedule',
         'id_patient',
@@ -17,4 +15,15 @@ class Appointment extends Model
         'created_by',
         'updated_by',
     ];
+
+    // Definición de las relaciones
+    public function schedule()
+    {
+        return $this->belongsTo(Schedule::class, 'id_schedule');
+    }
+
+    public function patient()
+    {
+        return $this->belongsTo(User::class, 'id_patient');
+    }
 }

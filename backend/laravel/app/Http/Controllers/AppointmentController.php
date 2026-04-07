@@ -4,118 +4,80 @@ namespace App\Http\Controllers;
 
 use App\Services\AppointmentService;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule;
 
 class AppointmentController extends Controller
 {
-    public function __construct(
-        protected AppointmentService $appointmentService
-    ) {}
-
-    public function index(): JsonResponse
+    // Se inyecta el servicio
+    public function __construct(private AppointmentService $service)
     {
-        $appointments = $this->appointmentService->index();
-
-        return response()->json($appointments);
     }
 
-    public function show(int $id): JsonResponse
+    // Se obtienen todas las citas
+    public function index()
     {
-        $appointment = $this->appointmentService->show($id);
-
-        if (!$appointment) {
-            return response()->json([
-                'message' => 'Cita no encontrada',
-            ], 404);
-        }
-
-        return response()->json($appointment);
+        return response()->json($this->service->getAll());
     }
 
-    public function store(Request $request): JsonResponse
+    // Se obtiene una cita por su id
+    public function show(int $id)
+    {
+        return response()->json($this->service->getById($id));
+    }
+
+    // Se crea una nueva cita
+    public function store(Request $request)
     {
         $validated = $request->validate([
-            'id_schedule' => ['required', 'integer', 'exists:schedules,id'],
-            'id_patient' => ['required', 'integer', 'exists:users,id'],
-            'date' => ['required', 'date'],
-            'status' => ['required', Rule::in([
-                'requested',
-                'accepted',
-                'rejected',
-                'cancelled',
-                'rescheduled',
-            ])],
-            'start_time' => ['required', 'date_format:H:i:s'],
-            'created_by' => ['required', 'integer', 'exists:users,id'],
-            'updated_by' => ['required', 'integer', 'exists:users,id'],
+            'id_schedule' => 'required|integer|exists:schedules,id',
+            'id_patient' => 'required|integer|exists:users,id',
+            'date' => 'required|date',
+            'status' => [
+                'required',
+                Rule::in([
+                    'requested',
+                    'accepted',
+                    'rejected',
+                    'cancelled',
+                    'rescheduled',
+                ])
+            ],
+            'start_time' => 'required|date_format:H:i:s',
+            'created_by' => 'required|integer|exists:users,id',
+            'updated_by' => 'required|integer|exists:users,id',
         ]);
 
-        try {
-            $appointment = $this->appointmentService->store($validated);
-
-            return response()->json($appointment, 201);
-        } catch (\RuntimeException $e) {
-            return response()->json([
-                'message' => $e->getMessage(),
-            ], 409);
-        }
+        return response()->json($this->service->create($validated), 201);
     }
 
-    public function update(Request $request, int $id): JsonResponse
+    // Se actualiza una cita
+    public function update(Request $request, int $id)
     {
         $validated = $request->validate([
-            'id_schedule' => ['sometimes', 'integer', 'exists:schedules,id'],
-            'id_patient' => ['sometimes', 'integer', 'exists:users,id'],
-            'date' => ['sometimes', 'date'],
-            'status' => ['sometimes', Rule::in([
-                'requested',
-                'accepted',
-                'rejected',
-                'cancelled',
-                'rescheduled',
-            ])],
-            'start_time' => ['sometimes', 'date_format:H:i:s'],
-            'updated_by' => ['required', 'integer', 'exists:users,id'],
+            'id_schedule' => 'sometimes|integer|exists:schedules,id',
+            'id_patient' => 'sometimes|integer|exists:users,id',
+            'date' => 'sometimes|date',
+            'status' => [
+                'sometimes',
+                Rule::in([
+                    'requested',
+                    'accepted',
+                    'rejected',
+                    'cancelled',
+                    'rescheduled',
+                ])
+            ],
+            'start_time' => 'sometimes|date_format:H:i:s',
+            'updated_by' => 'required|integer|exists:users,id',
         ]);
 
-        try {
-            $appointment = $this->appointmentService->update($id, $validated);
-
-            if (!$appointment) {
-                return response()->json([
-                    'message' => 'Cita no encontrada',
-                ], 404);
-            }
-
-            return response()->json($appointment);
-        } catch (\RuntimeException $e) {
-            return response()->json([
-                'message' => $e->getMessage(),
-            ], 409);
-        }
+        return response()->json($this->service->update($id, $validated));
     }
 
-    public function destroy(Request $request, int $id): JsonResponse
+    // Se elimina una cita
+    public function destroy(int $id)
     {
-        $validated = $request->validate([
-            'updated_by' => ['required', 'integer', 'exists:users,id'],
-        ]);
-
-        $appointment = $this->appointmentService->cancel(
-            $id,
-            $validated['updated_by']
-        );
-
-        if (!$appointment) {
-            return response()->json([
-                'message' => 'Cita no encontrada',
-            ], 404);
-        }
-
-        return response()->json([
-            'message' => 'Cita cancelada correctamente',
-            'appointment' => $appointment,
-        ]);
+        $this->service->delete($id);
+        return response()->json(null, 204);
     }
 }
