@@ -27,18 +27,12 @@ class UserService
     // Se crea un nuevo usuario
     public function create($data)
     {
-        $data['password_hash'] = Hash::make($data['password']);
-        unset($data['password']);
         return $this->repository->create($data);
     }
 
     // Se actualiza un usuario
     public function update($id, $data)
     {
-        if (isset($data['password'])) {
-            $data['password_hash'] = Hash::make($data['password']);
-            unset($data['password']);
-        }
         return $this->repository->update($id, $data);
     }
 

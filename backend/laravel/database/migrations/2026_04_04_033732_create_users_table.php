@@ -14,7 +14,6 @@ return new class extends Migration {
             $table->id();
             $table->text('name');
             $table->text('email')->unique();
-            $table->text('password_hash');
             $table->text('phone')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();

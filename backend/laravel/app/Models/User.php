@@ -10,14 +10,8 @@ class User extends Model
     protected $fillable = [
         'name',
         'email',
-        'password_hash',
         'phone',
         'is_active',
-    ];
-
-    // Columnas que no son devueltas en la response JSON
-    protected $hidden = [
-        'password_hash',
     ];
 
     // Columnas que deben ser convertidas a boolean
