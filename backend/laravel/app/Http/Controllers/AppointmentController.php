@@ -51,9 +51,15 @@ class AppointmentController extends Controller
             'updated_by' => ['required', 'integer', 'exists:users,id'],
         ]);
 
-        $appointment = $this->appointmentService->store($validated);
+        try {
+            $appointment = $this->appointmentService->store($validated);
 
-        return response()->json($appointment, 201);
+            return response()->json($appointment, 201);
+        } catch (\RuntimeException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 409);
+        }
     }
 
     public function update(Request $request, int $id): JsonResponse
@@ -73,15 +79,21 @@ class AppointmentController extends Controller
             'updated_by' => ['required', 'integer', 'exists:users,id'],
         ]);
 
-        $appointment = $this->appointmentService->update($id, $validated);
+        try {
+            $appointment = $this->appointmentService->update($id, $validated);
 
-        if (!$appointment) {
+            if (!$appointment) {
+                return response()->json([
+                    'message' => 'Cita no encontrada',
+                ], 404);
+            }
+
+            return response()->json($appointment);
+        } catch (\RuntimeException $e) {
             return response()->json([
-                'message' => 'Cita no encontrada',
-            ], 404);
+                'message' => $e->getMessage(),
+            ], 409);
         }
-
-        return response()->json($appointment);
     }
 
     public function destroy(Request $request, int $id): JsonResponse
