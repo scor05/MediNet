@@ -13,11 +13,12 @@ Route::get('/public', function () {
 //Todo protegido por Supabase Auth
 Route::middleware('supabase.auth')->group(function () {
 
-    
+
     require __DIR__ . '/api/clients.php';
     require __DIR__ . '/api/specialties.php';
     require __DIR__ . '/api/users.php';
     require __DIR__ . '/api/clinics.php';
+    require __DIR__ . '/api/appointments.php';
 
     //Usuario autenticado
     Route::get('/user', function (Request $request) {
