@@ -18,6 +18,7 @@ Route::middleware('supabase.auth')->group(function () {
     require __DIR__ . '/api/specialties.php';
     require __DIR__ . '/api/users.php';
     require __DIR__ . '/api/clinics.php';
+    require __DIR__ . '/api/schedules.php';
 
     //Usuario autenticado
     Route::get('/user', function (Request $request) {
