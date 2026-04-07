@@ -23,3 +23,12 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+# Flutter generated
+**/generated_plugin_registrant.dart
+**/generated_plugin_registrant.cc
+**/generated_plugins.cmake
+**/GeneratedPluginRegistrant.swift
+**/generated_plugins.gradle
+
+# VSCode
+.vscode/
