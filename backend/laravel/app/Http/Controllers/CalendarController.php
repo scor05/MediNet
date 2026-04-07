@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use Ap\Services\CalendarService;
+use App\Services\CalendarService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Http\JsonResponse;
 
 class CalendarController extends Controller
 {
-    public function __contruct(protected CalendarService $calendarService){}
+    public function __construct(protected CalendarService $calendarService)
+    {
+    }
 
     /** ENDPOINT para que el doctor vea el calendario
      * GET /api/calendar/doctor
@@ -19,15 +22,15 @@ class CalendarController extends Controller
             'client_id' => 'nullable|integer|exists:clients,id',
             'clinic_id' => 'nullable|integer|exists:clinics,id',
             'date_from' => 'nullable|date',
-            'date_to' => 'nullable|date|after_or_equal:date_from', 
+            'date_to' => 'nullable|date|after_or_equal:date_from',
         ]);
 
         $doctorID = $request->user()->id;
 
         $appointments = $this->calendarService->getDoctorCalendar(
-            doctorID: $doctorID,
-            clientID: $request->integer('client_id') ?: null,
-            clinicID: $request->integer('clinic_id') ?: null,
+            doctorId: $doctorID,
+            clientId: $request->integer('client_id') ?: null,
+            clinicId: $request->integer('clinic_id') ?: null,
             dateFrom: $request->input('date_from'),
             dateTo: $request->input('date_to'),
         );
@@ -48,9 +51,9 @@ class CalendarController extends Controller
         ]);
 
         $appointments = $this->calendarService->getSecretaryCalendar(
-            doctorID: $request->integer('doctor_id') ?: null,
-            clientID: $request->integer('client_id') ?: null,
-            clinicID: $request->integer('clinic_id') ?: null,
+            secretaryId: $request->user()->id,
+            doctorId: $request->integer('doctor_id') ?: null,
+            clinicId: $request->integer('clinic_id') ?: null,
             dateFrom: $request->input('date_from'),
             dateTo: $request->input('date_to'),
         );
@@ -62,7 +65,7 @@ class CalendarController extends Controller
      *  puede usar filtros opcionales como doctor_id, clinic_id, date_from, date_to
      * al menos doctor_id o clinic_id son requeridos
      */
-    public function patien(Request $request): JsonResponse
+    public function patient(Request $request): JsonResponse
     {
         $request->validate([
             'doctor_id' => 'nullable|integer|exists:users,id',
@@ -77,9 +80,9 @@ class CalendarController extends Controller
         $patientId = $request->user()->id;
 
         $appointments = $this->calendarService->getPatientCalendar(
-            patientID: $patientId,
-            doctorID: $request->integer('doctor_id') ?: null,
-            clinicID: $request->integer('clinic_id') ?: null,
+            patientId: $patientId,
+            doctorId: $request->integer('doctor_id') ?: null,
+            clinicId: $request->integer('clinic_id') ?: null,
             dateFrom: $request->input('date_from'),
             dateTo: $request->input('date_to'),
         );
