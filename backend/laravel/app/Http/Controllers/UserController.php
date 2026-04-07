@@ -24,27 +24,13 @@ class UserController extends Controller
         return response()->json($this->service->getById($id));
     }
 
-    // Se crea un nuevo usuario
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8',
-            'phone'    => 'nullable|string|max:20',
-        ]);
-
-        return response()->json($this->service->create($validated), 201);
-    }
-
     // Se actualiza un usuario
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'name'      => 'string|max:255',
-            'email'     => 'email|unique:users,email,' . $id,
-            'password'  => 'string|min:8',
-            'phone'     => 'nullable|string|max:20',
+            'name' => 'string|max:255',
+            'email' => 'email|unique:users,email,' . $id,
+            'phone' => 'nullable|string|max:20',
             'is_active' => 'boolean',
         ]);
 
