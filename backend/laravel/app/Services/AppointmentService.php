@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Collection;
 
 class AppointmentService
 {
+    private array $blockingStatuses = ['requested', 'accepted'];
+
     public function index(): Collection
     {
         return Appointment::orderBy('date')
@@ -21,6 +23,8 @@ class AppointmentService
 
     public function store(array $data): Appointment
     {
+        $this->validateConflict($data['id_schedule'],$data['date'],$data['start_time']);
+
         return Appointment::create($data);
     }
 
@@ -31,6 +35,17 @@ class AppointmentService
         if (!$appointment) {
             return null;
         }
+
+        $idSchedule = $data['id_schedule'] ?? $appointment->id_schedule;
+        $date = $data['date'] ?? $appointment->date;
+        $startTime = $data['start_time'] ?? $appointment->start_time;
+
+        $this->validateConflict(
+            $idSchedule,
+            $date,
+            $startTime,
+            $appointment->id
+        );
 
         $appointment->update($data);
         $appointment->refresh();
@@ -55,4 +70,27 @@ class AppointmentService
 
         return $appointment;
     }
+
+    private function validateConflict(
+        int $idSchedule,
+        string $date,
+        string $startTime,
+        ?int $ignoreAppointmentId = null
+    ): void {
+        $query = Appointment::where('id_schedule', $idSchedule)
+            ->where('date', $date)
+            ->where('start_time', $startTime)
+            ->whereIn('status', $this->blockingStatuses);
+
+        if ($ignoreAppointmentId !== null) {
+            $query->where('id', '!=', $ignoreAppointmentId);
+        }
+
+        $conflictingAppointment = $query->first();
+
+        if ($conflictingAppointment) {
+            throw new \RuntimeException('Ya existe una cita en ese horario');
+        }
+    }
 }
+
