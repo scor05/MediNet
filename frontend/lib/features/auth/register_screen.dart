@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/theme/app_theme.dart';
 import 'package:frontend/widgets/wave_header.dart';
+import 'package:frontend/services/auth_service.dart';
+
+// TODO: importar HomeScreen cuando esté lista
+// import 'package:frontend/features/home/home_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -35,31 +39,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _errorMsg = null;
     });
 
-    // TODO: Adair — conectar Supabase Auth + POST a /api/users
-    // try {
-    //   await Supabase.instance.client.auth.signUp(
-    //     email: _emailCtrl.text.trim(),
-    //     password: _passwordCtrl.text,
-    //   );
-    //   await http.post(
-    //     Uri.parse('TU_API_URL/api/users'),
-    //     headers: {'Content-Type': 'application/json'},
-    //     body: jsonEncode({
-    //       'name':     _nameCtrl.text.trim(),
-    //       'email':    _emailCtrl.text.trim(),
-    //       'password': _passwordCtrl.text,
-    //       'phone':    _phoneCtrl.text.trim(),
-    //     }),
-    //   );
-    //   Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
-    // } on AuthException catch (e) {
-    //   setState(() => _errorMsg = e.message);
-    // } finally {
-    //   if (mounted) setState(() => _isLoading = false);
-    // }
+    final result = await AuthService.register(
+      name: _nameCtrl.text.trim(),
+      email: _emailCtrl.text.trim(),
+      phone: _phoneCtrl.text.trim(),
+      password: _passwordCtrl.text,
+    );
 
-    await Future.delayed(const Duration(seconds: 1));
-    if (mounted) setState(() => _isLoading = false);
+    if (!mounted) return;
+
+    if (result.success) {
+      // TODO:
+      //temporal en lo que trabajamos el HomeScreen
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cuenta creada exitosamente ✓')),
+      );
+    } else {
+      setState(() => _errorMsg = result.error);
+    }
+
+    setState(() => _isLoading = false);
   }
 
   @override
@@ -68,10 +67,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       backgroundColor: AppTheme.background,
       body: Column(
         children: [
-          // Header con ola y botón de regreso
-          const WaveHeader(title: 'Crear cuenta'),
-
-          // Formulario
+          const WaveHeader(title: 'Crear cuenta', showBack: true),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
@@ -80,7 +76,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Error message
                     if (_errorMsg != null) ...[
                       Container(
                         padding: const EdgeInsets.all(12),
@@ -88,18 +83,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           color: AppTheme.error.withAlpha(25),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Text(
-                          _errorMsg!,
-                          style: const TextStyle(
-                            color: AppTheme.error,
-                            fontSize: 13,
-                          ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.error_outline,
+                              color: AppTheme.error,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _errorMsg!,
+                                style: const TextStyle(
+                                  color: AppTheme.error,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 16),
                     ],
 
-                    // Nombre
                     const FieldLabel(label: 'Nombre completo'),
                     TextFormField(
                       controller: _nameCtrl,
@@ -125,7 +131,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                     const SizedBox(height: 20),
 
-                    // Email
                     const FieldLabel(label: 'Correo electrónico'),
                     TextFormField(
                       controller: _emailCtrl,
@@ -151,7 +156,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                     const SizedBox(height: 20),
 
-                    // Teléfono
                     const FieldLabel(label: 'Teléfono'),
                     TextFormField(
                       controller: _phoneCtrl,
@@ -177,7 +181,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                     const SizedBox(height: 20),
 
-                    // Contraseña
                     const FieldLabel(label: 'Contraseña'),
                     TextFormField(
                       controller: _passwordCtrl,
@@ -214,7 +217,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                     const SizedBox(height: 32),
 
-                    // Botón REGISTRO
                     ElevatedButton(
                       style: AppTheme.btnDark,
                       onPressed: _isLoading ? null : _handleRegister,
@@ -232,7 +234,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                     const SizedBox(height: 16),
 
-                    // Link volver a login
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/theme/app_theme.dart';
 import 'package:frontend/widgets/wave_header.dart';
-
-// TODO: descomentar cuando esté lista
+import 'package:frontend/services/auth_service.dart';
 import 'package:frontend/features/auth/register_screen.dart';
+
+// TODO: importar HomeScreen cuando esté lista
+// import 'package:frontend/features/home/home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -34,21 +36,24 @@ class _LoginScreenState extends State<LoginScreen> {
       _errorMsg = null;
     });
 
-    // TODO: Adair — conectar Supabase Auth
-    // try {
-    //   await Supabase.instance.client.auth.signInWithPassword(
-    //     email: _emailCtrl.text.trim(),
-    //     password: _passwordCtrl.text,
-    //   );
-    //   Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
-    // } on AuthException catch (e) {
-    //   setState(() => _errorMsg = e.message);
-    // } finally {
-    //   if (mounted) setState(() => _isLoading = false);
-    // }
+    final result = await AuthService.login(
+      email: _emailCtrl.text.trim(),
+      password: _passwordCtrl.text,
+    );
 
-    await Future.delayed(const Duration(seconds: 1));
-    if (mounted) setState(() => _isLoading = false);
+    if (!mounted) return;
+
+    if (result.success) {
+      // TODO:
+      //temporal en lo que trabajamos el HomeScreen
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Login exitoso ✓')));
+    } else {
+      setState(() => _errorMsg = result.error);
+    }
+
+    setState(() => _isLoading = false);
   }
 
   @override
@@ -57,10 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: AppTheme.background,
       body: Column(
         children: [
-          // Header con ola — usando WaveHeader de widgets/wave_header.dart
           const WaveHeader(title: 'Login', showBack: true),
-
-          // Formulario
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
@@ -69,7 +71,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Error message
                     if (_errorMsg != null) ...[
                       Container(
                         padding: const EdgeInsets.all(12),
@@ -77,19 +78,30 @@ class _LoginScreenState extends State<LoginScreen> {
                           color: AppTheme.error.withAlpha(25),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Text(
-                          _errorMsg!,
-                          style: const TextStyle(
-                            color: AppTheme.error,
-                            fontSize: 13,
-                          ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.error_outline,
+                              color: AppTheme.error,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _errorMsg!,
+                                style: const TextStyle(
+                                  color: AppTheme.error,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 16),
                     ],
 
-                    // Email
-                    const FieldLabel(label: 'Usuario'),
+                    const FieldLabel(label: 'Correo electrónico'),
                     TextFormField(
                       controller: _emailCtrl,
                       keyboardType: TextInputType.emailAddress,
@@ -114,7 +126,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 20),
 
-                    // Contraseña
                     const FieldLabel(label: 'Contraseña'),
                     TextFormField(
                       controller: _passwordCtrl,
@@ -151,7 +162,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 32),
 
-                    // Botón LOGIN
                     ElevatedButton(
                       style: AppTheme.btnDark,
                       onPressed: _isLoading ? null : _handleLogin,
@@ -169,10 +179,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 12),
 
-                    // Botón Registro
                     ElevatedButton(
                       style: AppTheme.btnLight,
-                      // TTemporal en lo que termino lista RegisterScreen
                       onPressed: () => Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
