@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:frontend/config/supabase_config.dart';
@@ -22,7 +21,7 @@ class AuthService {
     }
   }
 
-  // ─── Register — Supabase Auth + POST a Laravel ─────────────────────────────
+  // ─── Register — delega todo a Laravel /auth/register ──────────────────────
   static Future<AuthResult> register({
     required String name,
     required String email,
@@ -30,21 +29,9 @@ class AuthService {
     required String password,
   }) async {
     try {
-      // 1. Crear cuenta en Supabase Auth
-      final response = await _supabase.auth.signUp(
-        email: email,
-        password: password,
-      );
-
-      if (response.user == null) {
-        return AuthResult.error(
-          'No se pudo crear la cuenta. Intenta de nuevo.',
-        );
-      }
-
-      // 2. Insertar en tabla users de Laravel
+      // Laravel crea el usuario en Supabase Auth y en la BD local
       final apiResponse = await http.post(
-        Uri.parse('${SupabaseConfig.apiUrl}/users'),
+        Uri.parse('${SupabaseConfig.apiUrl}/auth/register'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'name': name,
@@ -55,14 +42,18 @@ class AuthService {
       );
 
       if (apiResponse.statusCode == 201) {
+        // Iniciar sesión en el cliente Flutter con las mismas credenciales
+        await _supabase.auth.signInWithPassword(
+          email: email,
+          password: password,
+        );
         return AuthResult.success();
       } else {
-        // Si Laravel falla, eliminar el usuario de Supabase para no dejar inconsistencia
-        await _supabase.auth.signOut();
         final body = jsonDecode(apiResponse.body);
-        return AuthResult.error(
-          body['message'] ?? 'Error al guardar el usuario.',
-        );
+        // Laravel devuelve 'message' o 'error'
+        final msg =
+            body['message'] ?? body['error'] ?? 'Error al guardar el usuario.';
+        return AuthResult.error(msg);
       }
     } on AuthException catch (e) {
       return AuthResult.error(_parseSupabaseError(e.message));
@@ -90,7 +81,7 @@ class AuthService {
       return 'Este correo ya está registrado.';
     }
     if (message.contains('Password should be at least')) {
-      return 'La contraseña debe tener al menos 6 caracteres.';
+      return 'La contraseña debe tener al menos 8 caracteres.';
     }
     return message;
   }

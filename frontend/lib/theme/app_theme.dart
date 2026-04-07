@@ -97,8 +97,9 @@ class AppTheme {
   // Botón secundario
   static ButtonStyle get btnLight => ButtonStyle(
     backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-      if (states.contains(WidgetState.disabled))
+      if (states.contains(WidgetState.disabled)) {
         return secondary.withAlpha(128);
+      }
       return secondary;
     }),
     foregroundColor: WidgetStateProperty.all(Colors.white),
