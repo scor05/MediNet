@@ -3,7 +3,7 @@ import 'package:frontend/theme/app_theme.dart';
 import 'package:frontend/widgets/wave_header.dart';
 
 // TODO: descomentar cuando esté lista
-// import 'package:frontend/features/auth/register_screen.dart';
+import 'package:frontend/features/auth/register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -58,7 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Column(
         children: [
           // Header con ola — usando WaveHeader de widgets/wave_header.dart
-          const WaveHeader(title: 'Login'),
+          const WaveHeader(title: 'Login', showBack: true),
 
           // Formulario
           Expanded(
@@ -173,11 +173,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     ElevatedButton(
                       style: AppTheme.btnLight,
                       // TTemporal en lo que termino lista RegisterScreen
-                      // onPressed: () => Navigator.pushReplacement(
-                      //   context,
-                      //   MaterialPageRoute(builder: (_) => const RegisterScreen()),
-                      // ),
-                      onPressed: null,
+                      onPressed: () => Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const RegisterScreen(),
+                        ),
+                      ),
                       child: const Text('Registro'),
                     ),
                   ],
