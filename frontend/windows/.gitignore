@@ -1,17 +1,32 @@
-flutter/ephemeral/
+# Flutter/Dart
+**/generated_plugin_registrant.dart
+**/generated_plugin_registrant.cc
+**/generated_plugins.cmake
+**/GeneratedPluginRegistrant.swift
+**/generated_plugins.gradle
+**/flutter/ephemeral/
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+pubspec.lock
 
-# Visual Studio user-specific files.
+# Supabase credentials — NUNCA subir al repo
+lib/config/supabase_config.dart
+
+# Visual Studio
 *.suo
 *.user
 *.userosscache
 *.sln.docstates
-
-# Visual Studio build-related files.
 x64/
 x86/
-
-# Visual Studio cache files
-# files ending in .cache can be ignored
 *.[Cc]ache
-# but keep track of directories ending in .cache
 !*.[Cc]ache/
+
+# VSCode
+.vscode/
+
+# General
+*.log
+.DS_Store

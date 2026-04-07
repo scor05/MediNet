@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:frontend/theme/app_theme.dart';
+import 'package:frontend/config/supabase_config.dart';
 import 'package:frontend/features/auth/welcome_screen.dart';
 
-// Comentados hasta que estén listos:
-// import 'package:frontend/features/auth/login_screen.dart';
-// import 'package:frontend/features/auth/register_screen.dart';
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-void main() {
+  await Supabase.initialize(
+    url: SupabaseConfig.url,
+    anonKey: SupabaseConfig.anonKey,
+  );
+
   runApp(const MediNetApp());
 }
 
