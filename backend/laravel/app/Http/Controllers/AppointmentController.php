@@ -30,7 +30,8 @@ class AppointmentController extends Controller
     {
         $validated = $request->validate([
             'id_schedule' => 'required|integer|exists:schedules,id',
-            'id_patient' => 'required|integer|exists:users,id',
+            'id_patient' => 'nullable|integer|exists:users,id',
+            'name_patient' => 'required|string',
             'date' => 'required|date',
             'status' => [
                 'required',
@@ -56,6 +57,7 @@ class AppointmentController extends Controller
         $validated = $request->validate([
             'id_schedule' => 'sometimes|integer|exists:schedules,id',
             'id_patient' => 'sometimes|integer|exists:users,id',
+            'name_patient' => 'sometimes|string',
             'date' => 'sometimes|date',
             'status' => [
                 'sometimes',
