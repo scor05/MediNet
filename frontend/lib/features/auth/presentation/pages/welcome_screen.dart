@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:frontend/theme/app_theme.dart';
 import 'package:frontend/widgets/wave_header.dart';
 
-// Temporal en lo que termino todas las pantallas
-import 'package:frontend/features/auth/login_screen.dart';
-import 'package:frontend/features/auth/register_screen.dart';
+// Temporal en lo que se hacen todas las pantallas
+import 'package:frontend/features/auth/presentation/pages/login_screen.dart';
+import 'package:frontend/features/auth/presentation/pages/register_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
