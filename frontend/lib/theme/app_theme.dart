@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 
 class AppTheme {
   // Paleta  MediNet
-  static const Color primary = Color(0xFF0F172A); // botón principal
+  static const Color primary = Color(0xFF1E293B); // botón principal
   static const Color secondary = Color(0xFF2563EB); //botón secundario
-  static const Color background = Color(0xFFE0F2FE); // fondos
-  static const Color accent = Color(0xFF38BDF8); //  header/ola
-  static const Color textPrimary = Color(0xFF334155); // texto principal
+  static const Color background = Color(0xFFF8FAFC); // fondos
+  static const Color accent = Color(0xFF1E293B); //  header/ola
+  static const Color textPrimary = Color(0xFF1E293B); // texto principal
   static const Color textSecondary = Color(
     0xFF64748B,
   ); // texto secundario/hints
-  static const Color border = Color(0xFFBAE6FD); // bordes de campos
-  static const Color error = Color(0xFFE53E5A); // errores
+  static const Color border = Color(0xFF475569); // bordes de campos
+  static const Color error = Color(0xFFDC2626); // errores
 
   static ThemeData get theme => ThemeData(
     useMaterial3: false,

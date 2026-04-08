@@ -101,7 +101,7 @@ class WelcomeScreen extends StatelessWidget {
                             const Text(
                               'MEDINET',
                               style: TextStyle(
-                                color: AppTheme.textPrimary,
+                                color: AppTheme.background,
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: 2,
@@ -111,7 +111,7 @@ class WelcomeScreen extends StatelessWidget {
                             const Text(
                               'Bienvenido',
                               style: TextStyle(
-                                color: AppTheme.textPrimary,
+                                color: AppTheme.background,
                                 fontSize: 32,
                                 fontWeight: FontWeight.w600,
                               ),
