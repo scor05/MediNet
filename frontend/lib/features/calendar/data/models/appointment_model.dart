@@ -18,8 +18,14 @@ class AppointmentModel extends Appointment {
       date: DateTime.parse(json['date']),
       startTime: json['start_time'],
       status: json['status'],
-      patientName: json['patient'] != null ? json['patient']['name'] : (json['name_patient'] ?? 'Desconocido'),
-      clinicName: json['clinic'] != null ? json['clinic']['name'] : (json['schedule'] != null && json['schedule']['clinic'] != null ? json['schedule']['clinic']['name'] : 'Clínica no asignada'),
+      patientName: json['patient'] != null
+          ? json['patient']['name']
+          : (json['name_patient'] ?? 'Desconocido'),
+      clinicName: json['clinic'] != null
+          ? json['clinic']['name']
+          : (json['schedule'] != null && json['schedule']['clinic'] != null
+                ? json['schedule']['clinic']['name']
+                : 'Clínica no asignada'),
     );
   }
 }
