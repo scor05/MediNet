@@ -1,12 +1,12 @@
 import '../entities/appointment.dart';
-import '../repositories/calendar_repository.dart';
+import '../repositories/appointment_repository.dart';
 
 class GetDoctorCalendar {
-  final CalendarRepository repository;
+  final AppointmentRepository repository;
 
   GetDoctorCalendar(this.repository);
 
   Future<List<Appointment>> call({DateTime? dateFrom, DateTime? dateTo}) {
-    return repository.getDoctorCalendar(dateFrom: dateFrom, dateTo: dateTo);
+    return repository.getDoctorAppointments(dateFrom: dateFrom, dateTo: dateTo);
   }
 }
