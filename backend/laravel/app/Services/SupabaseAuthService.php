@@ -45,4 +45,17 @@ class SupabaseAuthService
         return $response->successful() ? $response->json() : null;
     }
 
+    // Iniciar sesión en Supabase Auth para obtener un token
+    public function signIn(string $email, string $password): ?array
+    {
+        $response = Http::withHeaders([
+            'apikey' => $this->anonKey,
+            'Content-Type' => 'application/json',
+        ])->post($this->url . '/auth/v1/token?grant_type=password', [
+                    'email' => $email,
+                    'password' => $password,
+                ]);
+
+        return $response->successful() ? $response->json() : null;
+    }
 }

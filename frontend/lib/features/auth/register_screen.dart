@@ -50,7 +50,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (result.success) {
       // TODO:
-      //temporal en lo que trabajamos el HomeScreen
+      // temporal en lo que trabajamos el HomeScreen
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Cuenta creada exitosamente ✓')),
       );

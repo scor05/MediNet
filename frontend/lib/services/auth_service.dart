@@ -29,7 +29,6 @@ class AuthService {
     required String password,
   }) async {
     try {
-      // Laravel crea el usuario en Supabase Auth y en la BD local
       final apiResponse = await http.post(
         Uri.parse('${SupabaseConfig.apiUrl}/auth/register'),
         headers: {'Content-Type': 'application/json'},
@@ -42,15 +41,14 @@ class AuthService {
       );
 
       if (apiResponse.statusCode == 201) {
-        // Iniciar sesión en el cliente Flutter con las mismas credenciales
-        await _supabase.auth.signInWithPassword(
-          email: email,
-          password: password,
-        );
+        final session = jsonDecode(apiResponse.body);
+
+        // Restore the Supabase session using the tokens from Laravel
+        await _supabase.auth.setSession(session['refresh_token']);
+
         return AuthResult.success();
       } else {
         final body = jsonDecode(apiResponse.body);
-        // Laravel devuelve 'message' o 'error'
         final msg =
             body['message'] ?? body['error'] ?? 'Error al guardar el usuario.';
         return AuthResult.error(msg);
