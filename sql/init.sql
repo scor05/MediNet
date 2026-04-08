@@ -76,7 +76,8 @@ CREATE TABLE schedule_blockades (
 CREATE TABLE appointments (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id_schedule INTEGER NOT NULL,
-    id_patient INTEGER NOT NULL,
+    id_patient INTEGER,
+    name_patient TEXT NOT NULL,
     date DATE NOT NULL,
     status TEXT NOT NULL,
     start_time TIME NOT NULL,
