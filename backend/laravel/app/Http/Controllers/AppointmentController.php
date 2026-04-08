@@ -28,10 +28,17 @@ class AppointmentController extends Controller
     // Se crea una nueva cita
     public function store(Request $request)
     {
+        if (!$request->has('created_by') || !is_numeric($request->input('created_by'))) {
+            $request->merge(['created_by' => $request->user()->id]);
+        }
+        if (!$request->has('updated_by') || !is_numeric($request->input('updated_by'))) {
+            $request->merge(['updated_by' => $request->user()->id]);
+        }
+
         $validated = $request->validate([
             'id_schedule' => 'required|integer|exists:schedules,id',
             'id_patient' => 'nullable|integer|exists:users,id',
-            'name_patient' => 'required|string',
+            'name_patient' => 'required_without:id_patient|string|nullable',
             'date' => 'required|date',
             'status' => [
                 'required',
@@ -54,10 +61,14 @@ class AppointmentController extends Controller
     // Se actualiza una cita
     public function update(Request $request, int $id)
     {
+        if (!$request->has('updated_by') || !is_numeric($request->input('updated_by'))) {
+            $request->merge(['updated_by' => $request->user()->id]);
+        }
+
         $validated = $request->validate([
             'id_schedule' => 'sometimes|integer|exists:schedules,id',
-            'id_patient' => 'sometimes|integer|exists:users,id',
-            'name_patient' => 'sometimes|string',
+            'id_patient' => 'nullable|integer|exists:users,id',
+            'name_patient' => 'nullable|string',
             'date' => 'sometimes|date',
             'status' => [
                 'sometimes',

@@ -13,13 +13,13 @@ return new class extends Migration {
         Schema::create('appointments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('id_schedule')->constrained('schedules');
-            $table->foreignId('id_patient')->constrained('users')->nullable();
+            $table->foreignId('id_patient')->nullable()->constrained('users');
             $table->text('name_patient');
             $table->date('date');
             $table->text('status');
             $table->time('start_time');
             $table->foreignId('created_by')->constrained('users');
-            $table->foreignId('last_updated_by')->constrained('users');
+            $table->foreignId('updated_by')->constrained('users');
             $table->timestamps();
         });
 

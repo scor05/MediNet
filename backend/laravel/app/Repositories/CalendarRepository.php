@@ -13,7 +13,7 @@ class CalendarRepository
             ->join('schedules AS s', 's.id', '=', 'a.id_schedule')
             ->join('clinics AS cl', 'cl.id', '=', 's.id_clinic')
             ->join('users AS doctor', 'doctor.id', '=', 's.id_doctor')
-            ->join('users AS patient', 'patient.id', '=', 'a.id_patient')
+            ->leftJoin('users AS patient', 'patient.id', '=', 'a.id_patient')
             ->select([
                 'a.id',
                 'a.id_schedule',
@@ -22,8 +22,8 @@ class CalendarRepository
                 'a.status',
                 'doctor.id   AS doctor_id',
                 'doctor.name AS doctor_name',
-                'patient.id   AS patient_id',
-                'patient.name AS patient_name',
+                'a.id_patient AS patient_id',
+                DB::raw('COALESCE(patient.name, a.name_patient) AS patient_name'),
                 'cl.id        AS clinic_id',
                 'cl.name      AS clinic_name',
                 'cl.address   AS clinic_address',

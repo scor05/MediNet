@@ -21,7 +21,10 @@ class ScheduleRepository
     // Se obtienen los horarios de un doctor
     public function findByDoctor($doctorId)
     {
-        return Schedule::where('id_doctor', $doctorId)->get();
+        return Schedule::select('schedules.*', 'clinics.name as clinic_name')
+            ->join('clinics', 'schedules.id_clinic', '=', 'clinics.id')
+            ->where('schedules.id_doctor', $doctorId)
+            ->get();
     }
 
     // Se verifica si el doctor ya tiene un horario en ese día y hora
@@ -34,7 +37,7 @@ class ScheduleRepository
             ->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))
             ->where(function ($query) use ($startTime, $endTime) {
                 $query->where('start_time', '<', $endTime)
-                      ->where('end_time', '>', $startTime);
+                    ->where('end_time', '>', $startTime);
             })
             ->exists();
     }
