@@ -5,13 +5,13 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use App\Services\SupabaseAuthService;
+use App\Services\AuthService;
 use App\Models\User;
 
 class SupabaseAuth
 {
     // Se inyecta el servicio
-    public function __construct(private SupabaseAuthService $authService)
+    public function __construct(private AuthService $authService)
     {
     }
 
@@ -44,9 +44,11 @@ class SupabaseAuth
             ], 403);
         }
 
-        // Pasar ambos usuarios en el request para que los controllers los usen
+        // Pasar el usuario de supabase en el request para que los controllers lo use
         $request->attributes->set('supabase_user', $supabaseUser);
-        $request->attributes->set('auth_user', $localUser);
+
+        // Iniciar sesión con el usuario local
+        Auth::setUser($localUser);
 
         return $next($request);
     }

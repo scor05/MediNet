@@ -6,14 +6,7 @@ use Illuminate\Support\Facades\DB;
 
 class CalendarRepository
 {
-    // -------------------------------------------------------------------------
-    // Shared base query
-    // -------------------------------------------------------------------------
-
-    /**
-     * Base query que une appointments → schedules → clinics → users (doctor y patient).
-     * Devuelve un QueryBuilder al que se le pueden encadenar más filtros.
-     */
+    // Query base que une appointments, schedules, clinics y users.Devuelve un QueryBuilder.
     private function baseQuery()
     {
         return DB::table('appointments AS a')
@@ -37,10 +30,7 @@ class CalendarRepository
             ]);
     }
 
-    // -------------------------------------------------------------------------
-    // Doctor calendar  
-    // -------------------------------------------------------------------------
-
+    // Se obtienen todas las citas de un doctor, pudiendose filtrar por cliente, clínica y rango de fechas.
     public function getAppointmentsForDoctor(
         int $doctorId,
         ?int $clientId,
@@ -51,7 +41,7 @@ class CalendarRepository
         $query = $this->baseQuery()
             ->where('s.id_doctor', $doctorId);
 
-        // Filtro por cliente: el doctor debe pertenecer a ese cliente
+        // Filtro por cliente (el doctor debe pertenecer a ese cliente)
         if ($clientId !== null) {
             $query->whereExists(function ($sub) use ($doctorId, $clientId) {
                 $sub->select(DB::raw(1))
@@ -62,15 +52,13 @@ class CalendarRepository
             });
         }
 
+        // Filtros por clínica y rango de fechas
         $this->applyCommonFilters($query, $clinicId, $dateFrom, $dateTo);
 
         return $query->orderBy('a.date')->orderBy('a.start_time')->get()->toArray();
     }
 
-    // -------------------------------------------------------------------------
-    // Secretary calendar  
-    // -------------------------------------------------------------------------
-
+    // Se obtienen todas las citas de una secretaria, pudiendose filtrar por doctor, clínica y rango de fechas.
     public function getAppointmentsForSecretary(
         int $clientId,
         ?int $doctorId,
@@ -83,22 +71,21 @@ class CalendarRepository
             ->join('client_users AS cu', function ($join) use ($clientId) {
                 $join->on('cu.id_user', '=', 's.id_doctor')
                     ->where('cu.id_client', '=', $clientId)
-                    ->where('cu.role', '=', 1);   // 1 = doctor
+                    ->where('cu.role', '=', 1);
             });
 
+        // Filtro por doctor
         if ($doctorId !== null) {
             $query->where('s.id_doctor', $doctorId);
         }
 
+        // Filtros por clínica y rango de fechas
         $this->applyCommonFilters($query, $clinicId, $dateFrom, $dateTo);
 
         return $query->orderBy('a.date')->orderBy('a.start_time')->get()->toArray();
     }
 
-    // -------------------------------------------------------------------------
-    // Patient calendar  
-    // -------------------------------------------------------------------------
-
+    // Se obtienen todas las citas de un paciente, pudiendose filtrar por doctor, clínica y rango de fechas.
     public function getAppointmentsForPatient(
         int $patientId,
         ?int $doctorId,
@@ -108,13 +95,15 @@ class CalendarRepository
     ): array {
         $query = $this->baseQuery()
             ->where('a.id_patient', $patientId)
-            // El paciente solo ve citas aceptadas
+            // El paciente solo ve citas aceptadas o solicitadas
             ->whereIn('a.status', ['accepted', 'requested']);
 
+        // Filtro por doctor
         if ($doctorId !== null) {
             $query->where('s.id_doctor', $doctorId);
         }
 
+        // Filtros por clínica y rango de fechas
         $this->applyCommonFilters($query, $clinicId, $dateFrom, $dateTo);
 
         return $query->orderBy('a.date')->orderBy('a.start_time')->get()->toArray();
@@ -124,9 +113,7 @@ class CalendarRepository
     // Helpers
     // -------------------------------------------------------------------------
 
-    /**
-     * Retorna el client_id al que pertenece un usuario (cualquier rol).
-     */
+    // Retorna el client_id al que pertenece un usuario.
     public function getClientIdForUser(int $userId): ?int
     {
         $row = DB::table('client_users')
@@ -137,9 +124,7 @@ class CalendarRepository
         return $row?->id_client;
     }
 
-    /**
-     * Filtros compartidos entre los tres calendarios.
-     */
+    // Filtros compartidos entre los tres calendarios.
     private function applyCommonFilters(
         &$query,
         ?int $clinicId,

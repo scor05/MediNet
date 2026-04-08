@@ -4,7 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 
-class SupabaseAuthService
+class AuthService
 {
     protected $url;
     protected $anonKey;

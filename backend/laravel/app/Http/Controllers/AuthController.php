@@ -3,13 +3,13 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Services\SupabaseAuthService;
+use App\Services\AuthService;
 use App\Services\UserService;
 
 class AuthController extends Controller
 {
     public function __construct(
-        private SupabaseAuthService $supabaseService,
+        private AuthService $authService,
         private UserService $userService
     ) {
     }
@@ -25,7 +25,7 @@ class AuthController extends Controller
 
         try {
             // Crear en Supabase Auth
-            $supabaseUser = $this->supabaseService->createUser(
+            $supabaseUser = $this->authService->createUser(
                 $validated['email'],
                 $validated['password']
             );
@@ -42,7 +42,7 @@ class AuthController extends Controller
             ]);
 
             // Hacer sign in para obtener el token
-            $session = $this->supabaseService->signIn(
+            $session = $this->authService->signIn(
                 $validated['email'],
                 $validated['password']
             );

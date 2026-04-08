@@ -9,14 +9,13 @@ use Illuminate\Http\JsonResponse;
 
 class CalendarController extends Controller
 {
+    // Se inyecta el servicio
     public function __construct(protected CalendarService $calendarService)
     {
     }
 
-    /** ENDPOINT para que el doctor vea el calendario
-     * GET /api/calendar/doctor
-     */
-    public function doctor(Request $request): JsonResponse
+    // Se obtienen todas las citas de un doctor, con posibilidad de filtrarlas
+    public function doctor(Request $request)
     {
         $request->validate([
             'client_id' => 'nullable|integer|exists:clients,id',
@@ -37,11 +36,8 @@ class CalendarController extends Controller
         return response()->json($appointments);
     }
 
-    /**GET para que la secretaria vea el calendario
-     * GET /api/calendar/secretary
-     *  puede usar filtros opcionales como doctor_id, client_id, clinic_id, date_from, date_to
-     */
-    public function secretary(Request $request): JsonResponse
+    // Se obtienen todas las citas que maneja una secretaria, con posibilidad de filtrarlas
+    public function secretary(Request $request)
     {
         $request->validate([
             'doctor_id' => 'nullable|integer|exists:users,id',
@@ -50,8 +46,10 @@ class CalendarController extends Controller
             'date_to' => 'nullable|date|after_or_equal:date_from',
         ]);
 
+        $secretaryID = $request->user()->id;
+
         $appointments = $this->calendarService->getSecretaryCalendar(
-            secretaryId: $request->user()->id,
+            secretaryId: $secretaryID,
             doctorId: $request->integer('doctor_id') ?: null,
             clinicId: $request->integer('clinic_id') ?: null,
             dateFrom: $request->input('date_from'),
@@ -60,12 +58,8 @@ class CalendarController extends Controller
         return response()->json($appointments);
     }
 
-    /** ENDPOINT para que los pacientes puedan ver el calendario de citas
-     * GET /api/calendar/patient
-     *  puede usar filtros opcionales como doctor_id, clinic_id, date_from, date_to
-     * al menos doctor_id o clinic_id son requeridos
-     */
-    public function patient(Request $request): JsonResponse
+    // Se obtienen todas las citas de un paciente, con posibilidad de filtrarlas
+    public function patient(Request $request)
     {
         $request->validate([
             'doctor_id' => 'nullable|integer|exists:users,id',
@@ -74,9 +68,6 @@ class CalendarController extends Controller
             'date_to' => 'nullable|date|after_or_equal:date_from',
         ]);
 
-        if (!$request->filled('doctor_id') && !$request->filled('clinic_id')) {
-            return response()->json(['message' => 'Al menos doctor_id o clinic_id son requeridos'], 422);
-        }
         $patientId = $request->user()->id;
 
         $appointments = $this->calendarService->getPatientCalendar(

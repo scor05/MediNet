@@ -5,11 +5,12 @@ use App\Repositories\CalendarRepository;
 
 class CalendarService
 {
+    // Se inyecta el repositorio
     public function __construct(protected CalendarRepository $calendarRepository)
     {
     }
-    //get para doctor
 
+    // Se obtienen todas las citas de un doctor, con posibilidad de filtrarlas
     public function getDoctorCalendar(
         int $doctorId,
         ?int $clientId,
@@ -26,8 +27,8 @@ class CalendarService
         );
         return $this->formatAppointments($appointments);
     }
-    //get para secretaria
 
+    // Se obtienen todas las citas que maneja una secretaria, con posibilidad de filtrarlas
     public function getSecretaryCalendar(
         int $secretaryId,
         ?int $doctorId,
@@ -52,7 +53,8 @@ class CalendarService
 
         return $this->formatAppointments($appointments);
     }
-    //get para pacientes
+
+    // Se obtienen todas las citas de un paciente, con posibilidad de filtrarlas
     public function getPatientCalendar(
         int $patientId,
         ?int $doctorId,
