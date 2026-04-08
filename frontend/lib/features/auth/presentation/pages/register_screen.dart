@@ -1,54 +1,88 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/theme/app_theme.dart';
 import 'package:frontend/widgets/wave_header.dart';
-import 'package:frontend/services/auth_service.dart';
-import 'package:frontend/features/auth/register_screen.dart';
+import 'package:frontend/features/auth/data/repositories/auth_repository_impl.dart';
+import 'package:frontend/features/auth/data/datasources/auth_remote_datasource.dart';
+import 'package:frontend/features/auth/domain/usecases/register_usecase.dart';
 
 // TODO: importar HomeScreen cuando esté lista
 // import 'package:frontend/features/home/home_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
+  late final AuthRemoteDatasource dataSource;
+  late final AuthRepositoryImpl repo;
+  late final RegisterUseCase registerUseCase;
+
   bool _obscure = true;
   bool _isLoading = false;
   String? _errorMsg;
 
+  // Inicializa las dependencias
+  @override
+  void initState() {
+    super.initState();
+    dataSource = AuthRemoteDatasource();
+    repo = AuthRepositoryImpl(dataSource);
+    registerUseCase = RegisterUseCase(repo);
+  }
+
+  // Limpia los controladores cuando el widget se destruye
   @override
   void dispose() {
+    _nameCtrl.dispose();
     _emailCtrl.dispose();
+    _phoneCtrl.dispose();
     _passwordCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
+  // Maneja el registro al presionar el botón de registro
+  Future<void> _handleRegister() async {
+    // Si el formulario no es válido, no hace nada
     if (!_formKey.currentState!.validate()) return;
+
+    // Muestra el indicador de carga y limpia el mensaje de error
     setState(() {
       _isLoading = true;
       _errorMsg = null;
     });
 
-    final result = await AuthService.login(
+    // Llama al servicio de autenticación
+    final result = await registerUseCase(
+      name: _nameCtrl.text.trim(),
       email: _emailCtrl.text.trim(),
+      phone: _phoneCtrl.text.trim(),
       password: _passwordCtrl.text,
     );
 
+    // Si la pantalla ya no existe, no hace nada
     if (!mounted) return;
 
+    // Si el registro fue exitoso
     if (result.success) {
       // TODO:
-      //temporal en lo que trabajamos el HomeScreen
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Login exitoso ✓')));
+      // temporal en lo que trabajamos el HomeScreen
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('Cuenta creada exitosamente ✓'),
+            backgroundColor: Color(0xFF16A34A),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
     } else {
       setState(() => _errorMsg = result.error);
     }
@@ -62,7 +96,7 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: AppTheme.background,
       body: Column(
         children: [
-          const WaveHeader(title: 'Login', showBack: true),
+          const WaveHeader(title: 'Crear cuenta', showBack: true),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
@@ -101,6 +135,32 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 16),
                     ],
 
+                    const FieldLabel(label: 'Nombre completo'),
+                    TextFormField(
+                      controller: _nameCtrl,
+                      style: const TextStyle(
+                        color: AppTheme.textPrimary,
+                        fontSize: 14,
+                      ),
+                      decoration: const InputDecoration(
+                        hintText: 'Juan Pérez',
+                        prefixIcon: Icon(
+                          Icons.person_outline,
+                          color: AppTheme.textSecondary,
+                          size: 18,
+                        ),
+                      ),
+                      validator: (v) {
+                        if (v == null || v.isEmpty) return 'Ingresa tu nombre';
+                        if (v.trim().split(' ').length < 2) {
+                          return 'Ingresa nombre y apellido';
+                        }
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 20),
+
                     const FieldLabel(label: 'Correo electrónico'),
                     TextFormField(
                       controller: _emailCtrl,
@@ -112,7 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       decoration: const InputDecoration(
                         hintText: 'correo@ejemplo.com',
                         prefixIcon: Icon(
-                          Icons.person_outline,
+                          Icons.email_outlined,
                           color: AppTheme.textSecondary,
                           size: 18,
                         ),
@@ -120,6 +180,32 @@ class _LoginScreenState extends State<LoginScreen> {
                       validator: (v) {
                         if (v == null || v.isEmpty) return 'Ingresa tu correo';
                         if (!v.contains('@')) return 'Correo inválido';
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    const FieldLabel(label: 'Teléfono'),
+                    TextFormField(
+                      controller: _phoneCtrl,
+                      keyboardType: TextInputType.phone,
+                      style: const TextStyle(
+                        color: AppTheme.textPrimary,
+                        fontSize: 14,
+                      ),
+                      decoration: const InputDecoration(
+                        hintText: '+502 1234 5678',
+                        prefixIcon: Icon(
+                          Icons.phone_outlined,
+                          color: AppTheme.textSecondary,
+                          size: 18,
+                        ),
+                      ),
+                      validator: (v) {
+                        if (v == null || v.isEmpty) {
+                          return 'Ingresa tu teléfono';
+                        }
                         return null;
                       },
                     ),
@@ -154,7 +240,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       validator: (v) {
                         if (v == null || v.isEmpty) {
-                          return 'Ingresa tu contraseña';
+                          return 'Ingresa una contraseña';
                         }
                         if (v.length < 6) return 'Mínimo 6 caracteres';
                         return null;
@@ -165,7 +251,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     ElevatedButton(
                       style: AppTheme.btnDark,
-                      onPressed: _isLoading ? null : _handleLogin,
+                      onPressed: _isLoading ? null : _handleRegister,
                       child: _isLoading
                           ? const SizedBox(
                               height: 20,
@@ -175,21 +261,36 @@ class _LoginScreenState extends State<LoginScreen> {
                                 strokeWidth: 2.5,
                               ),
                             )
-                          : const Text('LOGIN'),
+                          : const Text('Registrarse'),
                     ),
 
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
 
-                    ElevatedButton(
-                      style: AppTheme.btnLight,
-                      onPressed: () => Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const RegisterScreen(),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          'Volver a ',
+                          style: TextStyle(
+                            color: AppTheme.textSecondary,
+                            fontSize: 13,
+                          ),
                         ),
-                      ),
-                      child: const Text('Registro'),
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: const Text(
+                            'Login',
+                            style: TextStyle(
+                              color: AppTheme.secondary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
+
+                    const SizedBox(height: 24),
                   ],
                 ),
               ),
