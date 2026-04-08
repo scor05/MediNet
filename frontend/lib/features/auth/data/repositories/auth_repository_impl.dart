@@ -10,7 +10,10 @@ class AuthRepositoryImpl implements AuthRepository {
 
   // Login (Solo usa SupabaseAuth)
   @override
-  Future<AuthResult> login({required String email, required String password}) async {
+  Future<AuthResult> login({
+    required String email,
+    required String password,
+  }) async {
     try {
       await _datasource.login(email: email, password: password);
       return AuthResult.success();
@@ -39,6 +42,8 @@ class AuthRepositoryImpl implements AuthRepository {
       return AuthResult.success();
     } on AuthException catch (e) {
       return AuthResult.error(_parseSupabaseError(e.message));
+    } on ApiException catch (e) {
+      return AuthResult.error(e.message);
     } catch (e) {
       return AuthResult.error('Error de conexión. Verifica tu internet.');
     }

@@ -13,7 +13,7 @@ class CalendarRepository
             ->join('schedules AS s', 's.id', '=', 'a.id_schedule')
             ->join('clinics AS cl', 'cl.id', '=', 's.id_clinic')
             ->join('users AS doctor', 'doctor.id', '=', 's.id_doctor')
-            ->leftJoin('users AS patient', 'patient.id', '=', 'a.id_patient')
+            ->join('users AS patient', 'patient.id', '=', 'a.id_patient')
             ->select([
                 'a.id',
                 'a.id_schedule',

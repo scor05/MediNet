@@ -5,9 +5,7 @@ import 'package:frontend/features/auth/presentation/pages/register_screen.dart';
 import 'package:frontend/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:frontend/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:frontend/features/auth/domain/usecases/login_usecase.dart';
-
-// TODO: importar HomeScreen cuando esté lista
-// import 'package:frontend/features/home/home_screen.dart';
+import 'package:frontend/features/calendar/presentation/pages/doctor_calendar_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,25 +15,18 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  // Inicializa las dependencias
+  final _loginUsecase = LoginUsecase(
+    AuthRepositoryImpl(AuthRemoteDatasource()),
+  );
+
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
-  late final AuthRemoteDatasource dataSource;
-  late final AuthRepositoryImpl repo;
-  late final LoginUseCase loginUseCase;
 
   bool _obscure = true;
   bool _isLoading = false;
-  String? _errorMsg;
-
-  // Inicializa las dependencias
-  @override
-  void initState() {
-    super.initState();
-    dataSource = AuthRemoteDatasource();
-    repo = AuthRepositoryImpl(dataSource);
-    loginUseCase = LoginUseCase(repo);
-  }
+  String? _error;
 
   // Limpia los controladores cuando el widget se destruye
   @override
@@ -53,11 +44,11 @@ class _LoginScreenState extends State<LoginScreen> {
     // Muestra el indicador de carga y limpia el mensaje de error
     setState(() {
       _isLoading = true;
-      _errorMsg = null;
+      _error = null;
     });
 
     // Llama al servicio de autenticación
-    final result = await loginUseCase(
+    final result = await _loginUsecase(
       email: _emailCtrl.text.trim(),
       password: _passwordCtrl.text,
     );
@@ -65,21 +56,14 @@ class _LoginScreenState extends State<LoginScreen> {
     // Si la pantalla ya no existe, no hace nada
     if (!mounted) return;
 
-    // Si el login fue exitoso
+    // Si el login fue exitoso, navega a la pantalla del calendario
     if (result.success) {
-      // TODO:
-      // temporal en lo que trabajamos el HomeScreen
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(
-            content: Text('Login exitoso ✓'),
-            backgroundColor: Color(0xFF16A34A),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const DoctorCalendarPage()),
+      );
     } else {
-      setState(() => _errorMsg = result.error);
+      setState(() => _error = result.error);
     }
 
     setState(() => _isLoading = false);
@@ -100,7 +84,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (_errorMsg != null) ...[
+                    if (_error != null) ...[
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
@@ -117,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                _errorMsg!,
+                                _error!,
                                 style: const TextStyle(
                                   color: AppTheme.error,
                                   fontSize: 13,
