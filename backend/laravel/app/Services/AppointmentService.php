@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Appointment;
+use App\Models\User;
 use App\Repositories\AppointmentRepository;
 
 class AppointmentService
@@ -32,18 +33,32 @@ class AppointmentService
             $data['date'],
             $data['start_time']
         );
+
+        if (!empty($data['id_patient'])) {
+            $data['name_patient'] = User::find($data['id_patient'])?->name;
+        }
+
         return $this->repository->create($data);
     }
 
     // Se actualiza una cita
-    public function update(int $id, array $data): ?Appointment
+    public function update(int $id, array $data)
     {
-        $this->validateConflict(
-            $data['id_schedule'],
-            $data['date'],
-            $data['start_time'],
-            $id
-        );
+        if (isset($data['id_schedule'], $data['date'], $data['start_time'])) {
+            $this->validateConflict(
+                $data['id_schedule'],
+                $data['date'],
+                $data['start_time'],
+                $id
+            );
+        }
+
+        if (array_key_exists('id_patient', $data)) {
+            if (!empty($data['id_patient'])) {
+                $data['name_patient'] = User::find($data['id_patient'])?->name;
+            }
+        }
+
         return $this->repository->update($id, $data);
     }
 

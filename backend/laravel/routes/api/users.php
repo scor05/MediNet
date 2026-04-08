@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DoctorSpecialtyController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ScheduleController;
 
 Route::prefix('users')->group(function () {
     Route::get('/', [UserController::class, 'index']);
@@ -13,4 +14,6 @@ Route::prefix('users')->group(function () {
     Route::get('/{doctorId}/specialties', [DoctorSpecialtyController::class, 'index']);
     Route::post('/{doctorId}/specialties', [DoctorSpecialtyController::class, 'store']);
     Route::delete('/{doctorId}/specialties/{specialtyId}', [DoctorSpecialtyController::class, 'destroy']);
+
+    Route::get('/{doctorId}/schedules', [ScheduleController::class, 'indexByDoctor']);
 });

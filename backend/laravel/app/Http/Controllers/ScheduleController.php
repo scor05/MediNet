@@ -25,22 +25,28 @@ class ScheduleController extends Controller
     }
 
     // Se obtienen los horarios de un doctor
-    public function indexByDoctor($doctorId)
+    public function indexByDoctor(Request $request, $doctorId)
     {
+        if ($doctorId === 'me' || !is_numeric($doctorId)) {
+            $doctorId = $request->user()->id;
+        }
         return response()->json($this->service->getByDoctor($doctorId));
     }
 
     // Se crea un nuevo horario
     public function store(Request $request)
     {
+        if (!$request->has('id_doctor') || !is_numeric($request->input('id_doctor'))) {
+            $request->merge(['id_doctor' => $request->user()->id]);
+        }
+
         $validated = $request->validate([
-            'id_doctor'   => 'required|integer|exists:users,id',
-            'id_clinic'   => 'required|integer|exists:clinics,id',
+            'id_doctor' => 'required|integer|exists:users,id',
+            'id_clinic' => 'required|integer|exists:clinics,id',
             'day_of_week' => 'required|integer|between:0,6',
-            'start_time'  => 'required|date_format:H:i',
-            'end_time'    => 'required|date_format:H:i|after:start_time',
-            'duration'    => 'required|integer|min:1',
-            'is_active'   => 'sometimes|boolean',
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i|after:start_time',
+            'duration' => 'required|integer|min:1'
         ]);
 
         return response()->json($this->service->create($validated), 201);
@@ -51,10 +57,10 @@ class ScheduleController extends Controller
     {
         $validated = $request->validate([
             'day_of_week' => 'sometimes|integer|between:0,6',
-            'start_time'  => 'sometimes|date_format:H:i',
-            'end_time'    => 'sometimes|date_format:H:i|after:start_time',
-            'duration'    => 'sometimes|integer|min:1',
-            'is_active'   => 'sometimes|boolean',
+            'start_time' => 'sometimes|date_format:H:i',
+            'end_time' => 'sometimes|date_format:H:i|after:start_time',
+            'duration' => 'sometimes|integer|min:1',
+            'is_active' => 'sometimes|boolean'
         ]);
 
         return response()->json($this->service->update($id, $validated));
