@@ -1,10 +1,10 @@
 import '../repositories/auth_repository.dart';
 import '../results/auth_result.dart';
 
-class RegisterUseCase {
+class RegisterUsecase {
   final AuthRepository repository;
 
-  RegisterUseCase(this.repository);
+  RegisterUsecase(this.repository);
 
   Future<AuthResult> call({
     required String email,

@@ -1,10 +1,10 @@
 import '../repositories/auth_repository.dart';
 import '../results/auth_result.dart';
 
-class LoginUseCase {
+class LoginUsecase {
   final AuthRepository repository;
 
-  LoginUseCase(this.repository);
+  LoginUsecase(this.repository);
 
   Future<AuthResult> call({
     required String email,
@@ -14,9 +14,6 @@ class LoginUseCase {
       return AuthResult.error('Correo y contraseña son obligatorios.');
     }
 
-    return await repository.login(
-      email: email.trim(),
-      password: password,
-    );
+    return await repository.login(email: email.trim(), password: password);
   }
 }

@@ -47,8 +47,8 @@ class SupabaseAuth
         // Pasar el usuario de supabase en el request para que los controllers lo use
         $request->attributes->set('supabase_user', $supabaseUser);
 
-        // Iniciar sesión con el usuario local
-        Auth::setUser($localUser);
+        // Vincular el usuario local directamente al request (stateless, sin sesión)
+        $request->setUserResolver(fn() => $localUser);
 
         return $next($request);
     }

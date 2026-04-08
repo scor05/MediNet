@@ -32,11 +32,31 @@ class AuthRemoteDatasource {
       await _supabase.auth.setSession(session['refresh_token']);
     } else {
       final body = jsonDecode(apiResponse.body);
-      throw Exception(body['message'] ?? body['error'] ?? 'Error al registrar usuario.');
+      
+      if (body['errors'] != null && body['errors'] is Map) {
+        final errors = body['errors'] as Map<String, dynamic>;
+        if (errors.containsKey('email')) {
+          throw ApiException(errors['email'][0].toString());
+        }
+        final firstError = errors.values.first;
+        if (firstError != null && firstError is List && firstError.isNotEmpty) {
+          throw ApiException(firstError[0].toString());
+        }
+      }
+      
+      throw ApiException(body['message'] ?? body['error'] ?? 'Error al registrar usuario.');
     }
   }
 
   Future<void> logout() async {
     await _supabase.auth.signOut();
   }
+}
+
+class ApiException implements Exception {
+  final String message;
+  ApiException(this.message);
+
+  @override
+  String toString() => message;
 }

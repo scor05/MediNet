@@ -4,9 +4,7 @@ import 'package:frontend/widgets/wave_header.dart';
 import 'package:frontend/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:frontend/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:frontend/features/auth/domain/usecases/register_usecase.dart';
-
-// TODO: importar HomeScreen cuando esté lista
-// import 'package:frontend/features/home/home_screen.dart';
+import 'package:frontend/features/calendar/presentation/pages/doctor_calendar_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -16,27 +14,20 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  // Inicializa las dependencias
+  final _registerUsecase = RegisterUsecase(
+    AuthRepositoryImpl(AuthRemoteDatasource()),
+  );
+
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
-  late final AuthRemoteDatasource dataSource;
-  late final AuthRepositoryImpl repo;
-  late final RegisterUseCase registerUseCase;
 
   bool _obscure = true;
   bool _isLoading = false;
-  String? _errorMsg;
-
-  // Inicializa las dependencias
-  @override
-  void initState() {
-    super.initState();
-    dataSource = AuthRemoteDatasource();
-    repo = AuthRepositoryImpl(dataSource);
-    registerUseCase = RegisterUseCase(repo);
-  }
+  String? _error;
 
   // Limpia los controladores cuando el widget se destruye
   @override
@@ -56,11 +47,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     // Muestra el indicador de carga y limpia el mensaje de error
     setState(() {
       _isLoading = true;
-      _errorMsg = null;
+      _error = null;
     });
 
     // Llama al servicio de autenticación
-    final result = await registerUseCase(
+    final result = await _registerUsecase(
       name: _nameCtrl.text.trim(),
       email: _emailCtrl.text.trim(),
       phone: _phoneCtrl.text.trim(),
@@ -70,21 +61,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
     // Si la pantalla ya no existe, no hace nada
     if (!mounted) return;
 
-    // Si el registro fue exitoso
+    // Si el registro fue exitoso, navega a la pantalla del calendario
     if (result.success) {
-      // TODO:
-      // temporal en lo que trabajamos el HomeScreen
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(
-            content: Text('Cuenta creada exitosamente ✓'),
-            backgroundColor: Color(0xFF16A34A),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const DoctorCalendarPage()),
+      );
     } else {
-      setState(() => _errorMsg = result.error);
+      setState(() => _error = result.error);
     }
 
     setState(() => _isLoading = false);
@@ -105,7 +89,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (_errorMsg != null) ...[
+                    if (_error != null) ...[
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
@@ -122,7 +106,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                _errorMsg!,
+                                _error!,
                                 style: const TextStyle(
                                   color: AppTheme.error,
                                   fontSize: 13,
@@ -242,7 +226,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         if (v == null || v.isEmpty) {
                           return 'Ingresa una contraseña';
                         }
-                        if (v.length < 6) return 'Mínimo 6 caracteres';
+                        if (v.length < 6) return 'Mínimo 8 caracteres';
                         return null;
                       },
                     ),
