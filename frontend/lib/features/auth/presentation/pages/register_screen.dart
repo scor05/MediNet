@@ -226,7 +226,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         if (v == null || v.isEmpty) {
                           return 'Ingresa una contraseña';
                         }
-                        if (v.length < 6) return 'Mínimo 8 caracteres';
+                        if (v.length < 8) return 'Mínimo 8 caracteres';
                         return null;
                       },
                     ),
