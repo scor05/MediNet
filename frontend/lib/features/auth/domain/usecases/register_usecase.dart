@@ -12,13 +12,6 @@ class RegisterUsecase {
     required String name,
     required String phone,
   }) async {
-    if (email.trim().isEmpty ||
-        password.trim().isEmpty ||
-        name.trim().isEmpty ||
-        phone.trim().isEmpty) {
-      return AuthResult.error('Todos los campos son obligatorios.');
-    }
-
     return await repository.register(
       email: email.trim(),
       password: password,

@@ -29,10 +29,7 @@ class AppointmentCard extends StatelessWidget {
               appointment.startTime,
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
             ),
-            Text(
-              appointment.patientName!,
-              style: const TextStyle(fontSize: 11),
-            ),
+            Text(appointment.patientName, style: const TextStyle(fontSize: 11)),
             Text(
               appointment.clinicName,
               style: const TextStyle(fontSize: 10, color: Colors.black54),

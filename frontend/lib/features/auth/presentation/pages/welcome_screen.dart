@@ -144,8 +144,6 @@ class WelcomeScreen extends StatelessWidget {
               children: [
                 ElevatedButton(
                   style: AppTheme.btnDark,
-                  // TODO:
-                  //falta poner la logica de supabase
                   onPressed: () => Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -156,7 +154,6 @@ class WelcomeScreen extends StatelessWidget {
                 const SizedBox(height: 12),
                 ElevatedButton(
                   style: AppTheme.btnLight,
-                  // TODO: descomentar cuando esté lista RegisterScreen
                   onPressed: () => Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const RegisterScreen()),
