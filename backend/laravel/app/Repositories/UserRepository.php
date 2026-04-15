@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 class UserRepository
 {
@@ -35,6 +36,18 @@ class UserRepository
     // Se elimina un usuario
     public function delete($id)
     {
-        User::findOrFail($id)->delete();
+        $user = User::findOrFail($id);
+        $user->delete();
+    }
+
+    // Retorna el client_id al que pertenece un usuario.
+    public function getClientIdForUser(int $userId): ?int
+    {
+        $client = DB::table('client_users')
+            ->where('id_user', $userId)
+            ->where('is_active', true)
+            ->first(['id_client']);
+
+        return $client?->id_client;
     }
 }

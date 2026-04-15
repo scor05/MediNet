@@ -28,10 +28,10 @@ class ClinicController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'    => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'address' => 'required|string',
-            'phone'   => 'required|string|unique:clinics,phone',
-            'email'   => 'required|email|unique:clinics,email',
+            'phone' => 'required|string|unique:clinics,phone',
+            'email' => 'required|email|unique:clinics,email',
         ]);
 
         return response()->json($this->service->create($validated), 201);
@@ -41,10 +41,10 @@ class ClinicController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'name'    => 'string|max:255',
-            'address' => 'string',
-            'phone'   => 'string|unique:clinics,phone,' . $id,
-            'email'   => 'email|unique:clinics,email,' . $id,
+            'name' => 'sometimes|string|max:255',
+            'address' => 'sometimes|string',
+            'phone' => 'sometimes|string|unique:clinics,phone,' . $id,
+            'email' => 'sometimes|email|unique:clinics,email,' . $id,
         ]);
 
         return response()->json($this->service->update($id, $validated));

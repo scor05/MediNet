@@ -38,4 +38,12 @@ class ClientUserRepository
             ->firstOrFail()
             ->delete();
     }
+
+    // Se obtiene una fila de la tabla si un cliente específico tiene asignado a un usuario específico
+    public function findClientUser(int $clientId, int $userId)
+    {
+        return ClientUser::where('id_client', $clientId)
+            ->where('id_user', $userId)
+            ->first();
+    }
 }

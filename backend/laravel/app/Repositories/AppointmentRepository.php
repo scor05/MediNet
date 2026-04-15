@@ -35,11 +35,12 @@ class AppointmentRepository
     // Se elimina una cita
     public function delete(int $id)
     {
-        Appointment::destroy($id);
+        $appointment = Appointment::findOrFail($id);
+        $appointment->delete();
     }
 
-    // Se busca si existe una cita en conflicto (mismo horario, misma fecha, mismo schedule)
-    public function findConflict(
+    // Se busca si existe una cita en una hora, fecha y schedule
+    public function findAppointment(
         int $idSchedule,
         string $date,
         string $startTime,

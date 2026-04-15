@@ -28,7 +28,7 @@ class SpecialtyController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'specialty' => 'required|string|max:255',
+            'specialty' => 'required|string|max:255|unique:specialties,specialty',
         ]);
         return response()->json($this->service->create($validated), 201);
     }
@@ -37,7 +37,7 @@ class SpecialtyController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'specialty' => 'string|max:255',
+            'specialty' => 'required|string|max:255|unique:specialties,specialty',
         ]);
         return response()->json($this->service->update($id, $validated));
     }

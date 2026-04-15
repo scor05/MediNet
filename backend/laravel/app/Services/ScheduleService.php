@@ -12,10 +12,10 @@ class ScheduleService
     {
     }
 
-    // Se obtienen todos los horarios
-    public function getAll()
+    // Se obtienen los horarios de un doctor
+    public function getByDoctor($doctorId)
     {
-        return $this->repository->findAll();
+        return $this->repository->findByDoctor($doctorId);
     }
 
     // Se obtiene un horario por su ID
@@ -24,27 +24,15 @@ class ScheduleService
         return $this->repository->findById($id);
     }
 
-    // Se obtienen los horarios de un doctor
-    public function getByDoctor($doctorId)
-    {
-        return $this->repository->findByDoctor($doctorId);
-    }
-
     // Se crea un nuevo horario validando que el doctor no tenga conflicto de horario
     public function create($data)
     {
-        $conflict = $this->repository->hasConflict(
+        $this->validateConflict(
             $data['id_doctor'],
             $data['day_of_week'],
             $data['start_time'],
             $data['end_time']
         );
-
-        if ($conflict) {
-            throw ValidationException::withMessages([
-                'schedule' => 'El doctor ya tiene un horario en ese día y hora.'
-            ]);
-        }
 
         return $this->repository->create($data);
     }
@@ -52,22 +40,24 @@ class ScheduleService
     // Se actualiza un horario validando que no haya conflicto
     public function update($id, $data)
     {
-        if (isset($data['day_of_week']) || isset($data['start_time']) || isset($data['end_time'])) {
-            $current = $this->repository->findById($id);
+        $schedule = $this->repository->findById($id);
 
-            $conflict = $this->repository->hasConflict(
-                $current->id_doctor,
-                $data['day_of_week'] ?? $current->day_of_week,
-                $data['start_time']  ?? $current->start_time,
-                $data['end_time']    ?? $current->end_time,
+        $idDoctor = $schedule->id_doctor;
+        $dayOfWeek = $schedule->dayOfWeek;
+        $startTime = $data['start_time'] ?? $schedule->start_time;
+        $endTime = $data['end_time'] ?? $schedule->end_time;
+
+        if (
+            array_key_exists('start_time', $data) ||
+            array_key_exists('end_time', $data)
+        ) {
+            $this->validateConflict(
+                $idDoctor,
+                $dayOfWeek,
+                $startTime,
+                $endTime,
                 $id
             );
-
-            if ($conflict) {
-                throw ValidationException::withMessages([
-                    'schedule' => 'El doctor ya tiene un horario en ese día y hora.'
-                ]);
-            }
         }
 
         return $this->repository->update($id, $data);
@@ -77,5 +67,28 @@ class ScheduleService
     public function delete($id)
     {
         $this->repository->delete($id);
+    }
+
+    private function validateConflict(
+        int $doctorId,
+        int $dayOfWeek,
+        string $startTime,
+        string $endTime,
+        ?int $excludeId = null
+    ): void {
+        $conflict = $this->repository->findOverlappingSchedule(
+            $doctorId,
+            $dayOfWeek,
+            $startTime,
+            $endTime,
+            $excludeId
+        );
+
+        if ($conflict) {
+            throw ValidationException::withMessages([
+                'start_time' => ['Ya existe un horario en ese día y hora.'],
+                'end_time' => ['Ya existe un horario en ese día y hora.'],
+            ]);
+        }
     }
 }

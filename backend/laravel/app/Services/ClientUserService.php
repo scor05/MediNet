@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Repositories\ClientUserRepository;
+use Illuminate\Validation\ValidationException;
 
 class ClientUserService
 {
@@ -20,6 +21,8 @@ class ClientUserService
     // Se crea una nueva asignación de usuario a un cliente
     public function create($clientId, $data)
     {
+        $this->validateConflict($clientId, $data["id_user"]);
+
         return $this->repository->create([
             'id_client' => $clientId,
             'id_user' => $data['id_user'],
@@ -39,5 +42,22 @@ class ClientUserService
     public function delete($clientId, $userId)
     {
         $this->repository->delete($clientId, $userId);
+    }
+
+    // Se verifica si un cliente ya tiene asignado a un usuario
+    private function validateConflict(
+        int $clientId,
+        int $userId,
+    ): void {
+        $conflict = $this->repository->findClientUser(
+            $clientId,
+            $userId,
+        );
+
+        if ($conflict) {
+            throw ValidationException::withMessages([
+                'user' => ['El cliente ya tiene asignado a este usuario'],
+            ]);
+        }
     }
 }

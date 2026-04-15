@@ -26,6 +26,7 @@ class AppointmentRemoteDatasource {
     final response = await http.get(
       uri,
       headers: {
+        'Accept': 'application/json',
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
       },
@@ -57,6 +58,7 @@ class AppointmentRemoteDatasource {
     final response = await http.post(
       Uri.parse('${AppConfig.apiUrl}/appointments'),
       headers: {
+        'Accept': 'application/json',
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
       },

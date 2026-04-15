@@ -12,25 +12,16 @@ class ScheduleController extends Controller
     {
     }
 
-    // Se obtienen todos los horarios
-    public function index()
+    // Se obtienen los horarios de un doctor
+    public function index(Request $request, $doctorId)
     {
-        return response()->json($this->service->getAll());
+        return response()->json($this->service->getByDoctor($doctorId));
     }
 
     // Se obtiene un horario por su ID
     public function show($id)
     {
         return response()->json($this->service->getById($id));
-    }
-
-    // Se obtienen los horarios de un doctor
-    public function indexByDoctor(Request $request, $doctorId)
-    {
-        if ($doctorId === 'me' || !is_numeric($doctorId)) {
-            $doctorId = $request->user()->id;
-        }
-        return response()->json($this->service->getByDoctor($doctorId));
     }
 
     // Se crea un nuevo horario
@@ -46,7 +37,7 @@ class ScheduleController extends Controller
             'day_of_week' => 'required|integer|between:0,6',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
-            'duration' => 'required|integer|min:1'
+            'duration' => 'required|integer|min:10'
         ]);
 
         return response()->json($this->service->create($validated), 201);
@@ -56,10 +47,9 @@ class ScheduleController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'day_of_week' => 'sometimes|integer|between:0,6',
             'start_time' => 'sometimes|date_format:H:i',
             'end_time' => 'sometimes|date_format:H:i|after:start_time',
-            'duration' => 'sometimes|integer|min:1',
+            'duration' => 'sometimes|integer|min:10',
             'is_active' => 'sometimes|boolean'
         ]);
 

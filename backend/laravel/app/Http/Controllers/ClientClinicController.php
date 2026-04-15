@@ -31,7 +31,7 @@ class ClientClinicController extends Controller
     public function update(Request $request, $clientId, $clinicId)
     {
         $validated = $request->validate([
-            'is_active' => 'boolean',
+            'is_active' => 'required|boolean',
         ]);
         return response()->json($this->service->update($clientId, $clinicId, $validated));
     }

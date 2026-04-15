@@ -38,9 +38,9 @@ class ClientController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'nit' => 'string|max:20',
-            'name' => 'string|max:255',
-            'is_active' => 'boolean',
+            'nit' => 'sometimes|string|max:20',
+            'name' => 'sometimes|string|max:255',
+            'is_active' => 'somtimes|boolean',
         ]);
         return response()->json($this->service->update($id, $validated));
     }

@@ -11,7 +11,10 @@ class ScheduleRemoteDatasource {
     // Asumiendo que el backend maneja "me" correctamente
     final response = await http.get(
       Uri.parse('${AppConfig.apiUrl}/users/me/schedules'),
-      headers: {'Authorization': 'Bearer $token'},
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
     );
 
     if (response.statusCode == 200) {
@@ -34,6 +37,7 @@ class ScheduleRemoteDatasource {
     final response = await http.post(
       Uri.parse('${AppConfig.apiUrl}/schedules'),
       headers: {
+        'Accept': 'application/json',
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
       },
