@@ -1,8 +1,9 @@
 <?php
 
 namespace App\Models;
+use Illuminate\Database\Eloquent\Model;
 
-class ClientClinic extends BaseModel
+class ClientClinic extends Model
 {
     // Se desactiva el id autoincremental porque la llave primaria es compuesta
     public $incrementing = false;

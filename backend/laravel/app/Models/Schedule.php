@@ -1,8 +1,9 @@
 <?php
 
 namespace App\Models;
+use Illuminate\Database\Eloquent\Model;
 
-class Schedule extends BaseModel
+class Schedule extends Model
 {
     protected $table = 'schedules';
 
