@@ -40,4 +40,9 @@ class UserService
     {
         $this->repository->delete($id);
     }
+
+    public function getProfile($id)
+    {
+        return $this->repository->getProfile($id);
+    }
 }

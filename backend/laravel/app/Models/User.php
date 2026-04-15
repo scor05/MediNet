@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\ClientUser;
+use App\Models\DoctorSpecialty;
 use Illuminate\Database\Eloquent\Model;
 
 class User extends Model
@@ -18,4 +20,14 @@ class User extends Model
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
+    public function clientUsers()
+    {
+        return $this->hasMany(ClientUser::class, 'id_user');
+    }
+
+    public function doctorSpecialties()
+    {
+        return $this->hasMany(DoctorSpecialty::class, 'id_doctor');
+    }
 }

@@ -45,4 +45,13 @@ class UserController extends Controller
         $this->service->delete($id);
         return response()->json(null, 204);
     }
+
+
+    // Endpoint GET /profile
+    public function profile(Request $request)
+    {
+        return response()->json(
+            $this->service->getProfile($request->user()->id)
+        );
+    }
 }
