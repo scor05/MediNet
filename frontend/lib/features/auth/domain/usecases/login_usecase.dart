@@ -10,10 +10,6 @@ class LoginUsecase {
     required String email,
     required String password,
   }) async {
-    if (email.trim().isEmpty || password.trim().isEmpty) {
-      return AuthResult.error('Correo y contraseña son obligatorios.');
-    }
-
     return await repository.login(email: email.trim(), password: password);
   }
 }

@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_datasource.dart';
 import '../../domain/results/auth_result.dart';
+import 'package:frontend/core/exceptions/api_exception.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDatasource _datasource;
@@ -45,7 +46,7 @@ class AuthRepositoryImpl implements AuthRepository {
     } on ApiException catch (e) {
       return AuthResult.error(e.message);
     } catch (e) {
-      return AuthResult.error('Error de conexión. Verifica tu internet.');
+      return AuthResult.error('Error inesperado. Intenta de nuevo.');
     }
   }
 

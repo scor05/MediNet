@@ -44,7 +44,6 @@ class _CreateAppointmentDialogState extends State<CreateAppointmentDialog> {
     ('accepted', 'Aceptada'),
   ];
 
-  static const _days = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
   static const _daysFull = [
     'Lunes',
     'Martes',
@@ -143,7 +142,8 @@ class _CreateAppointmentDialogState extends State<CreateAppointmentDialog> {
       final created = await _createAppointmentUsecase(
         idSchedule: _selectedSchedule!.id,
         date: _fmtDate(_selectedDate!),
-        startTime: '$_selectedTime:00', // Agregamos los segundos para pasar validación H:i:s
+        startTime:
+            '$_selectedTime:00', // Agregamos los segundos para pasar validación H:i:s
         patientName: _patientCtrl.text.trim(),
         status: _status,
       );
