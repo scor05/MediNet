@@ -2,9 +2,7 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class DoctorSpecialty extends Model
+class DoctorSpecialty extends BaseModel
 {
     // Se desactiva el id autoincremental porque la llave primaria es compuesta
     public $incrementing = false;
