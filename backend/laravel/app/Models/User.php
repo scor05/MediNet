@@ -4,8 +4,9 @@ namespace App\Models;
 
 use App\Models\ClientUser;
 use App\Models\DoctorSpecialty;
+use Illuminate\Database\Eloquent\Model;
 
-class User extends BaseModel
+class User extends Model
 {
     // Columnas de la tabla en la base de datos
     protected $fillable = [
