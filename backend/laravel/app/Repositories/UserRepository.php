@@ -37,4 +37,72 @@ class UserRepository
     {
         User::findOrFail($id)->delete();
     }
+
+    // Endpoint GET /profile
+    public function getProfile($id)
+    {
+        $user = User::with([
+            'clientUsers.client',
+            'doctorSpecialties.specialty',
+        ])->findOrFail($id);
+
+        $memberships = $user->clientUsers->map(function ($clientUser) {
+            return [
+                'client_id' => $clientUser->id_client,
+                'client_name' => $clientUser->client?->name,
+                'role' => $clientUser->role,
+                'role_name' => $this->mapRole($clientUser->role),
+                'is_admin' => $clientUser->is_admin,
+                'is_active' => $clientUser->is_active,
+            ];
+        })->values();
+
+        $activeMemberships = $memberships->where('is_active', true)->values();
+
+        $isDoctor = $activeMemberships->contains('role_name', 'doctor')
+            || $user->doctorSpecialties->isNotEmpty();
+
+        $isSecretary = $activeMemberships->contains('role_name', 'secretary');
+
+        $adminOf = $activeMemberships
+            ->where('is_admin', true)
+            ->map(function ($membership) {
+                return [
+                    'client_id' => $membership['client_id'],
+                    'client_name' => $membership['client_name'],
+                ];
+            })
+            ->unique('client_id')
+            ->values();
+
+        $specialties = $user->doctorSpecialties->map(function ($doctorSpecialty) {
+            return [
+                'id' => $doctorSpecialty->id_specialty,
+                'name' => $doctorSpecialty->specialty?->specialty,
+            ];
+        })->values();
+
+        // $superAdmin = SuperAdmin::findOrFail($id);
+
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'is_active' => $user->is_active,
+            'is_doctor' => $isDoctor,
+            'is_secretary' => $isSecretary,
+            'admin_of' => $adminOf,
+            // 'superadmin' => true,  TODO: falta implementar tabla superadmin
+        ];
+    }
+
+    private function mapRole(int $role): ?string
+    {
+        return match ($role) {
+            0 => 'secretary',
+            1 => 'doctor',
+            default => null,
+        };
+    }
 }

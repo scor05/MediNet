@@ -5,6 +5,8 @@ use App\Http\Controllers\DoctorSpecialtyController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ScheduleController;
 
+Route::get('/profile', [UserController::class, 'profile']);
+
 Route::prefix('users')->group(function () {
     Route::get('/', [UserController::class, 'index']);
     Route::get('/{id}', [UserController::class, 'show']);

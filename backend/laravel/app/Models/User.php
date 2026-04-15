@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Models\ClientUser;
+use App\Models\DoctorSpecialty;
 
-class User extends Model
+class User extends BaseModel
 {
     // Columnas de la tabla en la base de datos
     protected $fillable = [
@@ -18,4 +19,14 @@ class User extends Model
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
+    public function clientUsers()
+    {
+        return $this->hasMany(ClientUser::class, 'id_user');
+    }
+
+    public function doctorSpecialties()
+    {
+        return $this->hasMany(DoctorSpecialty::class, 'id_doctor');
+    }
 }

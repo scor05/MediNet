@@ -2,9 +2,7 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class Specialty extends Model
+class Specialty extends BaseModel
 {
     // Se desactivan los timestamps porque esta tabla no los usa
     public $timestamps = false;
