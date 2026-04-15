@@ -35,6 +35,7 @@ class SpecialtyRepository
     // Se elimina una especialidad
     public function delete($id)
     {
-        Specialty::destroy($id);
+        $specialty = Specialty::findOrFail($id);
+        $specialty->delete();
     }
 }

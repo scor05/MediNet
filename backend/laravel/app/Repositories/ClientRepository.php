@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use App\Models\Client;
 
 class ClientRepository
@@ -35,6 +36,7 @@ class ClientRepository
     // Se elimina un cliente
     public function delete($id)
     {
-        Client::destroy($id);
+        $client = Client::findOrFail($id);
+        $client->delete();
     }
 }

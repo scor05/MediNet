@@ -2,14 +2,14 @@
 
 namespace App\Services;
 
-use App\Models\Appointment;
-use App\Models\User;
 use App\Repositories\AppointmentRepository;
+use App\Services\UserService;
+use Illuminate\Validation\ValidationException;
 
 class AppointmentService
 {
     // Se inyecta el repositorio
-    public function __construct(private AppointmentRepository $repository)
+    public function __construct(private AppointmentRepository $repository, private UserService $userService)
     {
     }
 
@@ -34,8 +34,8 @@ class AppointmentService
             $data['start_time']
         );
 
-        if (!empty($data['id_patient'])) {
-            $data['name_patient'] = User::find($data['id_patient'])?->name;
+        if ($data['id_patient'] !== null) {
+            $data['name_patient'] = $this->userService->getById($data['id_patient'])?->name;
         }
 
         return $this->repository->create($data);
@@ -44,19 +44,26 @@ class AppointmentService
     // Se actualiza una cita
     public function update(int $id, array $data)
     {
-        if (isset($data['id_schedule'], $data['date'], $data['start_time'])) {
+        $appointment = $this->repository->findById($id);
+
+        $idSchedule = $appointment->id_schedule;
+        $date = $data['date'] ?? $appointment->date;
+        $startTime = $data['start_time'] ?? $appointment->start_time;
+
+        if (
+            array_key_exists('date', $data) ||
+            array_key_exists('start_time', $data)
+        ) {
             $this->validateConflict(
-                $data['id_schedule'],
-                $data['date'],
-                $data['start_time'],
+                $idSchedule,
+                $date,
+                $startTime,
                 $id
             );
         }
 
         if (array_key_exists('id_patient', $data)) {
-            if (!empty($data['id_patient'])) {
-                $data['name_patient'] = User::find($data['id_patient'])?->name;
-            }
+            $data['name_patient'] = $this->userService->getById($data['id_patient'])?->name;
         }
 
         return $this->repository->update($id, $data);
@@ -68,14 +75,14 @@ class AppointmentService
         $this->repository->delete($id);
     }
 
-    // Se valida el conflicto de una cita (lógica pura, sin queries directos)
+    // Se valida si la cita por crear/actualizar no genera conflictos
     private function validateConflict(
         int $idSchedule,
         string $date,
         string $startTime,
         ?int $ignoreAppointmentId = null
     ): void {
-        $conflict = $this->repository->findConflict(
+        $conflict = $this->repository->findAppointment(
             $idSchedule,
             $date,
             $startTime,
@@ -83,7 +90,9 @@ class AppointmentService
         );
 
         if ($conflict) {
-            throw new \RuntimeException('Ya existe una cita en ese horario');
+            throw ValidationException::withMessages([
+                'start_time' => ['Ya existe una cita en ese horario'],
+            ]);
         }
     }
 }

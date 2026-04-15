@@ -38,4 +38,12 @@ class ClientClinicRepository
             ->firstOrFail()
             ->delete();
     }
+
+    // Se obtiene una fila de la tabla si un cliente específico tiene asignada a una clínica específica
+    public function findClientClinic(int $clientId, int $clinicId)
+    {
+        return ClientClinic::where('id_client', $clientId)
+            ->where('id_clinic', $clinicId)
+            ->first();
+    }
 }

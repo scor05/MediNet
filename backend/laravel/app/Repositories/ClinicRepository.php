@@ -35,6 +35,7 @@ class ClinicRepository
     // Se elimina una clínica
     public function delete($id)
     {
-        Clinic::findOrFail($id)->delete();
+        $clinic = Clinic::findOrFail($id);
+        $clinic->delete();
     }
 }

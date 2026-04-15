@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Repositories\UserRepository;
-use Illuminate\Support\Facades\Hash;
 
 class UserService
 {

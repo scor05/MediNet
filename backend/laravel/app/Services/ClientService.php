@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Repositories\ClientRepository;
+use Illuminate\Validation\ValidationException;
 
 class ClientService
 {
@@ -32,6 +33,12 @@ class ClientService
     // Se actualiza un cliente
     public function update($id, $data)
     {
+        if (empty($data)) {
+            throw ValidationException::withMessages([
+                'data' => ['No fields provided for update.'],
+            ]);
+        }
+
         return $this->repository->update($id, $data);
     }
 

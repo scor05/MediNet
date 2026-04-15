@@ -2,11 +2,13 @@
 
 namespace App\Services;
 use App\Repositories\CalendarRepository;
+use App\Repositories\UserRepository;
+use RuntimeException;
 
 class CalendarService
 {
     // Se inyecta el repositorio
-    public function __construct(protected CalendarRepository $calendarRepository)
+    public function __construct(protected CalendarRepository $calendarRepository, protected UserRepository $userRepository)
     {
     }
 
@@ -37,10 +39,10 @@ class CalendarService
         ?string $dateTo,
     ): array {
         // La secretaria ve las citas de todos los doctores del mismo cliente
-        $clientId = $this->calendarRepository->getClientIdForUser($secretaryId);
+        $clientId = $this->userRepository->getClientIdForUser($secretaryId);
 
         if (!$clientId) {
-            return [];
+            throw new RuntimeException("La secretaria {$secretaryId} no tiene un cliente asociado.");
         }
 
         $appointments = $this->calendarRepository->getAppointmentsForSecretary(

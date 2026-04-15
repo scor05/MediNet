@@ -22,32 +22,46 @@ class SupabaseAuth
 
         if (!$token) {
             return response()->json([
-                'error' => 'Token no proporcionado'
+                'message' => 'Token no proporcionado'
             ], 401);
         }
 
         // Verificar el token con Supabase
-        $supabaseUser = $this->authService->getUser($token);
+        try {
+            $supabaseUser = $this->authService->getUser($token);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'No se pudo validar el token en este momento'
+            ], 500);
+        }
 
         if (!$supabaseUser) {
             return response()->json([
-                'error' => 'Token inválido o expirado'
+                'message' => 'Token inválido o expirado'
             ], 401);
         }
 
         // Buscar el usuario local en tabla users usando el email
-        $localUser = User::where('email', $supabaseUser['email'])->first();
+        $email = $supabaseUser['email'] ?? null;
+
+        if (!$email) {
+            return response()->json([
+                'message' => 'No se pudo identificar el usuario autenticado'
+            ], 401);
+        }
+
+        $localUser = User::where('email', $email)->first();
 
         if (!$localUser) {
             return response()->json([
-                'error' => 'Usuario no registrado en el sistema'
+                'message' => 'Usuario no registrado en el sistema'
             ], 403);
         }
 
         // Pasar el usuario de supabase en el request para que los controllers lo use
         $request->attributes->set('supabase_user', $supabaseUser);
 
-        // Vincular el usuario local directamente al request (stateless, sin sesión)
+        // Vincular el usuario local directamente al request
         $request->setUserResolver(fn() => $localUser);
 
         return $next($request);

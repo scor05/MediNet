@@ -28,12 +28,9 @@ class AppointmentController extends Controller
     // Se crea una nueva cita
     public function store(Request $request)
     {
-        if (!$request->has('created_by') || !is_numeric($request->input('created_by'))) {
-            $request->merge(['created_by' => $request->user()->id]);
-        }
-        if (!$request->has('updated_by') || !is_numeric($request->input('updated_by'))) {
-            $request->merge(['updated_by' => $request->user()->id]);
-        }
+        $request->merge(['created_by' => $request->user()->id]);
+        $request->merge(['updated_by' => $request->user()->id]);
+
 
         $validated = $request->validate([
             'id_schedule' => 'required|integer|exists:schedules,id',
@@ -53,6 +50,8 @@ class AppointmentController extends Controller
             'start_time' => 'required|date_format:H:i:s',
             'created_by' => 'required|integer|exists:users,id',
             'updated_by' => 'required|integer|exists:users,id',
+        ], [
+            'name_patient.required_without' => 'Debe ingresar el nombre del paciente cuando no seleccione un paciente existente.',
         ]);
 
         return response()->json($this->service->create($validated), 201);
@@ -66,9 +65,8 @@ class AppointmentController extends Controller
         }
 
         $validated = $request->validate([
-            'id_schedule' => 'sometimes|integer|exists:schedules,id',
-            'id_patient' => 'nullable|integer|exists:users,id',
-            'name_patient' => 'nullable|string',
+            'id_patient' => 'sometimes|integer|exists:users,id',
+            'name_patient' => 'sometimes|string',
             'date' => 'sometimes|date',
             'status' => [
                 'sometimes',

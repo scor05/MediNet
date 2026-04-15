@@ -28,10 +28,12 @@ class UserController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'name' => 'string|max:255',
-            'email' => 'email|unique:users,email,' . $id,
-            'phone' => 'nullable|string|max:20',
-            'is_active' => 'boolean',
+            'name' => 'sometimes|string|max:255',
+            'email' => 'sometimes|email|unique:users,email,' . $id,
+            'phone' => 'sometimes|nullable|string|max:20',
+            'is_active' => 'sometimes|boolean',
+        ], [
+            'email.unique' => 'Este correo ya está registrado.',
         ]);
 
         return response()->json($this->service->update($id, $validated));

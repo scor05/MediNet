@@ -149,7 +149,7 @@ CREATE TABLE client_users (
     PRIMARY KEY (id_client, id_user),
     FOREIGN KEY (id_client) REFERENCES clients(id),
     FOREIGN KEY (id_user) REFERENCES users(id),
-    CHECK (role IN (0, 1))
+    CHECK (role IN (0, 2))
 );
 
 -- tabla clientes-clinicas

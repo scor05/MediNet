@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\CalendarService;
 use Illuminate\Http\Request;
+use Illuminate\Auth\AuthenticationException;
 
 class CalendarController extends Controller
 {
@@ -23,10 +24,6 @@ class CalendarController extends Controller
         ]);
 
         $doctorID = $request->user()?->id;
-
-        if (!$doctorID) {
-            return response()->json(['error' => 'No se pudo identificar al usuario.'], 401);
-        }
 
         $appointments = $this->calendarService->getDoctorCalendar(
             doctorId: $doctorID,

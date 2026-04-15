@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Repositories\DoctorSpecialtyRepository;
+use Illuminate\Validation\ValidationException;
 
 class DoctorSpecialtyService
 {
@@ -20,6 +21,8 @@ class DoctorSpecialtyService
     // Se crea una nueva asignación de especialidad a un doctor
     public function create($doctorId, $data)
     {
+        $this->validateConflict($doctorId, $data['id_specialty']);
+
         return $this->repository->create([
             'id_doctor' => $doctorId,
             'id_specialty' => $data['id_specialty'],
@@ -30,5 +33,22 @@ class DoctorSpecialtyService
     public function delete($doctorId, $specialtyId)
     {
         $this->repository->delete($doctorId, $specialtyId);
+    }
+
+    // Se verifica si un doctor ya tiene una especialidad
+    private function validateConflict(
+        int $doctorId,
+        int $specialtyId,
+    ): void {
+        $conflict = $this->repository->findDoctorSpecialty(
+            $doctorId,
+            $specialtyId,
+        );
+
+        if ($conflict) {
+            throw ValidationException::withMessages([
+                'specialty' => ['El doctor ya tiene esta especialidad'],
+            ]);
+        }
     }
 }

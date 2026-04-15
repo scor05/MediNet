@@ -18,7 +18,10 @@ class AuthRemoteDatasource {
   }) async {
     final apiResponse = await http.post(
       Uri.parse('${AppConfig.apiUrl}/auth/register'),
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
       body: jsonEncode({
         'name': name,
         'email': email,
