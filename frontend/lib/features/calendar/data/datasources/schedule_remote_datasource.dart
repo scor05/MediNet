@@ -11,7 +11,7 @@ class ScheduleRemoteDatasource {
 
     final response = await http
         .get(
-          Uri.parse('${AppConfig.apiUrl}users/me/schedules'),
+          Uri.parse('${AppConfig.apiUrl}/schedules/me'),
           headers: {
             'Accept': 'application/json',
             'Authorization': 'Bearer $token',

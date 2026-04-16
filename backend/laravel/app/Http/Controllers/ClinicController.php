@@ -32,6 +32,13 @@ class ClinicController extends Controller
             'address' => 'required|string',
             'phone' => 'required|string|unique:clinics,phone',
             'email' => 'required|email|unique:clinics,email',
+        ], [
+            'name.required' => 'El nombre es requerido',
+            'address.required' => 'La dirección es requerida',
+            'phone.required' => 'El teléfono es requerido',
+            'email.required' => 'El correo es requerido',
+            'phone.unique' => 'El teléfono ya es usado por otra clínica',
+            'email.unique' => 'El correo ya es usado por otra clínica',
         ]);
 
         return response()->json($this->service->create($validated), 201);
@@ -45,6 +52,9 @@ class ClinicController extends Controller
             'address' => 'sometimes|string',
             'phone' => 'sometimes|string|unique:clinics,phone,' . $id,
             'email' => 'sometimes|email|unique:clinics,email,' . $id,
+        ], [
+            'phone.unique' => 'El teléfono ya es usado por otra clínica',
+            'email.unique' => 'El correo ya es usado por otra clínica',
         ]);
 
         return response()->json($this->service->update($id, $validated));
