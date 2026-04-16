@@ -3,7 +3,7 @@ services:
     build: ./backend
     container_name: medinet_backend
     ports:
-      - "8067:8000"
+      - "8880:8000"
     volumes:
       - ./backend/laravel:/app
       - vendor_data:/app/vendor

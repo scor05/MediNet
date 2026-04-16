@@ -74,7 +74,7 @@ class AuthService
             ])->post($this->url . '/auth/v1/admin/users', [
                         'email' => $email,
                         'password' => $password,
-                        'email_confirm' => false,
+                        'email_confirm' => true,
                     ]);
         } catch (\Throwable $e) {
             throw new RegistrationException(
