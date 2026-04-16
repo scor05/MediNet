@@ -4,7 +4,7 @@ import '../../../domain/entities/schedule.dart';
 import '../../../data/datasources/schedule_remote_datasource.dart';
 import '../../../data/repositories/schedule_repository_impl.dart';
 import '../../../domain/usecases/get_doctor_schedules.dart';
-
+import 'package:frontend/core/exceptions/api_exception.dart';
 import '../../../data/datasources/appointment_remote_datasource.dart';
 import '../../../data/repositories/appointment_repository_impl.dart';
 import '../../../domain/usecases/create_appointment.dart';
@@ -19,7 +19,6 @@ class CreateAppointmentDialog extends StatefulWidget {
 }
 
 class _CreateAppointmentDialogState extends State<CreateAppointmentDialog> {
-  // Inicialización de dependencias
   final _getSchedulesUsecase = GetDoctorSchedules(
     ScheduleRepositoryImpl(ScheduleRemoteDatasource()),
   );
@@ -27,7 +26,6 @@ class _CreateAppointmentDialogState extends State<CreateAppointmentDialog> {
     AppointmentRepositoryImpl(AppointmentRemoteDatasource()),
   );
 
-  // Estado
   final _formKey = GlobalKey<FormState>();
   List<Schedule> _schedules = [];
   Schedule? _selectedSchedule;
@@ -38,6 +36,7 @@ class _CreateAppointmentDialogState extends State<CreateAppointmentDialog> {
   String _status = 'requested';
   bool _loadingSchedules = true;
   bool _saving = false;
+  String? _error;
 
   static const _statusOptions = [
     ('requested', 'Solicitada'),
@@ -66,25 +65,52 @@ class _CreateAppointmentDialogState extends State<CreateAppointmentDialog> {
     super.dispose();
   }
 
-  // Se obtienen los horarios del doctor
   Future<void> _fetchSchedules() async {
+    setState(() {
+      _loadingSchedules = true;
+      _error = null;
+    });
+
     try {
       final schedules = await _getSchedulesUsecase();
+
+      if (!mounted) return;
+
       setState(() {
         _schedules = schedules;
+
         if (_schedules.isNotEmpty) {
           _selectedSchedule = _schedules.first;
           _updateDate(_selectedSchedule!);
           _updateTimeSlots(_selectedSchedule!);
         }
       });
-    } catch (_) {}
-    if (mounted) {
-      setState(() => _loadingSchedules = false);
+    } catch (e, st) {
+      debugPrint('Error loading schedules: $e');
+      debugPrintStack(stackTrace: st);
+
+      if (!mounted) return;
+
+      setState(() {
+        _schedules = [];
+        _selectedSchedule = null;
+        _selectedDate = null;
+        _selectedTime = null;
+        _timeSlots = [];
+
+        if (e is ApiException) {
+          _error = e.message;
+        } else {
+          _error = 'Ocurrió un error inesperado.';
+        }
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _loadingSchedules = false);
+      }
     }
   }
 
-  // Se obtiene el día de la semana
   DateTime _nextDayOfWeek(int dayOfWeek) {
     for (int i = 0; i < 7; i++) {
       final d = widget.weekStart.add(Duration(days: i));
@@ -104,6 +130,7 @@ class _CreateAppointmentDialogState extends State<CreateAppointmentDialog> {
     int m = int.parse(parts[1]);
     final eParts = s.endTime.split(':');
     final endMins = int.parse(eParts[0]) * 60 + int.parse(eParts[1]);
+
     while (h * 60 + m < endMins) {
       slots.add(
         '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}',
@@ -114,13 +141,16 @@ class _CreateAppointmentDialogState extends State<CreateAppointmentDialog> {
         m = m % 60;
       }
     }
+
     _timeSlots = slots;
     _selectedTime = slots.isNotEmpty ? slots.first : null;
   }
 
   void _onScheduleChanged(Schedule? s) {
     if (s == null) return;
+
     setState(() {
+      _error = null;
       _selectedSchedule = s;
       _updateDate(s);
       _updateTimeSlots(s);
@@ -132,18 +162,26 @@ class _CreateAppointmentDialogState extends State<CreateAppointmentDialog> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+
     if (_selectedSchedule == null ||
         _selectedDate == null ||
-        _selectedTime == null)
+        _selectedTime == null) {
+      setState(() {
+        _error = 'Completa todos los campos requeridos.';
+      });
       return;
-    setState(() => _saving = true);
+    }
+
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
 
     try {
       final created = await _createAppointmentUsecase(
         idSchedule: _selectedSchedule!.id,
         date: _fmtDate(_selectedDate!),
-        startTime:
-            '$_selectedTime:00', // Agregamos los segundos para pasar validación H:i:s
+        startTime: '$_selectedTime:00',
         patientName: _patientCtrl.text.trim(),
         status: _status,
       );
@@ -151,19 +189,27 @@ class _CreateAppointmentDialogState extends State<CreateAppointmentDialog> {
       if (!mounted) return;
 
       Navigator.of(context).pop(created);
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Cita agendada exitosamente')),
       );
-    } catch (e) {
-      if (mounted) {
-        String msg = e.toString();
-        if (msg.startsWith('Exception: ')) msg = msg.substring(11);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(msg)));
-      }
+    } catch (e, st) {
+      debugPrint('Error creating appointment: $e');
+      debugPrintStack(stackTrace: st);
+
+      if (!mounted) return;
+
+      setState(() {
+        if (e is ApiException) {
+          _error = e.message;
+        } else {
+          _error = 'No se pudo agendar la cita.';
+        }
+      });
     } finally {
-      if (mounted) setState(() => _saving = false);
+      if (mounted) {
+        setState(() => _saving = false);
+      }
     }
   }
 
@@ -198,15 +244,32 @@ class _CreateAppointmentDialogState extends State<CreateAppointmentDialog> {
 
             if (_loadingSchedules)
               const Center(child: CircularProgressIndicator())
+            else if (_error != null)
+              Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _error!,
+                      style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: _fetchSchedules,
+                      child: const Text('Reintentar'),
+                    ),
+                  ],
+                ),
+              )
             else if (_schedules.isEmpty)
               const Text(
                 'No tienes horarios activos. Crea uno primero.',
                 style: TextStyle(color: Colors.red),
               )
             else ...[
-              // Horario
               DropdownButtonFormField<Schedule>(
-                value: _selectedSchedule,
+                initialValue: _selectedSchedule,
                 decoration: const InputDecoration(labelText: 'Horario'),
                 items: _schedules
                     .map(
@@ -224,7 +287,6 @@ class _CreateAppointmentDialogState extends State<CreateAppointmentDialog> {
               ),
               const SizedBox(height: 10),
 
-              // Fecha
               if (_selectedDate != null)
                 InputDecorator(
                   decoration: const InputDecoration(labelText: 'Fecha'),
@@ -235,19 +297,22 @@ class _CreateAppointmentDialogState extends State<CreateAppointmentDialog> {
                 ),
               const SizedBox(height: 10),
 
-              // Hora
               DropdownButtonFormField<String>(
-                value: _selectedTime,
+                initialValue: _selectedTime,
                 decoration: const InputDecoration(labelText: 'Hora de la cita'),
                 items: _timeSlots
                     .map((t) => DropdownMenuItem(value: t, child: Text(t)))
                     .toList(),
-                onChanged: (v) => setState(() => _selectedTime = v),
+                onChanged: (v) {
+                  setState(() {
+                    _selectedTime = v;
+                    _error = null;
+                  });
+                },
                 validator: (v) => v == null ? 'Selecciona una hora' : null,
               ),
               const SizedBox(height: 10),
 
-              // Paciente
               TextFormField(
                 controller: _patientCtrl,
                 decoration: const InputDecoration(
@@ -255,21 +320,36 @@ class _CreateAppointmentDialogState extends State<CreateAppointmentDialog> {
                 ),
                 validator: (v) =>
                     (v == null || v.trim().isEmpty) ? 'Requerido' : null,
+                onChanged: (_) {
+                  if (_error != null) {
+                    setState(() => _error = null);
+                  }
+                },
               ),
               const SizedBox(height: 10),
 
-              // Estado
               DropdownButtonFormField<String>(
-                value: _status,
+                initialValue: _status,
                 decoration: const InputDecoration(labelText: 'Estado'),
                 items: _statusOptions
                     .map(
                       (o) => DropdownMenuItem(value: o.$1, child: Text(o.$2)),
                     )
                     .toList(),
-                onChanged: (v) => setState(() => _status = v!),
+                onChanged: (v) {
+                  setState(() {
+                    _status = v!;
+                    _error = null;
+                  });
+                },
               ),
+
+              if (_error != null) ...[
+                const SizedBox(height: 12),
+                Text(_error!, style: const TextStyle(color: Colors.red)),
+              ],
             ],
+
             const SizedBox(height: 20),
 
             SizedBox(

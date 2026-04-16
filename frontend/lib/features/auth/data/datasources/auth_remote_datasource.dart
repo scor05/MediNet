@@ -17,25 +17,27 @@ class AuthRemoteDatasource {
     required String phone,
     required String password,
   }) async {
-    final apiResponse = await http.post(
-      Uri.parse('${AppConfig.apiUrl}/auth/register'),
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'name': name,
-        'email': email,
-        'password': password,
-        'phone': phone,
-      }),
-    );
+    final apiResponse = await http
+        .post(
+          Uri.parse('${AppConfig.apiUrl}/auth/register'),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'name': name,
+            'email': email,
+            'password': password,
+            'phone': phone,
+          }),
+        )
+        .timeout(const Duration(seconds: 10));
 
     if (apiResponse.statusCode == 201) {
       final session = jsonDecode(apiResponse.body);
       await _supabase.auth.setSession(session['refresh_token']);
     } else {
-      handleApiError(apiResponse);
+      throw handleApiError(apiResponse);
     }
   }
 

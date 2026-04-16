@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/exceptions/api_exception.dart';
 
 import '../../../domain/entities/clinic.dart';
 import '../../../data/datasources/clinic_remote_datasource.dart';
@@ -17,7 +18,6 @@ class CreateScheduleDialog extends StatefulWidget {
 }
 
 class _CreateScheduleDialogState extends State<CreateScheduleDialog> {
-  // Inicialización de dependencias
   final _getClinicsUsecase = GetClinics(
     ClinicRepositoryImpl(ClinicRemoteDatasource()),
   );
@@ -25,16 +25,17 @@ class _CreateScheduleDialogState extends State<CreateScheduleDialog> {
     ScheduleRepositoryImpl(ScheduleRemoteDatasource()),
   );
 
-  // Estado
   final _formKey = GlobalKey<FormState>();
   List<Clinic> _clinics = [];
   int? _selectedClinic;
   int _dayOfWeek = 0;
   TimeOfDay _startTime = const TimeOfDay(hour: 8, minute: 0);
   TimeOfDay _endTime = const TimeOfDay(hour: 16, minute: 0);
-  final _durationCtrl = TextEditingController(text: '30');
+  final _durationCtrl = TextEditingController();
+
   bool _loadingClinics = true;
   bool _saving = false;
+  String? _error;
 
   static const _days = [
     'Lunes',
@@ -49,6 +50,7 @@ class _CreateScheduleDialogState extends State<CreateScheduleDialog> {
   @override
   void initState() {
     super.initState();
+    _durationCtrl.text = '30';
     _fetchClinics();
   }
 
@@ -58,65 +60,94 @@ class _CreateScheduleDialogState extends State<CreateScheduleDialog> {
     super.dispose();
   }
 
-  // Se obtienen las clínicas registradas
   Future<void> _fetchClinics() async {
+    setState(() {
+      _loadingClinics = true;
+      _error = null;
+    });
+
     try {
       final clinics = await _getClinicsUsecase();
+
+      if (!mounted) return;
+
       setState(() {
         _clinics = clinics;
-        if (_clinics.isNotEmpty) _selectedClinic = _clinics.first.id;
+        if (_clinics.isNotEmpty) {
+          _selectedClinic = _clinics.first.id;
+        }
       });
-    } catch (_) {}
-    if (mounted) {
-      setState(() => _loadingClinics = false);
+    } catch (e, st) {
+      debugPrint('Error loading clinics: $e');
+      debugPrintStack(stackTrace: st);
+
+      if (!mounted) return;
+
+      setState(() {
+        _clinics = [];
+        _selectedClinic = null;
+
+        if (e is ApiException) {
+          _error = e.message;
+        } else {
+          _error = 'Ocurrió un error inesperado.';
+        }
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _loadingClinics = false);
+      }
     }
   }
 
-  // Función para elegir una hora del día
   Future<void> _pickTime(bool isStart) async {
     final picked = await showTimePicker(
       context: context,
       initialTime: isStart ? _startTime : _endTime,
     );
+
     if (picked != null) {
       setState(() {
-        if (isStart)
+        _error = null;
+        if (isStart) {
           _startTime = picked;
-        else
+        } else {
           _endTime = picked;
+        }
       });
     }
   }
 
-  // Formato de hora
   String _fmt(TimeOfDay t) =>
       '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
 
-  // Validación de rango de horas
   bool _isValidRange() {
     final startMins = _startTime.hour * 60 + _startTime.minute;
     final endMins = _endTime.hour * 60 + _endTime.minute;
     return endMins > startMins;
   }
 
-  // Envía el horario al backend
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+
     if (_selectedClinic == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Selecciona una clínica.')));
+      setState(() {
+        _error = 'Selecciona una clínica.';
+      });
       return;
     }
+
     if (!_isValidRange()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('La hora de inicio debe ser anterior a la de fin.'),
-        ),
-      );
+      setState(() {
+        _error = 'La hora de inicio debe ser anterior a la de fin.';
+      });
       return;
     }
-    setState(() => _saving = true);
+
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
 
     try {
       await _createScheduleUsecase(
@@ -130,19 +161,37 @@ class _CreateScheduleDialogState extends State<CreateScheduleDialog> {
       if (!mounted) return;
 
       Navigator.of(context).pop();
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Horario creado exitosamente')),
       );
-    } catch (e) {
-      if (mounted) {
-        String msg = e.toString();
-        if (msg.startsWith('Exception: ')) msg = msg.substring(11);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(msg)));
-      }
+    } catch (e, st) {
+      debugPrint('Error creating schedule: $e');
+      debugPrintStack(stackTrace: st);
+
+      if (!mounted) return;
+
+      setState(() {
+        if (e is ApiException) {
+          _error = e.message;
+        } else {
+          String msg = e.toString();
+          if (msg.startsWith('Exception: ')) {
+            msg = msg.substring(11);
+          }
+          _error = msg.isEmpty ? 'Ocurrió un error inesperado.' : msg;
+        }
+      });
     } finally {
-      if (mounted) setState(() => _saving = false);
+      if (mounted) {
+        setState(() => _saving = false);
+      }
+    }
+  }
+
+  void _clearError() {
+    if (_error != null) {
+      setState(() => _error = null);
     }
   }
 
@@ -178,36 +227,58 @@ class _CreateScheduleDialogState extends State<CreateScheduleDialog> {
             ),
             const SizedBox(height: 16),
 
-            // Clínica
             if (_loadingClinics)
               const Center(child: CircularProgressIndicator())
+            else if (_error != null && _clinics.isEmpty)
+              Center(
+                child: Column(
+                  children: [
+                    Text(_error!, style: const TextStyle(color: Colors.red)),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: _fetchClinics,
+                      child: const Text('Reintentar'),
+                    ),
+                  ],
+                ),
+              )
             else
               DropdownButtonFormField<int>(
-                value: _selectedClinic,
+                initialValue: _selectedClinic,
                 decoration: const InputDecoration(labelText: 'Clínica'),
                 items: _clinics
                     .map(
                       (c) => DropdownMenuItem(value: c.id, child: Text(c.name)),
                     )
                     .toList(),
-                onChanged: (v) => setState(() => _selectedClinic = v),
+                onChanged: (v) {
+                  setState(() {
+                    _selectedClinic = v;
+                    _error = null;
+                  });
+                },
                 validator: (v) => v == null ? 'Selecciona una clínica' : null,
               ),
+
             const SizedBox(height: 10),
 
-            // Día de la semana
             DropdownButtonFormField<int>(
-              value: _dayOfWeek,
+              initialValue: _dayOfWeek,
               decoration: const InputDecoration(labelText: 'Día de la semana'),
               items: List.generate(
                 7,
                 (i) => DropdownMenuItem(value: i, child: Text(_days[i])),
               ),
-              onChanged: (v) => setState(() => _dayOfWeek = v!),
+              onChanged: (v) {
+                setState(() {
+                  _dayOfWeek = v!;
+                  _error = null;
+                });
+              },
             ),
+
             const SizedBox(height: 10),
 
-            // Horas
             Row(
               children: [
                 Expanded(
@@ -233,9 +304,9 @@ class _CreateScheduleDialogState extends State<CreateScheduleDialog> {
                 ),
               ],
             ),
+
             const SizedBox(height: 10),
 
-            // Duración
             TextFormField(
               controller: _durationCtrl,
               keyboardType: TextInputType.number,
@@ -248,7 +319,14 @@ class _CreateScheduleDialogState extends State<CreateScheduleDialog> {
                 if (n == null || n < 5) return 'Mínimo 5 min';
                 return null;
               },
+              onChanged: (_) => _clearError(),
             ),
+
+            if (_error != null) ...[
+              const SizedBox(height: 12),
+              Text(_error!, style: const TextStyle(color: Colors.red)),
+            ],
+
             const SizedBox(height: 20),
 
             SizedBox(

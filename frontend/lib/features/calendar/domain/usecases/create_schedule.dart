@@ -1,11 +1,12 @@
 import '../repositories/schedule_repository.dart';
+import '../entities/schedule.dart';
 
 class CreateSchedule {
   final ScheduleRepository repository;
 
   CreateSchedule(this.repository);
 
-  Future<void> call({
+  Future<Schedule> call({
     required int idClinic,
     required int dayOfWeek,
     required String startTime,

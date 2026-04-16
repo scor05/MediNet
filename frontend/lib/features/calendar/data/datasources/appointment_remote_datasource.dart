@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:frontend/config/app_config.dart';
 import '../models/appointment_model.dart';
+import 'package:frontend/core/network/api_exception_handler.dart';
 
 class AppointmentRemoteDatasource {
   Future<List<AppointmentModel>> getDoctorAppointments({
@@ -23,25 +24,22 @@ class AppointmentRemoteDatasource {
       '${AppConfig.apiUrl}/calendar/doctor',
     ).replace(queryParameters: queryParams.isNotEmpty ? queryParams : null);
 
-    final response = await http.get(
-      uri,
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
+    final response = await http
+        .get(
+          uri,
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        )
+        .timeout(const Duration(seconds: 10));
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       return data.map((e) => AppointmentModel.fromJson(e)).toList();
     } else {
-      String errorMessage = 'Error al obtener el calendario.';
-      try {
-        final body = jsonDecode(response.body);
-        if (body['error'] != null) errorMessage = body['error'];
-      } catch (_) {}
-      throw Exception(errorMessage);
+      throw handleApiError(response);
     }
   }
 
@@ -53,41 +51,30 @@ class AppointmentRemoteDatasource {
     required String status,
   }) async {
     final token = Supabase.instance.client.auth.currentSession?.accessToken;
-    // userId is not needed anymore as backend resolves it automatically based on backend fixes
 
-    final response = await http.post(
-      Uri.parse('${AppConfig.apiUrl}/appointments'),
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-      body: jsonEncode({
-        'id_schedule': idSchedule,
-        'date': date,
-        'start_time': startTime,
-        'name_patient': patientName,
-        'status': status,
-      }),
-    );
+    final response = await http
+        .post(
+          Uri.parse('${AppConfig.apiUrl}/appointments'),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode({
+            'id_schedule': idSchedule,
+            'date': date,
+            'start_time': startTime,
+            'name_patient': patientName,
+            'status': status,
+          }),
+        )
+        .timeout(const Duration(seconds: 10));
 
     if (response.statusCode == 201) {
       final Map<String, dynamic> data = jsonDecode(response.body);
       return AppointmentModel.fromJson(data);
     } else {
-      String msg = 'Error al agendar la cita.';
-      try {
-        final b = jsonDecode(response.body);
-        if (b['error'] != null) {
-          msg = b['error'];
-        } else if (b['errors'] != null) {
-          final errors = b['errors'] as Map<String, dynamic>;
-          msg = errors.values.first[0].toString();
-        } else if (b['message'] != null) {
-          msg = b['message'];
-        }
-      } catch (_) {}
-      throw Exception(msg);
+      throw handleApiError(response);
     }
   }
 }

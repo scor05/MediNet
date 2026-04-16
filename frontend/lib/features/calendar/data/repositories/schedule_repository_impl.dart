@@ -1,6 +1,9 @@
 import '../../domain/entities/schedule.dart';
 import '../../domain/repositories/schedule_repository.dart';
 import '../datasources/schedule_remote_datasource.dart';
+import 'package:frontend/core/exceptions/api_exception.dart';
+import 'dart:io';
+import 'dart:async';
 
 class ScheduleRepositoryImpl implements ScheduleRepository {
   final ScheduleRemoteDatasource datasource;
@@ -11,15 +14,19 @@ class ScheduleRepositoryImpl implements ScheduleRepository {
   Future<List<Schedule>> getDoctorSchedules() async {
     try {
       return await datasource.getDoctorSchedules();
-    } on Exception catch (e) {
-      throw Exception(e.toString().replaceAll('Exception: ', ''));
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw ApiException('Sin conexión. Verifica tu internet.');
+    } on TimeoutException {
+      throw ApiException('La solicitud tardó demasiado. Intenta de nuevo.');
     } catch (e) {
-      throw Exception('Error de conexión. Verifica tu internet.');
+      throw ApiException('Error inesperado. Intenta de nuevo.');
     }
   }
 
   @override
-  Future<void> createSchedule({
+  Future<Schedule> createSchedule({
     required int idClinic,
     required int dayOfWeek,
     required String startTime,
@@ -27,17 +34,21 @@ class ScheduleRepositoryImpl implements ScheduleRepository {
     required int duration,
   }) async {
     try {
-      await datasource.createSchedule(
+      return await datasource.createSchedule(
         idClinic: idClinic,
         dayOfWeek: dayOfWeek,
         startTime: startTime,
         endTime: endTime,
         duration: duration,
       );
-    } on Exception catch (e) {
-      throw Exception(e.toString().replaceAll('Exception: ', ''));
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw ApiException('Sin conexión. Verifica tu internet.');
+    } on TimeoutException {
+      throw ApiException('La solicitud tardó demasiado. Intenta de nuevo.');
     } catch (e) {
-      throw Exception('Error de conexión. Verifica tu internet.');
+      throw ApiException('Error inesperado. Intenta de nuevo.');
     }
   }
 }

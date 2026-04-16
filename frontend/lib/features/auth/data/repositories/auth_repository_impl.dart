@@ -3,6 +3,8 @@ import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_datasource.dart';
 import '../../domain/results/auth_result.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
+import 'dart:io';
+import 'dart:async';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDatasource _datasource;
@@ -20,6 +22,12 @@ class AuthRepositoryImpl implements AuthRepository {
       return AuthResult.success();
     } on AuthException catch (e) {
       return AuthResult.error(_parseSupabaseError(e.message));
+    } on SocketException {
+      return AuthResult.error('Sin conexión. Verifica tu internet.');
+    } on TimeoutException {
+      return AuthResult.error(
+        'La solicitud tardó demasiado. Intenta de nuevo.',
+      );
     } catch (e) {
       return AuthResult.error('Error inesperado. Intenta de nuevo.');
     }
@@ -45,6 +53,12 @@ class AuthRepositoryImpl implements AuthRepository {
       return AuthResult.error(_parseSupabaseError(e.message));
     } on ApiException catch (e) {
       return AuthResult.error(e.message);
+    } on SocketException {
+      return AuthResult.error('Sin conexión. Verifica tu internet.');
+    } on TimeoutException {
+      return AuthResult.error(
+        'La solicitud tardó demasiado. Intenta de nuevo.',
+      );
     } catch (e) {
       return AuthResult.error('Error inesperado. Intenta de nuevo.');
     }
