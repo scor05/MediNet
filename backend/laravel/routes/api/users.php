@@ -15,7 +15,5 @@ Route::prefix('users')->group(function () {
     Route::post('/{doctorId}/specialties', [DoctorSpecialtyController::class, 'store']);
     Route::delete('/{doctorId}/specialties/{specialtyId}', [DoctorSpecialtyController::class, 'destroy']);
 
-    Route::get('/{doctorId}/schedules', [ScheduleController::class, 'index']);
-
     Route::get('/profile', [UserController::class, 'profile']);
 });

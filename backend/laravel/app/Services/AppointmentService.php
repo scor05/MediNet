@@ -34,7 +34,7 @@ class AppointmentService
             $data['start_time']
         );
 
-        if ($data['id_patient'] !== null) {
+        if (array_key_exists('id_patient', $data)) {
             $data['name_patient'] = $this->userService->getById($data['id_patient'])?->name;
         }
 
