@@ -7,6 +7,7 @@ import '../widgets/week_view.dart';
 import 'dialogs/create_clinic_dialog.dart';
 import 'dialogs/create_schedule_dialog.dart';
 import 'dialogs/create_appointment_dialog.dart';
+import 'package:frontend/core/exceptions/api_exception.dart';
 
 class DoctorCalendarPage extends StatefulWidget {
   const DoctorCalendarPage({super.key});
@@ -51,8 +52,21 @@ class _DoctorCalendarPageState extends State<DoctorCalendarPage> {
         dateTo: dateTo,
       );
       setState(() => _appointments = result);
-    } catch (e) {
-      setState(() => _error = e.toString());
+    } catch (e, st) {
+      debugPrint('Error loading appointments: $e');
+      debugPrintStack(stackTrace: st);
+
+      if (e is ApiException) {
+        setState(() {
+          _appointments = [];
+          _error = e.message;
+        });
+      } else {
+        setState(() {
+          _appointments = [];
+          _error = 'Ocurrió un error inesperado.';
+        });
+      }
     } finally {
       setState(() => _loading = false);
     }
@@ -133,7 +147,19 @@ class _DoctorCalendarPageState extends State<DoctorCalendarPage> {
           _loading
               ? const Center(child: CircularProgressIndicator())
               : _error != null
-              ? Center(child: Text(_error!))
+              ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(_error!),
+                      const SizedBox(height: 12),
+                      ElevatedButton(
+                        onPressed: _loadAppointments,
+                        child: const Text('Reintentar'),
+                      ),
+                    ],
+                  ),
+                )
               : WeekView(weekStart: _weekStart, appointments: _appointments),
           if (_fabOpen)
             GestureDetector(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/exceptions/api_exception.dart';
 import '../../../data/datasources/clinic_remote_datasource.dart';
 import '../../../data/repositories/clinic_repository_impl.dart';
 import '../../../domain/usecases/create_clinic.dart';
@@ -11,18 +12,18 @@ class CreateClinicDialog extends StatefulWidget {
 }
 
 class _CreateClinicDialogState extends State<CreateClinicDialog> {
-  // Inicialización de dependencias
   final _createClinicUsecase = CreateClinic(
     ClinicRepositoryImpl(ClinicRemoteDatasource()),
   );
 
-  // Estado
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   final _addressCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
+
   bool _loading = false;
+  String? _error;
 
   @override
   void dispose() {
@@ -35,7 +36,11 @@ class _CreateClinicDialogState extends State<CreateClinicDialog> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() => _loading = true);
+
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
 
     try {
       await _createClinicUsecase(
@@ -51,16 +56,33 @@ class _CreateClinicDialogState extends State<CreateClinicDialog> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Clínica creada exitosamente')),
       );
-    } catch (e) {
-      if (mounted) {
-        String msg = e.toString();
-        if (msg.startsWith('Exception: ')) msg = msg.substring(11);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(msg)));
-      }
+    } catch (e, st) {
+      debugPrint('Error creating clinic: $e');
+      debugPrintStack(stackTrace: st);
+
+      if (!mounted) return;
+
+      setState(() {
+        if (e is ApiException) {
+          _error = e.message;
+        } else {
+          String msg = e.toString();
+          if (msg.startsWith('Exception: ')) {
+            msg = msg.substring(11);
+          }
+          _error = msg.isEmpty ? 'Ocurrió un error inesperado.' : msg;
+        }
+      });
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+    }
+  }
+
+  void _clearError() {
+    if (_error != null) {
+      setState(() => _error = null);
     }
   }
 
@@ -95,6 +117,7 @@ class _CreateClinicDialogState extends State<CreateClinicDialog> {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 16),
+
             TextFormField(
               controller: _nameCtrl,
               decoration: const InputDecoration(
@@ -103,8 +126,10 @@ class _CreateClinicDialogState extends State<CreateClinicDialog> {
               ),
               validator: (v) =>
                   (v == null || v.trim().isEmpty) ? 'Requerido' : null,
+              onChanged: (_) => _clearError(),
             ),
             const SizedBox(height: 10),
+
             TextFormField(
               controller: _addressCtrl,
               decoration: const InputDecoration(
@@ -113,8 +138,10 @@ class _CreateClinicDialogState extends State<CreateClinicDialog> {
               ),
               validator: (v) =>
                   (v == null || v.trim().isEmpty) ? 'Requerido' : null,
+              onChanged: (_) => _clearError(),
             ),
             const SizedBox(height: 10),
+
             Row(
               children: [
                 Expanded(
@@ -124,6 +151,7 @@ class _CreateClinicDialogState extends State<CreateClinicDialog> {
                     decoration: const InputDecoration(labelText: 'Teléfono'),
                     validator: (v) =>
                         (v == null || v.trim().isEmpty) ? 'Requerido' : null,
+                    onChanged: (_) => _clearError(),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -134,11 +162,19 @@ class _CreateClinicDialogState extends State<CreateClinicDialog> {
                     decoration: const InputDecoration(labelText: 'Email'),
                     validator: (v) =>
                         (v == null || v.trim().isEmpty) ? 'Requerido' : null,
+                    onChanged: (_) => _clearError(),
                   ),
                 ),
               ],
             ),
+
+            if (_error != null) ...[
+              const SizedBox(height: 12),
+              Text(_error!, style: const TextStyle(color: Colors.red)),
+            ],
+
             const SizedBox(height: 20),
+
             SizedBox(
               width: double.infinity,
               child: FilledButton(

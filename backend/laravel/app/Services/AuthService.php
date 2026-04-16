@@ -104,27 +104,27 @@ class AuthService
                         'email' => $email,
                         'password' => $password,
                     ]);
-
-            if ($response->successful()) {
-                return $response->json();
-            }
-
-            if ($response->status() === 400 || $response->status() === 401) {
-                throw new RegistrationException(
-                    'No se pudo iniciar sesión con el usuario recién creado.',
-                    500
-                );
-            }
-
-            throw new RegistrationException(
-                'Error al iniciar sesión.',
-                500
-            );
         } catch (\Throwable $e) {
             throw new RegistrationException(
                 'No se pudo comunicar con el servidor para iniciar sesión.',
                 500
             );
         }
+
+        if ($response->successful()) {
+            return $response->json();
+        }
+
+        if ($response->status() === 400 || $response->status() === 401) {
+            throw new RegistrationException(
+                'No se pudo iniciar sesión con el usuario recién creado.',
+                500
+            );
+        }
+
+        throw new RegistrationException(
+            'Error al iniciar sesión.',
+            500
+        );
     }
 }

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:frontend/core/exceptions/api_exception.dart';
 
-void handleApiError(http.Response response) {
+Never handleApiError(http.Response response) {
   final body = jsonDecode(response.body);
 
   // Para errores 422

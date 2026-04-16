@@ -5,8 +5,6 @@ use App\Http\Controllers\DoctorSpecialtyController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ScheduleController;
 
-Route::get('/profile', [UserController::class, 'profile']);
-
 Route::prefix('users')->group(function () {
     Route::get('/', [UserController::class, 'index']);
     Route::get('/{id}', [UserController::class, 'show']);
@@ -17,5 +15,7 @@ Route::prefix('users')->group(function () {
     Route::post('/{doctorId}/specialties', [DoctorSpecialtyController::class, 'store']);
     Route::delete('/{doctorId}/specialties/{specialtyId}', [DoctorSpecialtyController::class, 'destroy']);
 
-    Route::get('/{doctorId}/schedules', [ScheduleController::class, 'indexByDoctor']);
+    Route::get('/{doctorId}/schedules', [ScheduleController::class, 'index']);
+
+    Route::get('/profile', [UserController::class, 'profile']);
 });
