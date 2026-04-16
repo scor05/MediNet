@@ -43,25 +43,25 @@ class AuthService
                 'Authorization' => 'Bearer ' . $token,
                 'apikey' => $this->anonKey,
             ])->get($this->url . '/auth/v1/user');
-
-            if ($response->successful()) {
-                return $response->json();
-            }
-
-            if ($response->status() === 401 || $response->status() === 403) {
-                return null;
-            }
-
-            throw new RegistrationException(
-                'Error al validar el token.',
-                500
-            );
         } catch (\Throwable $e) {
             throw new RegistrationException(
                 'No se pudo comunicar con el servidor para validar el token.',
                 500
             );
         }
+
+        if ($response->successful()) {
+            return $response->json();
+        }
+
+        if ($response->status() === 401 || $response->status() === 403) {
+            return null;
+        }
+
+        throw new RegistrationException(
+            'Error al validar el token.',
+            500
+        );
     }
 
     // Crear un nuevo usuario en Supabase Auth
@@ -76,21 +76,21 @@ class AuthService
                         'password' => $password,
                         'email_confirm' => false,
                     ]);
-
-            if ($response->successful()) {
-                return $response->json();
-            }
-
-            throw new RegistrationException(
-                'Error al crear usuario.',
-                500
-            );
         } catch (\Throwable $e) {
             throw new RegistrationException(
                 'No se pudo comunicar con el servidor para crear el usuario.',
                 500
             );
         }
+
+        if ($response->successful()) {
+            return $response->json();
+        }
+
+        throw new RegistrationException(
+            'Error al crear usuario.',
+            500
+        );
     }
 
     // Iniciar sesión en Supabase Auth para obtener un token
