@@ -1,38 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/theme/app_theme.dart';
 import 'package:frontend/widgets/wave_header.dart';
 import 'package:frontend/features/auth/presentation/pages/register_screen.dart';
 import 'package:frontend/features/auth/presentation/pages/role_selection_screen.dart';
-import 'package:frontend/features/auth/data/repositories/auth_repository_impl.dart';
-import 'package:frontend/features/auth/data/datasources/auth_remote_datasource.dart';
-import 'package:frontend/features/auth/data/datasources/profile_remote_datasource.dart';
-import 'package:frontend/features/auth/domain/usecases/login_usecase.dart';
+import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
 import 'package:frontend/features/calendar/presentation/pages/doctor_calendar_screen.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
-  // Inicializa las dependencias
-  final _loginUsecase = LoginUsecase(
-    AuthRepositoryImpl(AuthRemoteDatasource()),
-  );
-
-  final _profileDatasource = ProfileRemoteDatasource();
-
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
-
   bool _obscure = true;
-  bool _isLoading = false;
-  String? _error;
 
-  // Limpia los controladores cuando el widget se destruye
   @override
   void dispose() {
     _emailCtrl.dispose();
@@ -40,34 +27,32 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  // Construye la lista de roles disponibles con base en el perfil
-  List<String> _extractRoles(Map<String, dynamic> profile) {
-    final roles = <String>[];
+  Future<void> _handleLogin() async {
+    if (!_formKey.currentState!.validate()) return;
 
-    // Se considera paciente como modo base para cualquier usuario autenticado
-    roles.add('patient');
-
-    // Agrega rol doctor si aplica
-    if (profile['is_doctor'] == true) {
-      roles.add('doctor');
-    }
-
-    // Agrega rol secretaria si aplica
-    if (profile['is_secretary'] == true) {
-      roles.add('secretary');
-    }
-
-    // Agrega rol administrador si el usuario administra al menos un cliente
-    if (profile['admin_of'] is List &&
-        (profile['admin_of'] as List).isNotEmpty) {
-      roles.add('admin');
-    }
-
-    return roles;
+    await ref
+        .read(authNotifierProvider.notifier)
+        .login(email: _emailCtrl.text.trim(), password: _passwordCtrl.text);
   }
 
-  // Navega automáticamente según el rol cuando el usuario solo tiene un modo disponible
-  void _navigateSingleRole(BuildContext context, String role) {
+  // Navega según los roles cuando el estado pasa a AuthAuthenticated
+  void _handleAuthenticated(AuthAuthenticated authState) {
+    final profile = authState.profile;
+    final roles = profile.roles;
+
+    if (roles.length == 1) {
+      _navigateByRole(roles.first);
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => RoleSelectionScreen(profile: profile),
+        ),
+      );
+    }
+  }
+
+  void _navigateByRole(String role) {
     switch (role) {
       case 'doctor':
         Navigator.pushReplacement(
@@ -75,95 +60,33 @@ class _LoginScreenState extends State<LoginScreen> {
           MaterialPageRoute(builder: (_) => const DoctorCalendarPage()),
         );
         break;
-
       case 'secretary':
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Pantalla de secretaria pendiente de implementar'),
-          ),
-        );
+        // TODO: navegar a pantalla de secretaria
         break;
-
       case 'admin':
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Pantalla de administrador pendiente de implementar'),
-          ),
-        );
+        // TODO: navegar a pantalla de admin
         break;
-
       case 'patient':
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Pantalla de paciente pendiente de implementar'),
-          ),
-        );
+        // TODO: navegar a pantalla de paciente
         break;
     }
-  }
-
-  // Maneja el inicio de sesión al presionar el botón de login
-  Future<void> _handleLogin() async {
-    // Si el formulario no es válido, no hace nada
-    if (!_formKey.currentState!.validate()) return;
-
-    // Muestra el indicador de carga y limpia el mensaje de error
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
-    // Llama al servicio de autenticación
-    final result = await _loginUsecase(
-      email: _emailCtrl.text.trim(),
-      password: _passwordCtrl.text,
-    );
-
-    // Si la pantalla ya no existe, no hace nada
-    if (!mounted) return;
-
-    // Si el login fue exitoso, consulta el perfil del usuario
-    // para determinar los modos disponibles dentro del sistema
-    if (result.success) {
-      try {
-        // Obtiene el perfil del backend usando el token actual de Supabase
-        final profile = await _profileDatasource.getProfile();
-
-        // Determina los roles disponibles del usuario
-        final roles = _extractRoles(profile);
-
-        // Si la pantalla ya no existe, no hace nada
-        if (!mounted) return;
-
-        // Si solo existe un rol disponible, navega automáticamente
-        if (roles.length == 1) {
-          _navigateSingleRole(context, roles.first);
-        } else {
-          // Si tiene más de un rol, muestra la pantalla de selección de modo
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (_) =>
-                  RoleSelectionScreen(roles: roles, profile: profile),
-            ),
-          );
-        }
-      } catch (e) {
-        print('ERROR PROFILE: $e');
-        setState(() {
-          _error =
-              'Inicio de sesión exitoso, pero no se pudo cargar el perfil.';
-        });
-      }
-    } else {
-      setState(() => _error = result.error);
-    }
-
-    setState(() => _isLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
+    // Escucha cambios de estado para navegar o mostrar errores
+    ref.listen<AuthState>(authNotifierProvider, (previous, next) {
+      if (next is AuthAuthenticated) {
+        _handleAuthenticated(next);
+        // Resetea el estado después de navegar para no re-disparar en rebuilds
+        ref.read(authNotifierProvider.notifier).reset();
+      }
+    });
+
+    final authState = ref.watch(authNotifierProvider);
+    final isLoading = authState is AuthLoading;
+    final error = authState is AuthError ? authState.message : null;
+
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: Column(
@@ -177,7 +100,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (_error != null) ...[
+                    if (error != null) ...[
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
@@ -194,7 +117,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                _error!,
+                                error,
                                 style: const TextStyle(
                                   color: AppTheme.error,
                                   fontSize: 13,
@@ -271,8 +194,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     ElevatedButton(
                       style: AppTheme.btnDark,
-                      onPressed: _isLoading ? null : _handleLogin,
-                      child: _isLoading
+                      onPressed: isLoading ? null : _handleLogin,
+                      child: isLoading
                           ? const SizedBox(
                               height: 20,
                               width: 20,

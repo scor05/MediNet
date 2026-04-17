@@ -1,35 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/theme/app_theme.dart';
 import 'package:frontend/widgets/wave_header.dart';
-import 'package:frontend/features/auth/data/repositories/auth_repository_impl.dart';
-import 'package:frontend/features/auth/data/datasources/auth_remote_datasource.dart';
-import 'package:frontend/features/auth/domain/usecases/register_usecase.dart';
+import 'package:frontend/features/auth/presentation/pages/role_selection_screen.dart';
+import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
 import 'package:frontend/features/calendar/presentation/pages/doctor_calendar_screen.dart';
 
-class RegisterScreen extends StatefulWidget {
+class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
-  // Inicializa las dependencias
-  final _registerUsecase = RegisterUsecase(
-    AuthRepositoryImpl(AuthRemoteDatasource()),
-  );
-
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
-
   bool _obscure = true;
-  bool _isLoading = false;
-  String? _error;
 
-  // Limpia los controladores cuando el widget se destruye
   @override
   void dispose() {
     _nameCtrl.dispose();
@@ -39,43 +30,68 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  // Maneja el registro al presionar el botón de registro
   Future<void> _handleRegister() async {
-    // Si el formulario no es válido, no hace nada
     if (!_formKey.currentState!.validate()) return;
 
-    // Muestra el indicador de carga y limpia el mensaje de error
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
+    await ref
+        .read(authNotifierProvider.notifier)
+        .register(
+          name: _nameCtrl.text.trim(),
+          email: _emailCtrl.text.trim(),
+          phone: _phoneCtrl.text.trim(),
+          password: _passwordCtrl.text,
+        );
+  }
 
-    // Llama al servicio de autenticación
-    final result = await _registerUsecase(
-      name: _nameCtrl.text.trim(),
-      email: _emailCtrl.text.trim(),
-      phone: _phoneCtrl.text.trim(),
-      password: _passwordCtrl.text,
-    );
+  void _handleAuthenticated(AuthAuthenticated authState) {
+    final profile = authState.profile;
+    final roles = profile.roles;
 
-    // Si la pantalla ya no existe, no hace nada
-    if (!mounted) return;
-
-    // Si el registro fue exitoso, navega a la pantalla del calendario
-    if (result.success) {
+    if (roles.length == 1) {
+      _navigateByRole(roles.first);
+    } else {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const DoctorCalendarPage()),
+        MaterialPageRoute(
+          builder: (_) => RoleSelectionScreen(profile: profile),
+        ),
       );
-    } else {
-      setState(() => _error = result.error);
     }
+  }
 
-    setState(() => _isLoading = false);
+  void _navigateByRole(String role) {
+    switch (role) {
+      case 'doctor':
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const DoctorCalendarPage()),
+        );
+        break;
+      case 'secretary':
+        // TODO: navegar a pantalla de secretaria
+        break;
+      case 'admin':
+        // TODO: navegar a pantalla de admin
+        break;
+      case 'patient':
+        // TODO: navegar a pantalla de paciente
+        break;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AuthState>(authNotifierProvider, (previous, next) {
+      if (next is AuthAuthenticated) {
+        _handleAuthenticated(next);
+        ref.read(authNotifierProvider.notifier).reset();
+      }
+    });
+
+    final authState = ref.watch(authNotifierProvider);
+    final isLoading = authState is AuthLoading;
+    final error = authState is AuthError ? authState.message : null;
+
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: Column(
@@ -89,7 +105,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (_error != null) ...[
+                    if (error != null) ...[
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
@@ -106,7 +122,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                _error!,
+                                error,
                                 style: const TextStyle(
                                   color: AppTheme.error,
                                   fontSize: 13,
@@ -235,8 +251,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                     ElevatedButton(
                       style: AppTheme.btnDark,
-                      onPressed: _isLoading ? null : _handleRegister,
-                      child: _isLoading
+                      onPressed: isLoading ? null : _handleRegister,
+                      child: isLoading
                           ? const SizedBox(
                               height: 20,
                               width: 20,
