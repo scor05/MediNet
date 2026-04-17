@@ -41,6 +41,8 @@ class UserService
         $this->repository->delete($id);
     }
 
+
+    // Se obtiene información básica del usuario
     public function getProfile($id)
     {
         return $this->repository->getProfile($id);
