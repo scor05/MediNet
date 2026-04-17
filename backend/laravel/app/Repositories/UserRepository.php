@@ -51,7 +51,7 @@ class UserRepository
         return $client?->id_client;
     }
 
-    // Endpoint GET /profile
+    // Se obtiene información básica del usuario
     public function getProfile($id)
     {
         $user = User::with([
