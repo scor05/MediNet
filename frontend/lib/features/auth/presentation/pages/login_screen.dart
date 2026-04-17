@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:frontend/theme/app_theme.dart';
 import 'package:frontend/widgets/wave_header.dart';
 import 'package:frontend/features/auth/presentation/pages/register_screen.dart';
+import 'package:frontend/features/auth/presentation/pages/role_selection_screen.dart';
 import 'package:frontend/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:frontend/features/auth/data/datasources/auth_remote_datasource.dart';
+import 'package:frontend/features/auth/data/datasources/profile_remote_datasource.dart';
 import 'package:frontend/features/auth/domain/usecases/login_usecase.dart';
 import 'package:frontend/features/calendar/presentation/pages/doctor_calendar_screen.dart';
 
@@ -20,6 +22,8 @@ class _LoginScreenState extends State<LoginScreen> {
     AuthRepositoryImpl(AuthRemoteDatasource()),
   );
 
+  final _profileDatasource = ProfileRemoteDatasource();
+
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
@@ -34,6 +38,68 @@ class _LoginScreenState extends State<LoginScreen> {
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     super.dispose();
+  }
+
+  // Construye la lista de roles disponibles con base en el perfil
+  List<String> _extractRoles(Map<String, dynamic> profile) {
+    final roles = <String>[];
+
+    // Se considera paciente como modo base para cualquier usuario autenticado
+    roles.add('patient');
+
+    // Agrega rol doctor si aplica
+    if (profile['is_doctor'] == true) {
+      roles.add('doctor');
+    }
+
+    // Agrega rol secretaria si aplica
+    if (profile['is_secretary'] == true) {
+      roles.add('secretary');
+    }
+
+    // Agrega rol administrador si el usuario administra al menos un cliente
+    if (profile['admin_of'] is List &&
+        (profile['admin_of'] as List).isNotEmpty) {
+      roles.add('admin');
+    }
+
+    return roles;
+  }
+
+  // Navega automáticamente según el rol cuando el usuario solo tiene un modo disponible
+  void _navigateSingleRole(BuildContext context, String role) {
+    switch (role) {
+      case 'doctor':
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const DoctorCalendarPage()),
+        );
+        break;
+
+      case 'secretary':
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Pantalla de secretaria pendiente de implementar'),
+          ),
+        );
+        break;
+
+      case 'admin':
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Pantalla de administrador pendiente de implementar'),
+          ),
+        );
+        break;
+
+      case 'patient':
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Pantalla de paciente pendiente de implementar'),
+          ),
+        );
+        break;
+    }
   }
 
   // Maneja el inicio de sesión al presionar el botón de login
@@ -56,12 +122,39 @@ class _LoginScreenState extends State<LoginScreen> {
     // Si la pantalla ya no existe, no hace nada
     if (!mounted) return;
 
-    // Si el login fue exitoso, navega a la pantalla del calendario
+    // Si el login fue exitoso, consulta el perfil del usuario
+    // para determinar los modos disponibles dentro del sistema
     if (result.success) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const DoctorCalendarPage()),
-      );
+      try {
+        // Obtiene el perfil del backend usando el token actual de Supabase
+        final profile = await _profileDatasource.getProfile();
+
+        // Determina los roles disponibles del usuario
+        final roles = _extractRoles(profile);
+
+        // Si la pantalla ya no existe, no hace nada
+        if (!mounted) return;
+
+        // Si solo existe un rol disponible, navega automáticamente
+        if (roles.length == 1) {
+          _navigateSingleRole(context, roles.first);
+        } else {
+          // Si tiene más de un rol, muestra la pantalla de selección de modo
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) =>
+                  RoleSelectionScreen(roles: roles, profile: profile),
+            ),
+          );
+        }
+      } catch (e) {
+        print('ERROR PROFILE: $e');
+        setState(() {
+          _error =
+              'Inicio de sesión exitoso, pero no se pudo cargar el perfil.';
+        });
+      }
     } else {
       setState(() => _error = result.error);
     }
