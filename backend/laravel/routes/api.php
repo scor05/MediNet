@@ -5,11 +5,6 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\AuthController;
 
 // Rutas públicas
-Route::get('/public', function () {
-    return response()->json([
-        'message' => 'Ruta publica funcionando'
-    ]);
-});
 Route::post('/auth/register', [AuthController::class, 'register']);
 
 // Rutas protegidas por autenticación
@@ -27,7 +22,7 @@ Route::middleware('supabase.auth')->group(function () {
     Route::get('/user', function (Request $request) {
         return response()->json([
             'message' => 'Token válido',
-            'user' => $request->attributes->get('supabase_user')
+            'user' => $request->user()
         ]);
     });
 });

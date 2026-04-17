@@ -11,10 +11,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('superadmins', function (Blueprint $table) {
-            $table->foreignId('id_user')
-                  ->primary()
-                  ->constrained('users')
-                  ->onDelete('cascade');
+            $table->foreignId('id_user')->constrained('users')->primary()->onDelete('cascade');
         });
     }
 
