@@ -40,7 +40,7 @@ class ClientController extends Controller
         $validated = $request->validate([
             'nit' => 'sometimes|string|max:20',
             'name' => 'sometimes|string|max:255',
-            'is_active' => 'somtimes|boolean',
+            'is_active' => 'sometimes|boolean',
         ]);
         return response()->json($this->service->update($id, $validated));
     }

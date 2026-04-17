@@ -7,7 +7,7 @@ use App\Http\Controllers\ClientClinicController;
 
 
 Route::prefix('clients')->group(function () {
-    Route::prefix('superadmin')->middleware('is.superadmin')->group(function () {
+    Route::middleware('is.superadmin')->group(function () {
         Route::get('/', [ClientController::class, 'index']);
         Route::get('/{clientId}', [ClientController::class, 'show']);
         Route::post('/', [ClientController::class, 'store']);

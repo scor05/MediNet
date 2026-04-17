@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:frontend/theme/app_theme.dart';
 import 'package:frontend/config/app_config.dart';
 import 'package:frontend/features/auth/presentation/pages/welcome_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,7 +13,7 @@ void main() async {
     anonKey: AppConfig.supabaseAnonKey,
   );
 
-  runApp(const MediNetApp());
+  runApp(const ProviderScope(child: MediNetApp()));
 }
 
 class MediNetApp extends StatelessWidget {
