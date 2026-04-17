@@ -47,7 +47,7 @@ class UserController extends Controller
     }
 
 
-    // Endpoint GET /profile
+    // Se obtiene información básica del usuario
     public function profile(Request $request)
     {
         return response()->json(
