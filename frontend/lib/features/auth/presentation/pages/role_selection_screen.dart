@@ -1,19 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/theme/app_theme.dart';
 import 'package:frontend/widgets/wave_header.dart';
+import 'package:frontend/features/auth/domain/entities/user_profile.dart';
 import 'package:frontend/features/calendar/presentation/pages/doctor_calendar_screen.dart';
 
 class RoleSelectionScreen extends StatelessWidget {
-  final List<String> roles;
-  final Map<String, dynamic> profile;
+  final UserProfile profile;
 
-  const RoleSelectionScreen({
-    super.key,
-    required this.roles,
-    required this.profile,
-  });
+  const RoleSelectionScreen({super.key, required this.profile});
 
-  // Navega a la pantalla correspondiente según el rol seleccionado
   void _navigateByRole(BuildContext context, String role) {
     switch (role) {
       case 'doctor':
@@ -22,34 +17,18 @@ class RoleSelectionScreen extends StatelessWidget {
           MaterialPageRoute(builder: (_) => const DoctorCalendarPage()),
         );
         break;
-
       case 'secretary':
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Pantalla de secretaria pendiente de implementar'),
-          ),
-        );
+        // TODO: navegar a pantalla de secretaria
         break;
-
       case 'admin':
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Pantalla de administrador pendiente de implementar'),
-          ),
-        );
+        // TODO: navegar a pantalla de admin
         break;
-
       case 'patient':
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Pantalla de paciente pendiente de implementar'),
-          ),
-        );
+        // TODO: navegar a pantalla de paciente
         break;
     }
   }
 
-  // Traduce el nombre interno del rol a un texto amigable para la UI
   String _getRoleLabel(String role) {
     switch (role) {
       case 'doctor':
@@ -79,7 +58,7 @@ class RoleSelectionScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Hola, ${profile['name'] ?? 'usuario'}',
+                    'Hola, ${profile.name}',
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -96,8 +75,8 @@ class RoleSelectionScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 28),
 
-                  // Se genera un botón por cada rol disponible
-                  ...roles.map(
+                  // profile.roles viene del getter de la entidad
+                  ...profile.roles.map(
                     (role) => Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: ElevatedButton(

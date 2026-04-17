@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/repositories/auth_repository.dart';
+import '../../domain/entities/user_profile.dart';
 import '../datasources/auth_remote_datasource.dart';
 import '../../domain/results/auth_result.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
@@ -68,6 +69,21 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> logout() async {
     await _datasource.logout();
+  }
+
+  @override
+  Future<UserProfile> getProfile() async {
+    try {
+      return await _datasource.getProfile();
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw ApiException('Sin conexión. Verifica tu internet.');
+    } on TimeoutException {
+      throw ApiException('La solicitud tardó demasiado. Intenta de nuevo.');
+    } catch (e) {
+      throw ApiException('Error inesperado al cargar el perfil.');
+    }
   }
 
   // Traduce errores de Supabase al español
