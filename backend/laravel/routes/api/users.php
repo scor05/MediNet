@@ -6,6 +6,8 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ScheduleController;
 
 Route::prefix('users')->group(function () {
+    Route::get('/profile', [UserController::class, 'profile']);
+
     Route::get('/', [UserController::class, 'index']);
     Route::get('/{id}', [UserController::class, 'show']);
     Route::patch('/{id}', [UserController::class, 'update']);
@@ -14,6 +16,4 @@ Route::prefix('users')->group(function () {
     Route::get('/{doctorId}/specialties', [DoctorSpecialtyController::class, 'index']);
     Route::post('/{doctorId}/specialties', [DoctorSpecialtyController::class, 'store']);
     Route::delete('/{doctorId}/specialties/{specialtyId}', [DoctorSpecialtyController::class, 'destroy']);
-
-    Route::get('/profile', [UserController::class, 'profile']);
 });
