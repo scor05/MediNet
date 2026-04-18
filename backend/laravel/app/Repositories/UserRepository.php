@@ -87,7 +87,7 @@ class UserRepository
             ->unique('client_id')
             ->values();
 
-        $superAdmin = Superadmin::where('id_user', $id)->exists();
+        $superadmin = Superadmin::where('id_user', $id)->exists();
 
         return [
             'id' => $user->id,
@@ -98,7 +98,7 @@ class UserRepository
             'is_doctor' => $isDoctor,
             'is_secretary' => $isSecretary,
             'admin_of' => $adminOf,
-            'superadmin' => $superAdmin,
+            'superadmin' => $superadmin,
         ];
     }
 

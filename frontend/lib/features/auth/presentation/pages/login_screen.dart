@@ -63,7 +63,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     ref.listen<AuthState>(authNotifierProvider, (previous, next) {
       if (next is AuthAuthenticated) {
         _handleAuthenticated(next);
-        // Resetea el estado después de navegar para no re-disparar en rebuilds
         ref.read(authNotifierProvider.notifier).reset();
       }
       if (next is AuthSuperadmin) {
@@ -71,6 +70,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           context,
           MaterialPageRoute(builder: (_) => const SuperadminPanel()),
         );
+        ref.read(authNotifierProvider.notifier).reset();
       }
     });
 

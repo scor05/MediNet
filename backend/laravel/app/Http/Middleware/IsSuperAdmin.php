@@ -19,9 +19,9 @@ class IsSuperAdmin
         }
 
         // Verificar si el usuario existe en la tabla superadmins
-        $isSuperAdmin = SuperAdmin::where('id_user', $user->id)->exists();
+        $isSuperadmin = Superadmin::where('id_user', $user->id)->exists();
 
-        if (!$isSuperAdmin) {
+        if (!$isSuperadmin) {
             return response()->json([
                 'message' => 'Acceso denegado. No tiene los permisos necesarios.'
             ], 403);
