@@ -51,7 +51,7 @@ class AuthRemoteDatasource {
 
     final response = await http
         .get(
-          Uri.parse('${AppConfig.apiUrl}/users/profile'),
+          Uri.parse('${AppConfig.apiUrl}/profile'),
           headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',

@@ -5,7 +5,7 @@ import 'package:frontend/widgets/wave_header.dart';
 import 'package:frontend/features/auth/presentation/pages/register_screen.dart';
 import 'package:frontend/features/auth/presentation/pages/role_selection_screen.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
-import 'package:frontend/features/calendar/presentation/pages/doctor_calendar_screen.dart';
+import 'package:frontend/features/superadmin/presentation/pages/superadmin_panel.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -65,6 +65,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         _handleAuthenticated(next);
         // Resetea el estado después de navegar para no re-disparar en rebuilds
         ref.read(authNotifierProvider.notifier).reset();
+      }
+      if (next is AuthSuperadmin) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const SuperadminPanel()),
+        );
       }
     });
 

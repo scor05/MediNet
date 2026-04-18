@@ -10,7 +10,7 @@ class UserProfileModel extends UserProfile {
     required super.isActive,
     required super.isDoctor,
     required super.isSecretary,
-    required super.isSuperAdmin,
+    required super.isSuperadmin,
     required super.adminOf,
   });
 
@@ -23,7 +23,7 @@ class UserProfileModel extends UserProfile {
       isActive: json['is_active'] == true,
       isDoctor: json['is_doctor'] == true,
       isSecretary: json['is_secretary'] == true,
-      isSuperAdmin: json['superadmin'] == true,
+      isSuperadmin: json['superadmin'] == true,
 
       adminOf: (json['admin_of'] as List<dynamic>? ?? [])
           .map((e) => AdminOfModel.fromJson(e as Map<String, dynamic>))

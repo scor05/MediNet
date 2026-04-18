@@ -8,7 +8,7 @@ class UserProfile {
   final bool isActive;
   final bool isDoctor;
   final bool isSecretary;
-  final bool isSuperAdmin;
+  final bool isSuperadmin;
   final List<AdminOf> adminOf;
 
   const UserProfile({
@@ -19,7 +19,7 @@ class UserProfile {
     required this.isActive,
     required this.isDoctor,
     required this.isSecretary,
-    required this.isSuperAdmin,
+    required this.isSuperadmin,
     required this.adminOf,
   });
 
