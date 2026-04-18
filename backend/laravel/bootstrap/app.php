@@ -6,7 +6,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\HandleCors;
 use Illuminate\Http\Request;
 use App\Http\Middleware\SupabaseAuth;
-use App\Http\Middleware\IsSuperAdmin;
+use App\Http\Middleware\IsSuperadmin;
 use App\Exceptions\RegistrationException;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -21,7 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'supabase.auth' => SupabaseAuth::class,
-            'is.superadmin' => IsSuperAdmin::class,
+            'is.superadmin' => IsSuperadmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
