@@ -49,6 +49,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     if (roles.length == 1) {
       // TODO: navegar a pantalla de paciente
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const Text('Pantalla de paciente')),
+      );
     } else {
       Navigator.pushReplacement(
         context,

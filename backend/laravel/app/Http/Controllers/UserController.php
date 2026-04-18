@@ -21,6 +21,9 @@ class UserController extends Controller
     // Se obtiene un usuario por su ID
     public function show($id)
     {
+        if (!is_numeric($id)) {
+            return response()->json(['error' => 'El ID debe ser un número.'], 400);
+        }
         return response()->json($this->service->getById($id));
     }
 
