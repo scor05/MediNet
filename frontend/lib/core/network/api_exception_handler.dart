@@ -19,7 +19,7 @@ Never handleApiError(http.Response response) {
 
   // Para otros errores
   throw ApiException(
-    body['message'] ?? body['error'] ?? 'Error inesperado.',
+    body['error'] ?? 'Error inesperado.',
     statusCode: response.statusCode,
   );
 }

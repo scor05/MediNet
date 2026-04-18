@@ -48,7 +48,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final roles = profile.roles;
 
     if (roles.length == 1) {
-      _navigateByRole(roles.first);
+      // TODO: navegar a pantalla de paciente
     } else {
       Navigator.pushReplacement(
         context,
@@ -56,26 +56,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           builder: (_) => RoleSelectionScreen(profile: profile),
         ),
       );
-    }
-  }
-
-  void _navigateByRole(String role) {
-    switch (role) {
-      case 'doctor':
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const DoctorCalendarPage()),
-        );
-        break;
-      case 'secretary':
-        // TODO: navegar a pantalla de secretaria
-        break;
-      case 'admin':
-        // TODO: navegar a pantalla de admin
-        break;
-      case 'patient':
-        // TODO: navegar a pantalla de paciente
-        break;
     }
   }
 

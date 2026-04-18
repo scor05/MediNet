@@ -6,6 +6,7 @@ import 'package:frontend/features/auth/domain/repositories/auth_repository.dart'
 import 'package:frontend/features/auth/domain/usecases/login_usecase.dart';
 import 'package:frontend/features/auth/domain/usecases/register_usecase.dart';
 import 'package:frontend/features/auth/domain/usecases/get_profile_usecase.dart';
+import 'package:frontend/core/exceptions/api_exception.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepositoryImpl(AuthRemoteDatasource());
@@ -95,6 +96,8 @@ class AuthNotifier extends Notifier<AuthState> {
     try {
       final profile = await ref.read(getProfileUsecaseProvider)();
       state = AuthAuthenticated(profile);
+    } on ApiException catch (e) {
+      state = AuthError(e.message);
     } catch (e) {
       state = AuthError(
         'Inicio de sesión exitoso, pero no se pudo cargar el perfil.',
