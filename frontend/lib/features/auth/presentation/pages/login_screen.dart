@@ -27,6 +27,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
+  // Maneja el login
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -41,7 +42,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final roles = profile.roles;
 
     if (roles.length == 1) {
-      _navigateByRole(roles.first);
+      // TODO: navegar a pantalla de paciente
     } else {
       Navigator.pushReplacement(
         context,
@@ -49,26 +50,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           builder: (_) => RoleSelectionScreen(profile: profile),
         ),
       );
-    }
-  }
-
-  void _navigateByRole(String role) {
-    switch (role) {
-      case 'doctor':
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const DoctorCalendarPage()),
-        );
-        break;
-      case 'secretary':
-        // TODO: navegar a pantalla de secretaria
-        break;
-      case 'admin':
-        // TODO: navegar a pantalla de admin
-        break;
-      case 'patient':
-        // TODO: navegar a pantalla de paciente
-        break;
     }
   }
 

@@ -1,17 +1,25 @@
+import 'admin_of.dart';
+
 class UserProfile {
   final int id;
   final String name;
   final String email;
+  final String phone;
+  final bool isActive;
   final bool isDoctor;
   final bool isSecretary;
-  final List<dynamic> adminOf;
+  final bool isSuperAdmin;
+  final List<AdminOf> adminOf;
 
   const UserProfile({
     required this.id,
     required this.name,
     required this.email,
+    required this.phone,
+    required this.isActive,
     required this.isDoctor,
     required this.isSecretary,
+    required this.isSuperAdmin,
     required this.adminOf,
   });
 

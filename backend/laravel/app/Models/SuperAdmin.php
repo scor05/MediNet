@@ -11,4 +11,10 @@ class SuperAdmin extends Model
     protected $fillable = [
         'id_user',
     ];
+
+    // Definición de relaciones
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'id_user');
+    }
 }

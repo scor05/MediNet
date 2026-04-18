@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use App\Models\SuperAdmin;
 
 class UserRepository
 {
@@ -56,7 +57,6 @@ class UserRepository
     {
         $user = User::with([
             'clientUsers.client',
-            'doctorSpecialties.specialty',
         ])->findOrFail($id);
 
         $memberships = $user->clientUsers->map(function ($clientUser) {
@@ -72,8 +72,7 @@ class UserRepository
 
         $activeMemberships = $memberships->where('is_active', true)->values();
 
-        $isDoctor = $activeMemberships->contains('role_name', 'doctor')
-            || $user->doctorSpecialties->isNotEmpty();
+        $isDoctor = $activeMemberships->contains('role_name', 'doctor');
 
         $isSecretary = $activeMemberships->contains('role_name', 'secretary');
 
@@ -88,14 +87,7 @@ class UserRepository
             ->unique('client_id')
             ->values();
 
-        $specialties = $user->doctorSpecialties->map(function ($doctorSpecialty) {
-            return [
-                'id' => $doctorSpecialty->id_specialty,
-                'name' => $doctorSpecialty->specialty?->specialty,
-            ];
-        })->values();
-
-        // $superAdmin = SuperAdmin::findOrFail($id);
+        $superAdmin = SuperAdmin::where('id_user', $id)->exists();
 
         return [
             'id' => $user->id,
@@ -106,7 +98,7 @@ class UserRepository
             'is_doctor' => $isDoctor,
             'is_secretary' => $isSecretary,
             'admin_of' => $adminOf,
-            // 'superadmin' => true,  TODO: falta implementar tabla superadmin
+            'superadmin' => $superAdmin,
         ];
     }
 
