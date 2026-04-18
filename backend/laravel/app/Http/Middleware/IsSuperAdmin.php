@@ -5,9 +5,9 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use App\Models\SuperAdmin;
+use App\Models\Superadmin;
 
-class IsSuperAdmin
+class IsSuperadmin
 {
     public function handle(Request $request, Closure $next): Response
     {
