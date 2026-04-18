@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthController;
 
 // Rutas públicas
@@ -19,10 +19,5 @@ Route::middleware('supabase.auth')->group(function () {
     require __DIR__ . '/api/calendar.php';
 
     // Usuario autenticado
-    Route::get('/user', function (Request $request) {
-        return response()->json([
-            'message' => 'Token válido',
-            'user' => $request->user()
-        ]);
-    });
+    Route::get('/profile', [UserController::class, 'profile']);
 });

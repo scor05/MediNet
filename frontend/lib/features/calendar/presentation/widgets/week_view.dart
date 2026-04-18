@@ -35,7 +35,7 @@ class WeekView extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: isToday
                         ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).colorScheme.surfaceVariant,
+                        : Theme.of(context).colorScheme.surfaceContainerHighest,
                     border: Border(
                       right: i < 6
                           ? BorderSide(

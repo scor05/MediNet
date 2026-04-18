@@ -108,7 +108,7 @@ class _SuperadminPanelState extends ConsumerState<SuperadminPanel> {
                     ),
                     SizedBox(height: 2),
                     Text(
-                      'Clientes',
+                      'Dashboard',
                       style: TextStyle(
                         color: AppTheme.background,
                         fontSize: 26,
@@ -118,26 +118,28 @@ class _SuperadminPanelState extends ConsumerState<SuperadminPanel> {
                   ],
                 ),
               ),
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.background,
-                  foregroundColor: AppTheme.accent,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
+              Expanded(
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.background,
+                    foregroundColor: AppTheme.accent,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                  onPressed: () {
+                    // TODO: navegar a pantalla de crear cliente
+                  },
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text(
+                    'Nuevo cliente',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                   ),
-                ),
-                onPressed: () {
-                  // TODO: navegar a pantalla de crear cliente
-                },
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text(
-                  'Nuevo',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                 ),
               ),
             ],

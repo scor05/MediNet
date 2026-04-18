@@ -4,8 +4,6 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DoctorSpecialtyController;
 use App\Http\Controllers\UserController;
 
-Route::get('/profile', [UserController::class, 'profile']);
-
 Route::prefix('users')->group(function () {
 
     Route::get('/', [UserController::class, 'index']);
