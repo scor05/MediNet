@@ -43,6 +43,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     if (roles.length == 1) {
       // TODO: navegar a pantalla de paciente
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const Text('Pantalla de paciente')),
+      );
     } else {
       Navigator.pushReplacement(
         context,
