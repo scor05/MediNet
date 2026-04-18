@@ -7,16 +7,14 @@ import '../providers/clients_provider.dart';
 import '../widgets/client_card.dart';
 import '../widgets/client_filter_chip.dart';
 
-class SuperadminClientsScreen extends ConsumerStatefulWidget {
-  const SuperadminClientsScreen({super.key});
+class SuperadminPanel extends ConsumerStatefulWidget {
+  const SuperadminPanel({super.key});
 
   @override
-  ConsumerState<SuperadminClientsScreen> createState() =>
-      _SuperadminClientsScreenState();
+  ConsumerState<SuperadminPanel> createState() => _SuperadminPanelState();
 }
 
-class _SuperadminClientsScreenState
-    extends ConsumerState<SuperadminClientsScreen> {
+class _SuperadminPanelState extends ConsumerState<SuperadminPanel> {
   // IDs de clientes cuyo toggle está en curso (para mostrar spinner individual)
   final Set<int> _togglingIds = {};
 

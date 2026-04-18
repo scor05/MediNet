@@ -4,7 +4,6 @@ import 'package:frontend/theme/app_theme.dart';
 import 'package:frontend/widgets/wave_header.dart';
 import 'package:frontend/features/auth/presentation/pages/role_selection_screen.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
-import 'package:frontend/features/calendar/presentation/pages/doctor_calendar_screen.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});

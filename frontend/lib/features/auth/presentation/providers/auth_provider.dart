@@ -27,13 +27,13 @@ final getProfileUsecaseProvider = Provider<GetProfileUsecase>((ref) {
 // Representa los posibles estados del flujo de autenticación
 sealed class AuthState {}
 
-// Estado inicial / pantallas de login y registro
+// Estado inicial de pantallas de login y registro
 class AuthIdle extends AuthState {}
 
 // Cargando (login, register o getProfile en curso)
 class AuthLoading extends AuthState {}
 
-// Login o register exitoso y perfil cargado: listo para navegar
+// Login o register exitoso y perfil cargado
 class AuthAuthenticated extends AuthState {
   final UserProfile profile;
   AuthAuthenticated(this.profile);
@@ -44,6 +44,9 @@ class AuthError extends AuthState {
   final String message;
   AuthError(this.message);
 }
+
+// Login exitoso como superadmin
+class AuthSuperadmin extends AuthState {}
 
 // Provee los estados del flujo de autenticación
 class AuthNotifier extends Notifier<AuthState> {
@@ -95,7 +98,12 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<void> _loadProfile() async {
     try {
       final profile = await ref.read(getProfileUsecaseProvider)();
-      state = AuthAuthenticated(profile);
+
+      if (profile.isSuperadmin) {
+        state = AuthSuperadmin();
+      } else {
+        state = AuthAuthenticated(profile);
+      }
     } on ApiException catch (e) {
       state = AuthError(e.message);
     } catch (e) {
