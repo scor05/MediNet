@@ -93,35 +93,43 @@ class ClientCard extends StatelessWidget {
                 ),
               ),
 
-              // Toggle button o spinner
               const SizedBox(width: 8),
-              toggling
-                  ? const SizedBox(
-                      width: 36,
-                      height: 36,
-                      child: Padding(
-                        padding: EdgeInsets.all(8),
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppTheme.accent,
-                        ),
-                      ),
-                    )
-                  : IconButton(
-                      onPressed: onToggle,
-                      tooltip: client.isActive ? 'Desactivar' : 'Activar',
-                      icon: Icon(
-                        client.isActive
-                            ? Icons.toggle_on_rounded
-                            : Icons.toggle_off_rounded,
-                        size: 32,
-                        color: client.isActive
-                            ? AppTheme.accent
-                            : Colors.black26,
-                      ),
-                    ),
 
-              // Flecha de detalle
+              // Toggle button o spinner
+              SizedBox(
+                width: 44,
+                height: 44,
+                child: Center(
+                  child: toggling
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppTheme.accent,
+                          ),
+                        )
+                      : IconButton(
+                          onPressed: onToggle,
+                          tooltip: client.isActive ? 'Desactivar' : 'Activar',
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          splashRadius: 22,
+                          icon: Icon(
+                            client.isActive
+                                ? Icons.toggle_on_rounded
+                                : Icons.toggle_off_rounded,
+                            size: 36,
+                            color: client.isActive
+                                ? AppTheme.accent
+                                : Colors.black26,
+                          ),
+                        ),
+                ),
+              ),
+
+              const SizedBox(width: 6),
+
               const Icon(Icons.chevron_right, color: Colors.black26, size: 20),
             ],
           ),

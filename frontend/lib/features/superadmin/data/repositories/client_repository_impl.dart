@@ -39,4 +39,23 @@ class ClientRepositoryImpl implements ClientRepository {
       throw ApiException('Error inesperado. Intenta de nuevo.');
     }
   }
+
+  @override
+  Future<Client> editClient(
+    int id, {
+    required String name,
+    required String nit,
+  }) async {
+    try {
+      return await datasource.editClient(id, name: name, nit: nit);
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw ApiException('Sin conexión. Verifica tu internet.');
+    } on TimeoutException {
+      throw ApiException('La solicitud tardó demasiado. Intenta de nuevo.');
+    } catch (e) {
+      throw ApiException('Error inesperado. Intenta de nuevo.');
+    }
+  }
 }

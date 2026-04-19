@@ -5,27 +5,33 @@ import '../../domain/entities/client.dart';
 import '../../domain/repositories/client_repository.dart';
 import '../../domain/usecases/get_clients_usecase.dart';
 import '../../domain/usecases/toggle_client_status_usecase.dart';
+import '../../domain/usecases/edit_client_usecase.dart';
+
+// ── Repositorio y usecases ───────────────────────────────────────────────────
 
 final clientRepositoryProvider = Provider<ClientRepository>((ref) {
   return ClientRepositoryImpl(ClientRemoteDatasource());
 });
 
-final getClientsUseCaseProvider = Provider<GetClientsUseCase>((ref) {
-  final repository = ref.read(clientRepositoryProvider);
-  return GetClientsUseCase(repository);
+final getClientsUsecaseProvider = Provider<GetClientsUsecase>((ref) {
+  return GetClientsUsecase(ref.read(clientRepositoryProvider));
 });
 
-final toggleClientStatusUseCaseProvider = Provider<ToggleClientStatusUseCase>((
+final toggleClientStatusUsecaseProvider = Provider<ToggleClientStatusUseCase>((
   ref,
 ) {
-  final repository = ref.read(clientRepositoryProvider);
-  return ToggleClientStatusUseCase(repository);
+  return ToggleClientStatusUseCase(ref.read(clientRepositoryProvider));
+});
+
+final editClientUsecaseProvider = Provider<EditClientUsecase>((ref) {
+  return EditClientUsecase(ref.read(clientRepositoryProvider));
 });
 
 // Provee los filtros de los clientes (null = todos, true = activos, false = inactivos)
 final clientFilterProvider = StateProvider<bool?>((ref) => null);
 
-// Notifier que maneja los 3 estados (loading / data / error) automáticamente
+// ── Notifier ──────────────────────────────────────────────────────────────────
+
 class ClientsNotifier extends AsyncNotifier<List<Client>> {
   @override
   Future<List<Client>> build() async {
@@ -39,33 +45,59 @@ class ClientsNotifier extends AsyncNotifier<List<Client>> {
   }
 
   // Activa o desactiva un cliente y actualiza la lista en memoria
-  Future<void> toggleStatus(Client client) async {
-    final toggleClientStatus = ref.read(toggleClientStatusUseCaseProvider);
-
-    // Guardamos la lista actual para poder revertir si falla
+  Future<void> toggleStatus(int clientId) async {
+    final current = state.requireValue.firstWhere((c) => c.id == clientId);
     final previousState = state;
 
-    // Actualizamos la UI antes de que responda el servidor
+    // Optimistic update
     state = AsyncData(
-      state.requireValue.map((c) {
-        return c.id == client.id ? c.copyWith(isActive: !c.isActive) : c;
-      }).toList(),
+      state.requireValue
+          .map((c) => c.id == clientId ? c.copyWith(isActive: !c.isActive) : c)
+          .toList(),
     );
 
     try {
-      final updated = await toggleClientStatus(
-        clientId: client.id,
-        isActive: !client.isActive,
-      );
+      final updated = await ref
+          .read(toggleClientStatusUsecaseProvider)
+          .call(clientId: clientId, isActive: !current.isActive);
 
-      // Se confirma la lista de clientes con el valor real que devolvió el servidor
       state = AsyncData(
-        state.requireValue.map((c) {
-          return c.id == updated.id ? updated : c;
-        }).toList(),
+        state.requireValue
+            .map((c) => c.id == updated.id ? updated : c)
+            .toList(),
       );
     } catch (e) {
-      // Si falla, revertimos al estado anterior
+      state = previousState;
+      rethrow;
+    }
+  }
+
+  // Edita un cliente y actualiza la lista en memoria
+  Future<void> editClient(
+    int clientId, {
+    required String name,
+    required String nit,
+  }) async {
+    final previousState = state;
+
+    // Optimistic update
+    state = AsyncData(
+      state.requireValue
+          .map((c) => c.id == clientId ? c.copyWith(name: name, nit: nit) : c)
+          .toList(),
+    );
+
+    try {
+      final updated = await ref
+          .read(editClientUsecaseProvider)
+          .call(clientId: clientId, name: name, nit: nit);
+
+      state = AsyncData(
+        state.requireValue
+            .map((c) => c.id == updated.id ? updated : c)
+            .toList(),
+      );
+    } catch (e) {
       state = previousState;
       rethrow;
     }
@@ -77,7 +109,7 @@ class ClientsNotifier extends AsyncNotifier<List<Client>> {
 
   // Método privado para obtener los clientes
   Future<List<Client>> _fetchClients() async {
-    final getClients = ref.read(getClientsUseCaseProvider);
+    final getClients = ref.read(getClientsUsecaseProvider);
     return getClients();
   }
 }

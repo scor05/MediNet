@@ -1,0 +1,640 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/theme/app_theme.dart';
+import 'package:frontend/core/exceptions/api_exception.dart';
+import '../../domain/entities/client.dart';
+import '../../domain/entities/user.dart';
+import '../../domain/entities/clinic.dart';
+import '../providers/clients_provider.dart';
+import '../providers/client_users_provider.dart';
+import '../providers/client_clinics_provider.dart';
+
+class ClientDetailScreen extends ConsumerStatefulWidget {
+  final int clientId;
+
+  const ClientDetailScreen({super.key, required this.clientId});
+
+  @override
+  ConsumerState<ClientDetailScreen> createState() => _ClientDetailScreenState();
+}
+
+class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
+  bool _togglingStatus = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  // ── Acciones ──────────────────────────────────────────────
+
+  Future<void> _toggleStatus() async {
+    if (_togglingStatus) return;
+    setState(() => _togglingStatus = true);
+    try {
+      await ref
+          .read(clientsNotifierProvider.notifier)
+          .toggleStatus(widget.clientId);
+    } on ApiException catch (e) {
+      _showError(e.message);
+    } catch (_) {
+      _showError('Error inesperado. Intenta de nuevo.');
+    } finally {
+      if (mounted) setState(() => _togglingStatus = false);
+    }
+  }
+
+  void _showEditDialog(String currentName, String currentNit) {
+    final nameCtrl = TextEditingController(text: currentName);
+    final nitCtrl = TextEditingController(text: currentNit);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Editar cliente'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameCtrl,
+              decoration: _inputDecoration('Nombre'),
+              textCapitalization: TextCapitalization.words,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: nitCtrl,
+              decoration: _inputDecoration('NIT'),
+              keyboardType: TextInputType.number,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.accent,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              final name = nameCtrl.text.trim();
+              final nit = nitCtrl.text.trim();
+              if (name.isEmpty || nit.isEmpty) return;
+              Navigator.pop(ctx);
+              try {
+                await ref
+                    .read(clientsNotifierProvider.notifier)
+                    .editClient(widget.clientId, name: name, nit: nit);
+                // No hace falta syncClient — ref.watch(clientsNotifierProvider)
+                // ya reconstruye la pantalla automáticamente.
+              } on ApiException catch (e) {
+                _showError(e.message);
+              } catch (_) {
+                _showError('Error al guardar los cambios.');
+              }
+            },
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.redAccent),
+    );
+  }
+
+  // ── Build ─────────────────────────────────────────────────
+
+  @override
+  Widget build(BuildContext context) {
+    // Lee el cliente directamente de la lista del panel.
+    // Cualquier cambio (toggle, edit) reconstruye esta pantalla automáticamente.
+    final clientsState = ref.watch(clientsNotifierProvider);
+    final usersAsync = ref.watch(clientUsersNotifierProvider(widget.clientId));
+    final clinicsAsync = ref.watch(
+      clientClinicsNotifierProvider(widget.clientId),
+    );
+
+    // Derivamos el cliente de la lista. Si la lista aún está cargando o falló,
+    // mostramos los estados correspondientes.
+    final clientAsync = clientsState.whenData(
+      (list) => list.firstWhere((c) => c.id == widget.clientId),
+    );
+
+    return Scaffold(
+      backgroundColor: AppTheme.background,
+      body: clientAsync.when(
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: AppTheme.accent),
+        ),
+        error: (e, _) => _buildClientError(),
+        data: (client) => _buildContent(client, usersAsync, clinicsAsync),
+      ),
+    );
+  }
+
+  Widget _buildContent(
+    Client client,
+    AsyncValue<List<User>> usersAsync,
+    AsyncValue<List<Clinic>> clinicsAsync,
+  ) {
+    return Column(
+      children: [
+        _buildHeader(
+          name: client.name,
+          nit: client.nit,
+          isActive: client.isActive,
+        ),
+        TabBar(
+          controller: _tabController,
+          labelColor: AppTheme.accent,
+          unselectedLabelColor: Colors.black45,
+          indicatorColor: AppTheme.accent,
+          tabs: [
+            Tab(
+              text:
+                  usersAsync.whenOrNull(
+                    data: (u) => 'Usuarios (${u.length})',
+                  ) ??
+                  'Usuarios',
+            ),
+            Tab(
+              text:
+                  clinicsAsync.whenOrNull(
+                    data: (c) => 'Clínicas (${c.length})',
+                  ) ??
+                  'Clínicas',
+            ),
+          ],
+        ),
+        Expanded(
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              _buildAsyncList(
+                asyncValue: usersAsync,
+                listLabel: 'Usuarios',
+                emptyLabel: 'No hay usuarios registrados',
+                onRetry: () => ref
+                    .read(clientUsersNotifierProvider(widget.clientId).notifier)
+                    .refresh(),
+                onAdd: () {}, // TODO
+                itemBuilder: (i) => _UserTile(
+                  user: usersAsync.requireValue[i],
+                  onDelete: () {}, // TODO
+                ),
+              ),
+              _buildAsyncList(
+                asyncValue: clinicsAsync,
+                listLabel: 'Clínicas',
+                emptyLabel: 'No hay clínicas registradas',
+                onRetry: () => ref
+                    .read(
+                      clientClinicsNotifierProvider(widget.clientId).notifier,
+                    )
+                    .refresh(),
+                onAdd: () {}, // TODO
+                itemBuilder: (i) => _ClinicTile(
+                  clinic: clinicsAsync.requireValue[i],
+                  onDelete: () {}, // TODO
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Header ────────────────────────────────────────────────
+
+  Widget _buildHeader({
+    required String name,
+    required String nit,
+    required bool isActive,
+  }) {
+    return Container(
+      width: double.infinity,
+      color: AppTheme.accent,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(
+                  Icons.arrow_back_ios_new,
+                  color: AppTheme.background,
+                  size: 20,
+                ),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'MEDINET',
+                      style: TextStyle(
+                        color: AppTheme.background,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            name,
+                            style: const TextStyle(
+                              color: AppTheme.background,
+                              fontSize: 22,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => _showEditDialog(name, nit),
+                          child: const Icon(
+                            Icons.edit_outlined,
+                            color: AppTheme.background,
+                            size: 18,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'NIT: $nit',
+                      style: const TextStyle(
+                        color: AppTheme.background,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              _StatusToggle(
+                isActive: isActive,
+                loading: _togglingStatus,
+                onTap: _toggleStatus,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Lista genérica ────────────────────────────────────────
+
+  Widget _buildAsyncList({
+    required AsyncValue asyncValue,
+    required String listLabel,
+    required String emptyLabel,
+    required VoidCallback onRetry,
+    required VoidCallback onAdd,
+    required Widget Function(int index) itemBuilder,
+  }) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                listLabel,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                ),
+              ),
+              TextButton.icon(
+                onPressed: onAdd,
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('Agregar'),
+                style: TextButton.styleFrom(foregroundColor: AppTheme.accent),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: asyncValue.when(
+            loading: () => const Center(
+              child: CircularProgressIndicator(color: AppTheme.accent),
+            ),
+            error: (e, _) => Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 40,
+                    color: Colors.redAccent.shade200,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    e is ApiException ? e.message : 'Error inesperado.',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.black54, fontSize: 14),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    style: AppTheme.btnDark,
+                    onPressed: onRetry,
+                    child: const Text('Reintentar'),
+                  ),
+                ],
+              ),
+            ),
+            data: (items) => (items as List).isEmpty
+                ? _EmptyState(label: emptyLabel)
+                : ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+                    itemCount: items.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemBuilder: (_, i) => itemBuilder(i),
+                  ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Error del cliente (raro — solo si el panel falló) ─────
+
+  Widget _buildClientError() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 48,
+              color: Colors.redAccent.shade200,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'No se pudo cargar el cliente.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 15, color: Colors.black54),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              style: AppTheme.btnDark,
+              onPressed: () =>
+                  ref.read(clientsNotifierProvider.notifier).refresh(),
+              child: const Text('Reintentar'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  InputDecoration _inputDecoration(String label) => InputDecoration(
+    labelText: label,
+    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+  );
+}
+
+// ── Sub-widgets ───────────────────────────────────────────────────────────────
+
+class _StatusToggle extends StatelessWidget {
+  final bool isActive;
+  final bool loading;
+  final VoidCallback onTap;
+
+  const _StatusToggle({
+    required this.isActive,
+    required this.loading,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: loading ? null : onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isActive
+              ? Colors.white.withValues(alpha: 0.2)
+              : Colors.black.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white54),
+        ),
+        child: loading
+            ? const SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    isActive
+                        ? Icons.check_circle_outline
+                        : Icons.cancel_outlined,
+                    color: Colors.white,
+                    size: 14,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    isActive ? 'Activo' : 'Inactivo',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+class _UserTile extends StatelessWidget {
+  final User user;
+  final VoidCallback onDelete;
+
+  const _UserTile({required this.user, required this.onDelete});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 18,
+            backgroundColor: AppTheme.accent.withValues(alpha: 0.15),
+            child: Text(
+              user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
+              style: const TextStyle(
+                color: AppTheme.accent,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  user.name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+                Text(
+                  user.email,
+                  style: const TextStyle(color: Colors.black45, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: AppTheme.accent.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              user.role,
+              style: const TextStyle(
+                color: AppTheme.accent,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            onPressed: onDelete,
+            icon: const Icon(
+              Icons.delete_outline,
+              color: Colors.redAccent,
+              size: 20,
+            ),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ClinicTile extends StatelessWidget {
+  final Clinic clinic;
+  final VoidCallback onDelete;
+
+  const _ClinicTile({required this.clinic, required this.onDelete});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.local_hospital_outlined,
+            color: AppTheme.accent,
+            size: 22,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              clinic.name,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+            ),
+          ),
+          IconButton(
+            onPressed: onDelete,
+            icon: const Icon(
+              Icons.delete_outline,
+              color: Colors.redAccent,
+              size: 20,
+            ),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  final String label;
+  const _EmptyState({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Text(
+        label,
+        style: const TextStyle(color: Colors.black45, fontSize: 14),
+      ),
+    );
+  }
+}

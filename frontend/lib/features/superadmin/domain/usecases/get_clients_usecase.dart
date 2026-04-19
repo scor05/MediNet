@@ -1,10 +1,10 @@
 import '../entities/client.dart';
 import '../repositories/client_repository.dart';
 
-class GetClientsUseCase {
+class GetClientsUsecase {
   final ClientRepository repository;
 
-  GetClientsUseCase(this.repository);
+  GetClientsUsecase(this.repository);
 
   Future<List<Client>> call() {
     return repository.getClients();

@@ -6,6 +6,7 @@ import '../../domain/entities/client.dart';
 import '../providers/clients_provider.dart';
 import '../widgets/client_card.dart';
 import '../widgets/client_filter_chip.dart';
+import 'client_detail_screen.dart';
 
 class SuperadminPanel extends ConsumerStatefulWidget {
   const SuperadminPanel({super.key});
@@ -24,7 +25,7 @@ class _SuperadminPanelState extends ConsumerState<SuperadminPanel> {
     setState(() => _togglingIds.add(client.id));
 
     try {
-      await ref.read(clientsNotifierProvider.notifier).toggleStatus(client);
+      await ref.read(clientsNotifierProvider.notifier).toggleStatus(client.id);
     } on ApiException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -70,7 +71,7 @@ class _SuperadminPanelState extends ConsumerState<SuperadminPanel> {
     );
   }
 
-  // ─── Header ───────────────────────────────────────────────────────────────
+  // Header
 
   Widget _buildHeader(BuildContext context) {
     return Container(
@@ -149,7 +150,7 @@ class _SuperadminPanelState extends ConsumerState<SuperadminPanel> {
     );
   }
 
-  // ─── Filter bar ───────────────────────────────────────────────────────────
+  // Filter bar
 
   Widget _buildFilterBar(bool? currentFilter) {
     return Container(
@@ -180,7 +181,7 @@ class _SuperadminPanelState extends ConsumerState<SuperadminPanel> {
     );
   }
 
-  // ─── Estados ──────────────────────────────────────────────────────────────
+  // Estados
 
   Widget _buildError(Object error) {
     final message = error is ApiException
@@ -251,7 +252,12 @@ class _SuperadminPanelState extends ConsumerState<SuperadminPanel> {
             client: client,
             toggling: _togglingIds.contains(client.id),
             onTap: () {
-              // TODO: navegar a pantalla de detalle
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ClientDetailScreen(clientId: client.id),
+                ),
+              );
             },
             onToggle: () => _toggleStatus(client),
           );
