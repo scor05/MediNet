@@ -10,12 +10,15 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('client_clinics', function (Blueprint $table) {
+        Schema::create('clinics', function (Blueprint $table) {
+            $table->id();
+            $table->text('name');
+            $table->text('address');
+            $table->text('phone')->unique();
+            $table->text('email')->unique();
             $table->foreignId('id_client')->constrained('clients');
-            $table->foreignId('id_clinic')->constrained('clinics');
             $table->boolean('is_active')->default(true);
-
-            $table->primary(['id_client', 'id_clinic']);
+            $table->timestamps();
         });
     }
 
@@ -24,6 +27,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('client_clinics');
+        Schema::dropIfExists('clinics');
     }
 };

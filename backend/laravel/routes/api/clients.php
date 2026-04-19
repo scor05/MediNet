@@ -3,8 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientUserController;
-use App\Http\Controllers\ClientClinicController;
-
+use App\Http\Controllers\ClinicController;
 
 Route::prefix('clients')->group(function () {
     Route::middleware('is.superadmin')->group(function () {
@@ -20,8 +19,5 @@ Route::prefix('clients')->group(function () {
     Route::patch('/{clientId}/users/{userId}', [ClientUserController::class, 'update']);
     Route::delete('/{clientId}/users/{userId}', [ClientUserController::class, 'destroy']);
 
-    Route::get('/{clientId}/clinics', [ClientClinicController::class, 'index']);
-    Route::post('/{clientId}/clinics', [ClientClinicController::class, 'store']);
-    Route::patch('/{clientId}/clinics/{clinicId}', [ClientClinicController::class, 'update']);
-    Route::delete('/{clientId}/clinics/{clinicId}', [ClientClinicController::class, 'destroy']);
+    Route::get('/{clientId}/clinics', [ClinicController::class, 'index']);
 });

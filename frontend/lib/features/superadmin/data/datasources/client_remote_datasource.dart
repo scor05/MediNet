@@ -50,4 +50,30 @@ class ClientRemoteDatasource {
       throw handleApiError(response);
     }
   }
+
+  Future<ClientModel> editClient(
+    int id, {
+    required String name,
+    required String nit,
+  }) async {
+    final token = Supabase.instance.client.auth.currentSession?.accessToken;
+
+    final response = await http
+        .patch(
+          Uri.parse('${AppConfig.apiUrl}/clients/$id'),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode({'name': name, 'nit': nit}),
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode == 200) {
+      return ClientModel.fromJson(jsonDecode(response.body));
+    } else {
+      throw handleApiError(response);
+    }
+  }
 }

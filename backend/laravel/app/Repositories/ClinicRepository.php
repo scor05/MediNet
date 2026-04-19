@@ -6,10 +6,10 @@ use App\Models\Clinic;
 
 class ClinicRepository
 {
-    // Se obtienen todas las clínicas
-    public function findAll()
+    // Se obtienen todas las clínicas de un cliente
+    public function findByClient(int $clientId)
     {
-        return Clinic::all();
+        return Clinic::where('client_id', $clientId)->get();
     }
 
     // Se obtiene una clínica por su ID
