@@ -58,4 +58,29 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
       throw ApiException('Error inesperado. Intenta de nuevo.');
     }
   }
+
+  @override
+  Future<List<Appointment>> getSecretaryAppointments({
+    DateTime? dateFrom,
+    DateTime? dateTo,
+    int? doctorId,
+    int? clinicId,
+  }) async {
+    try{
+      return await datasource.getSecretaryAppointments(
+        dateFrom: dateFrom,
+        dateTo: dateTo,
+        doctorId: doctorId,
+        clinicId: clinicId,
+      );
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw ApiException('Sin conexión. Verifica tu internet.');
+    } on TimeoutException {
+      throw ApiException('La solicitud tardó demasiado. Intenta de nuevo.');
+    } catch (e) {
+      throw ApiException('Error inesperado. Intenta de nuevo.');
+    }
+  }
 }

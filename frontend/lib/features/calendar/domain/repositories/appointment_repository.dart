@@ -13,4 +13,11 @@ abstract class AppointmentRepository {
     required String patientName,
     required String status,
   });
+
+  Future<List<Appointment>> getSecretaryAppointments({
+    DateTime? dateFrom,
+    DateTime? dateTo,
+    int? doctorId,
+    int? clinicId,
+  });
 }

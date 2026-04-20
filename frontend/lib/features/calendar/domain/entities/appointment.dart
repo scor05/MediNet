@@ -6,6 +6,8 @@ class Appointment {
   final String status;
   final String patientName;
   final String clinicName;
+  final int? doctorId;
+  final String? doctorName;
 
   Appointment({
     required this.id,
@@ -15,5 +17,7 @@ class Appointment {
     required this.status,
     required this.patientName,
     required this.clinicName,
+    this.doctorId,
+    this.doctorName,
   });
 }
