@@ -126,13 +126,13 @@ class _CreateClientDialogState extends ConsumerState<CreateClientDialog> {
 
           // ── Admin (opcional) ──────────────────────────────
           const Text(
-            'Administrador (opcional)',
+            'Usuario Administrador (opcional)',
             style: TextStyle(fontSize: 12, color: Colors.black45),
           ),
           const SizedBox(height: 6),
           TextField(
             controller: adminEmailCtrl,
-            decoration: _inputDecoration('Buscar por nombre o email').copyWith(
+            decoration: _inputDecoration('Buscar por email').copyWith(
               suffixIcon: isSearching
                   ? const Padding(
                       padding: EdgeInsets.all(12),
