@@ -1,11 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontend/features/superadmin/domain/usecases/get_available_users_for_client.dart';
+import 'package:frontend/features/superadmin/domain/usecases/get_available_users_for_client_usecase.dart';
 import '../../data/datasources/user_remote_datasource.dart';
 import '../../data/repositories/user_repository_impl.dart';
 import '../../domain/repositories/user_repository.dart';
 import '../../domain/usecases/get_client_users_usecase.dart';
 import '../../domain/usecases/add_user_to_client_usecase.dart';
 import '../../domain/entities/user.dart';
+import '../../domain/usecases/get_available_users_usecase.dart';
 
 // ── Repositorio y usecases ────────────────────────────────────────────────────
 
@@ -21,20 +22,36 @@ final addUserToClientUsecaseProvider = Provider<AddUserToClientUsecase>((ref) {
   return AddUserToClientUsecase(ref.read(userRepositoryProvider));
 });
 
-final searchAvailableUsersUsecaseProvider =
-    Provider<GetAvailableUsersForClient>((ref) {
-      return GetAvailableUsersForClient(ref.read(userRepositoryProvider));
+final getAvailableUsersForClientUsecaseProvider =
+    Provider<GetAvailableUsersForClientUsecase>((ref) {
+      return GetAvailableUsersForClientUsecase(
+        ref.read(userRepositoryProvider),
+      );
     });
 
+final getAvailableUsersUsecaseProvider = Provider<GetAvailableUsersUsecase>((
+  ref,
+) {
+  return GetAvailableUsersUsecase(ref.read(userRepositoryProvider));
+});
+
+final availableUsersProvider = FutureProvider.family<List<User>, String>((
+  ref,
+  search,
+) async {
+  if (search.length < 2) return [];
+  return ref.read(getAvailableUsersUsecaseProvider).call(search);
+});
+
 // Se devuelve una lista de usuarios disponibles para ser agregados al cliente
-final availableUsersProvider =
+final availableUsersForClientProvider =
     FutureProvider.family<List<User>, ({int clientId, String search})>((
       ref,
       params,
     ) async {
       if (params.search.length < 2) return [];
       return ref
-          .read(searchAvailableUsersUsecaseProvider)
+          .read(getAvailableUsersForClientUsecaseProvider)
           .call(params.clientId, params.search);
     });
 

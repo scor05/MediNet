@@ -751,7 +751,7 @@ class _AddUserDialogState extends ConsumerState<_AddUserDialog> {
       setState(() => isSearching = true);
       try {
         final results = await ref.read(
-          availableUsersProvider((
+          availableUsersForClientProvider((
             clientId: widget.clientId,
             search: value.trim(),
           )).future,
