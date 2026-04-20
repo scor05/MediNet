@@ -23,7 +23,7 @@ class ClientUserController extends Controller
     {
         $validated = $request->validate([
             'id_user' => 'required|integer|exists:users,id',
-            'role' => 'required|integer|in:0,2',
+            'role' => 'required|integer|in:0,1,2',
             'is_admin' => 'required|boolean',
         ]);
         return response()->json($this->service->create($clientId, $validated), 201);
@@ -33,7 +33,7 @@ class ClientUserController extends Controller
     public function update(Request $request, $clientId, $userId)
     {
         $validated = $request->validate([
-            'role' => 'sometimes|integer|in:0,2',
+            'role' => 'sometimes|integer|in:0,1,2',
             'is_admin' => 'sometimes|boolean',
             'is_active' => 'sometimes|boolean',
         ]);

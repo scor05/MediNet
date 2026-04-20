@@ -14,20 +14,39 @@ class UserModel extends User {
     required super.isActiveInClient,
   });
 
-  factory UserModel.fromJson(Map<String, dynamic> json) {
-    final user = json['user'];
+  factory UserModel.fromClientUserJson(Map<String, dynamic> json) {
+    final user = json['user'] as Map<String, dynamic>;
 
     return UserModel(
       id: user['id'] as int,
       name: user['name'] as String,
       email: user['email'] as String,
-      phone: user['phone'] as String,
+      phone: (user['phone'] ?? '') as String,
       isAccountActive: user['is_active'] as bool,
-      createdAt: DateTime.parse(user['created_at']),
-      updatedAt: DateTime.parse(user['updated_at']),
+      createdAt: DateTime.parse(user['created_at'] as String),
+      updatedAt: DateTime.parse(user['updated_at'] as String),
       role: _mapRole(json['role'] as int),
       isAdmin: json['is_admin'] as bool,
       isActiveInClient: json['is_active'] as bool,
+    );
+  }
+
+  factory UserModel.fromAvailableUserJson(Map<String, dynamic> json) {
+    return UserModel(
+      id: json['id'] as int,
+      name: json['name'] as String,
+      email: json['email'] as String,
+      phone: (json['phone'] ?? '') as String,
+      isAccountActive: (json['is_active'] ?? true) as bool,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : DateTime.now(),
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : DateTime.now(),
+      role: '',
+      isAdmin: false,
+      isActiveInClient: false,
     );
   }
 
