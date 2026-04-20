@@ -111,7 +111,7 @@ class UserRepository
                 ->where('id_client', $clientId);
         })
             ->whereNotIn('id', function ($query) {
-                $query->select('id_user')
+                $query->select('user_id')
                     ->from('superadmins');
             })
             ->when($search, function ($query, $search) {
@@ -125,5 +125,16 @@ class UserRepository
             ->limit(15)
             ->get()
             ->toArray();
+    }
+
+    // Se mapean los roles
+    private function _mapRole(int $role): string
+    {
+        return match ($role) {
+            0 => 'Administrador',
+            1 => 'Doctor',
+            2 => 'Secretaria',
+            default => 'Unknown',
+        };
     }
 }

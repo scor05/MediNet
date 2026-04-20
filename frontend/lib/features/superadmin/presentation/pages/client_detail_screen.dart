@@ -894,9 +894,9 @@ class _AddUserDialogState extends ConsumerState<_AddUserDialog> {
           onPressed: () async {
             if (selectedUser == null) return;
 
-            Navigator.pop(context);
             try {
               await widget.onAdd(selectedUser!.id, selectedRole, isAdmin);
+              if (context.mounted) Navigator.pop(context);
             } on ApiException catch (e) {
               widget.onError(e.message);
             } catch (_) {
