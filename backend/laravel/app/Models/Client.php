@@ -17,4 +17,10 @@ class Client extends Model
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
+    // Relación con los usuarios del cliente
+    public function clientUsers()
+    {
+        return $this->hasMany(ClientUser::class, 'id_client');
+    }
 }
