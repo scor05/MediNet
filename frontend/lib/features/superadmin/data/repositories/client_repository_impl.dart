@@ -41,6 +41,29 @@ class ClientRepositoryImpl implements ClientRepository {
   }
 
   @override
+  Future<Client> createClient({
+    required String name,
+    required String nit,
+    int? userId,
+  }) async {
+    try {
+      return await datasource.createClient(
+        name: name,
+        nit: nit,
+        userId: userId,
+      );
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw ApiException('Sin conexión. Verifica tu internet.');
+    } on TimeoutException {
+      throw ApiException('La solicitud tardó demasiado. Intenta de nuevo.');
+    } catch (e) {
+      throw ApiException('Error inesperado. Intenta de nuevo.');
+    }
+  }
+
+  @override
   Future<Client> editClient(
     int id, {
     required String name,

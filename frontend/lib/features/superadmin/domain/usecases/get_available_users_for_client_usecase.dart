@@ -1,10 +1,10 @@
 import 'package:frontend/features/superadmin/domain/entities/user.dart';
 import 'package:frontend/features/superadmin/domain/repositories/user_repository.dart';
 
-class GetAvailableUsersForClient {
+class GetAvailableUsersForClientUsecase {
   final UserRepository repository;
 
-  GetAvailableUsersForClient(this.repository);
+  GetAvailableUsersForClientUsecase(this.repository);
 
   Future<List<User>> call(int clientId, String search) {
     return repository.getAvailableUsersForClient(clientId, search);
