@@ -26,10 +26,7 @@ final searchAvailableUsersUsecaseProvider =
       return GetAvailableUsersForClient(ref.read(userRepositoryProvider));
     });
 
-// ── Provider de búsqueda (family por query) ───────────────────────────────────
-// FutureProvider porque es una consulta puntual, no un estado que se modifica.
-// Se crea una instancia por cada (clientId, search) distinto.
-
+// Se devuelve una lista de usuarios disponibles para ser agregados al cliente
 final availableUsersProvider =
     FutureProvider.family<List<User>, ({int clientId, String search})>((
       ref,
