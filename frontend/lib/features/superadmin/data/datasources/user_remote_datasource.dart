@@ -54,7 +54,7 @@ class UserRemoteDatasource {
         )
         .timeout(const Duration(seconds: 10));
 
-    if (response.statusCode != 200) {
+    if (response.statusCode != 201) {
       throw handleApiError(response);
     }
   }
