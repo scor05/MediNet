@@ -46,7 +46,6 @@ class _SuperadminPanelState extends ConsumerState<SuperadminPanel> {
 
   @override
   Widget build(BuildContext context) {
-    // ref.watch hace que el widget se reconstruya cuando cambia el provider
     final filteredAsync = ref.watch(filteredClientsProvider);
     final filter = ref.watch(clientFilterProvider);
 

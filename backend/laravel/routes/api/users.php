@@ -16,4 +16,6 @@ Route::prefix('users')->group(function () {
     Route::delete('/{doctorId}/specialties/{specialtyId}', [DoctorSpecialtyController::class, 'destroy'])->whereNumber('doctorId')->whereNumber('specialtyId');
 
     Route::get('/{doctorId}/schedules', [ScheduleController::class, 'index']);
+
+    Route::get('/available/{clientId}', [UserController::class, 'availableForClient']);
 });

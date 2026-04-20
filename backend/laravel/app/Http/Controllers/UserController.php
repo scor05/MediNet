@@ -57,4 +57,15 @@ class UserController extends Controller
             $this->service->getProfile($request->user()->id)
         );
     }
+
+    // Se obtiene los usuarios que no están asociados ya al cliente y que no son superadmins
+    public function availableForClient(Request $request, int $clientId)
+    {
+        $users = $this->service->getAvailableForClient(
+            clientId: $clientId,
+            search: $request->validated('search', ''),
+        );
+
+        return response()->json($users);
+    }
 }
