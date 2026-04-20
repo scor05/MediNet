@@ -23,7 +23,7 @@ class UserRemoteDatasource {
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
-      return data.map((e) => UserModel.fromJson(e)).toList();
+      return data.map((e) => UserModel.fromClientUserJson(e)).toList();
     } else {
       throw handleApiError(response);
     }
@@ -47,7 +47,7 @@ class UserRemoteDatasource {
             'Authorization': 'Bearer $token',
           },
           body: jsonEncode({
-            'user_id': userId,
+            'id_user': userId,
             'role': role,
             'is_admin': isAdmin,
           }),
@@ -81,7 +81,7 @@ class UserRemoteDatasource {
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
-      return data.map((e) => UserModel.fromJson(e)).toList();
+      return data.map((e) => UserModel.fromAvailableUserJson(e)).toList();
     } else {
       throw handleApiError(response);
     }

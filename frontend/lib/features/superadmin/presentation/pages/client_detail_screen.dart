@@ -118,245 +118,14 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen>
   }
 
   void _showAddUserDialog() {
-    String selectedRole = 'doctor';
-    bool isAdmin = false;
-    User? selectedUser;
-    List<User> searchResults = [];
-    bool isSearching = false;
-    final emailCtrl = TextEditingController();
-    Timer? _debounce;
-
     showDialog(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) {
-          return AlertDialog(
-            title: const Text('Agregar usuario'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // ── Campo de búsqueda ─────────────────────────
-                TextField(
-                  controller: emailCtrl,
-                  decoration: _inputDecoration('Correo electrónico').copyWith(
-                    suffixIcon: isSearching
-                        ? const Padding(
-                            padding: EdgeInsets.all(12),
-                            child: SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                          )
-                        : selectedUser != null
-                        ? const Icon(
-                            Icons.check_circle,
-                            color: Colors.green,
-                            size: 20,
-                          )
-                        : null,
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                  onChanged: (value) {
-                    if (selectedUser != null) {
-                      setDialogState(() {
-                        selectedUser = null;
-                        searchResults = [];
-                      });
-                    }
-
-                    _debounce?.cancel();
-                    if (value.trim().length < 2) {
-                      setDialogState(() => searchResults = []);
-                      return;
-                    }
-
-                    _debounce = Timer(
-                      const Duration(milliseconds: 400),
-                      () async {
-                        setDialogState(() => isSearching = true);
-                        try {
-                          final results = await ref.read(
-                            availableUsersProvider((
-                              clientId: widget.clientId,
-                              search: value.trim(),
-                            )).future,
-                          );
-                          setDialogState(() {
-                            searchResults = results;
-                            isSearching = false;
-                          });
-                        } catch (_) {
-                          setDialogState(() {
-                            searchResults = [];
-                            isSearching = false;
-                          });
-                        }
-                      },
-                    );
-                  },
-                ),
-
-                // ── Lista de resultados ───────────────────────
-                if (searchResults.isNotEmpty && selectedUser == null) ...[
-                  const SizedBox(height: 4),
-                  Container(
-                    constraints: const BoxConstraints(maxHeight: 160),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.black12),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      padding: EdgeInsets.zero,
-                      itemCount: searchResults.length,
-                      itemBuilder: (_, i) {
-                        final user = searchResults[i];
-                        return InkWell(
-                          borderRadius: BorderRadius.circular(8),
-                          onTap: () {
-                            _debounce?.cancel();
-                            setDialogState(() {
-                              selectedUser = user;
-                              searchResults = [];
-                              emailCtrl.text = user.email;
-                            });
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 10,
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  user.name,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                Text(
-                                  user.email,
-                                  style: const TextStyle(
-                                    color: Colors.black45,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-
-                const SizedBox(height: 16),
-
-                // ── Rol ───────────────────────────────────────
-                DropdownButtonFormField<String>(
-                  value: selectedRole,
-                  decoration: _inputDecoration('Rol'),
-                  items: const [
-                    DropdownMenuItem(value: 'doctor', child: Text('Doctor')),
-                    DropdownMenuItem(
-                      value: 'secretaria',
-                      child: Text('Secretaria'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'administrador',
-                      child: Text('Administrador'),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    if (value == null) return;
-                    setDialogState(() {
-                      selectedRole = value;
-                      if (value == 'administrador') isAdmin = true;
-                    });
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // ── ¿Es admin? ────────────────────────────────
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        '¿Es administrador?',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: selectedRole == 'administrador'
-                              ? Colors.black38
-                              : Colors.black87,
-                        ),
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        _AdminOption(
-                          label: 'Sí',
-                          selected: isAdmin,
-                          disabled: selectedRole == 'administrador',
-                          onTap: () => setDialogState(() => isAdmin = true),
-                        ),
-                        const SizedBox(width: 8),
-                        _AdminOption(
-                          label: 'No',
-                          selected: !isAdmin,
-                          disabled: selectedRole == 'administrador',
-                          onTap: () => setDialogState(() => isAdmin = false),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  _debounce?.cancel();
-                  Navigator.pop(ctx);
-                },
-                child: const Text('Cancelar'),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.accent,
-                  foregroundColor: Colors.white,
-                ),
-                onPressed: () async {
-                  if (selectedUser == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Selecciona un usuario de la lista.'),
-                        backgroundColor: Colors.orange,
-                      ),
-                    );
-                    return;
-                  }
-                  _debounce?.cancel();
-                  Navigator.pop(ctx);
-                  try {
-                    await ref
-                        .read(
-                          clientUsersNotifierProvider(widget.clientId).notifier,
-                        )
-                        .addUser(selectedUser!.id, selectedRole, isAdmin);
-                  } on ApiException catch (e) {
-                    _showError(e.message);
-                  } catch (_) {
-                    _showError('Error al agregar el usuario.');
-                  }
-                },
-                child: const Text('Agregar'),
-              ),
-            ],
-          );
+      builder: (ctx) => _AddUserDialog(
+        clientId: widget.clientId,
+        onAdd: (userId, role, isAdmin) async {
+          await ref
+              .read(clientUsersNotifierProvider(widget.clientId).notifier)
+              .addUser(userId, role, isAdmin);
         },
       ),
     );
@@ -927,6 +696,204 @@ class _AdminOption extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _AddUserDialog extends ConsumerStatefulWidget {
+  final int clientId;
+  final Future<void> Function(int userId, String role, bool isAdmin) onAdd;
+
+  const _AddUserDialog({required this.clientId, required this.onAdd});
+
+  @override
+  ConsumerState<_AddUserDialog> createState() => _AddUserDialogState();
+}
+
+class _AddUserDialogState extends ConsumerState<_AddUserDialog> {
+  String selectedRole = 'doctor';
+  bool isAdmin = false;
+  User? selectedUser;
+  List<User> searchResults = [];
+  bool isSearching = false;
+  final emailCtrl = TextEditingController();
+  Timer? _debounce;
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    emailCtrl.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String value) {
+    if (selectedUser != null) {
+      setState(() {
+        selectedUser = null;
+        searchResults = [];
+      });
+    }
+
+    _debounce?.cancel();
+    if (value.trim().length < 2) {
+      setState(() => searchResults = []);
+      return;
+    }
+
+    _debounce = Timer(const Duration(milliseconds: 400), () async {
+      if (!mounted) return;
+      setState(() => isSearching = true);
+      try {
+        final results = await ref.read(
+          availableUsersProvider((
+            clientId: widget.clientId,
+            search: value.trim(),
+          )).future,
+        );
+
+        if (!mounted) {
+          return;
+        }
+        setState(() {
+          searchResults = results;
+          isSearching = false;
+        });
+      } catch (e, st) {
+        if (!mounted) return;
+        setState(() {
+          searchResults = [];
+          isSearching = false;
+        });
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Agregar usuario'),
+      content: SizedBox(
+        width: 400,
+        height: 450, // 🔥 CLAVE: tamaño fijo
+        child: Column(
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            TextField(
+              controller: emailCtrl,
+              decoration: InputDecoration(
+                labelText: 'Correo electrónico',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                suffixIcon: isSearching
+                    ? const Padding(
+                        padding: EdgeInsets.all(12),
+                        child: SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                    : selectedUser != null
+                    ? const Icon(Icons.check_circle, color: Colors.green)
+                    : null,
+              ),
+              onChanged: _onSearchChanged,
+            ),
+
+            const SizedBox(height: 8),
+
+            if (searchResults.isNotEmpty && selectedUser == null)
+              Expanded(
+                // 🔥 CLAVE
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.black12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: ListView.builder(
+                    itemCount: searchResults.length,
+                    itemBuilder: (_, i) {
+                      final user = searchResults[i];
+                      return ListTile(
+                        title: Text(user.name),
+                        subtitle: Text(user.email),
+                        onTap: () {
+                          _debounce?.cancel();
+                          setState(() {
+                            selectedUser = user;
+                            searchResults = [];
+                            emailCtrl.text = user.email;
+                          });
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ),
+
+            const SizedBox(height: 12),
+
+            DropdownButtonFormField<String>(
+              value: selectedRole,
+              items: const [
+                DropdownMenuItem(value: 'doctor', child: Text('Doctor')),
+                DropdownMenuItem(
+                  value: 'secretaria',
+                  child: Text('Secretaria'),
+                ),
+                DropdownMenuItem(
+                  value: 'administrador',
+                  child: Text('Administrador'),
+                ),
+              ],
+              onChanged: (value) {
+                if (value == null) return;
+                setState(() {
+                  selectedRole = value;
+                  if (value == 'administrador') isAdmin = true;
+                });
+              },
+            ),
+
+            const SizedBox(height: 12),
+
+            Row(
+              children: [
+                const Expanded(child: Text('¿Es administrador?')),
+                _AdminOption(
+                  label: 'Sí',
+                  selected: isAdmin,
+                  disabled: selectedRole == 'administrador',
+                  onTap: () => setState(() => isAdmin = true),
+                ),
+                const SizedBox(width: 8),
+                _AdminOption(
+                  label: 'No',
+                  selected: !isAdmin,
+                  disabled: selectedRole == 'administrador',
+                  onTap: () => setState(() => isAdmin = false),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
+        ElevatedButton(
+          onPressed: () async {
+            if (selectedUser == null) return;
+
+            Navigator.pop(context);
+            await widget.onAdd(selectedUser!.id, selectedRole, isAdmin);
+          },
+          child: const Text('Agregar'),
+        ),
+      ],
     );
   }
 }
