@@ -53,4 +53,10 @@ class UserService
     {
         return $this->repository->findAvailableForClient($clientId, $search);
     }
+
+    // Se obtienen todos los usuarios que no son superadmins
+    public function getAvailable(string $search)
+    {
+        return $this->repository->findAvailable($search);
+    }
 }
