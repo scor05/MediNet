@@ -131,9 +131,9 @@ class UserRepository
     private function _mapRole(int $role): string
     {
         return match ($role) {
-            0 => 'Administrador',
-            1 => 'Doctor',
-            2 => 'Secretaria',
+            0 => 'admin',
+            1 => 'doctor',
+            2 => 'secretary',
             default => 'Unknown',
         };
     }
