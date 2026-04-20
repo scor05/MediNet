@@ -106,12 +106,12 @@ class UserRepository
     public function findAvailableForClient(int $clientId, string $search)
     {
         return User::whereNotIn('id', function ($query) use ($clientId) {
-            $query->select('user_id')
+            $query->select('id_user')
                 ->from('client_users')
-                ->where('client_id', $clientId);
+                ->where('id_client', $clientId);
         })
             ->whereNotIn('id', function ($query) {
-                $query->select('user_id')
+                $query->select('id_user')
                     ->from('superadmins');
             })
             ->when($search, function ($query, $search) {
