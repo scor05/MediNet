@@ -71,7 +71,7 @@ class UserController extends Controller
     }
 
     // Se obtienen todos los usuarios que no son superadmins
-    public function available(Request $request)
+    public function available(AvailableUsersRequest $request)
     {
         $users = $this->service->getAvailable(
             search: $request->validated('search', ''),

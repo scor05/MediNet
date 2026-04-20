@@ -38,6 +38,7 @@ class ClientRepository
                     'is_active' => true,
                 ]);
             }
+            $client->refresh();
 
             return $client;
         });
