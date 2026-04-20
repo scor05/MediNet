@@ -62,4 +62,19 @@ class UserRepositoryImpl implements UserRepository {
       throw ApiException('Error inesperado. Intenta de nuevo.');
     }
   }
+
+  @override
+  Future<List<User>> getAvailableUsers(String search) async {
+    try {
+      return await datasource.getAvailableUsers(search);
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw ApiException('Sin conexión. Verifica tu internet.');
+    } on TimeoutException {
+      throw ApiException('La solicitud tardó demasiado. Intenta de nuevo.');
+    } catch (e) {
+      throw ApiException('Error inesperado. Intenta de nuevo.');
+    }
+  }
 }

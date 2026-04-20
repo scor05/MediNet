@@ -9,6 +9,7 @@ import '../providers/clients_provider.dart';
 import '../providers/client_users_provider.dart';
 import '../providers/client_clinics_provider.dart';
 import 'dart:async';
+import 'dart:math' as math;
 
 class ClientDetailScreen extends ConsumerStatefulWidget {
   final int clientId;
@@ -391,7 +392,7 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen>
                 : ListView.separated(
                     padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
                     itemCount: items.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
                     itemBuilder: (_, i) => itemBuilder(i),
                   ),
           ),
@@ -751,7 +752,7 @@ class _AddUserDialogState extends ConsumerState<_AddUserDialog> {
       setState(() => isSearching = true);
       try {
         final results = await ref.read(
-          availableUsersProvider((
+          availableUsersForClientProvider((
             clientId: widget.clientId,
             search: value.trim(),
           )).future,
@@ -764,7 +765,7 @@ class _AddUserDialogState extends ConsumerState<_AddUserDialog> {
           searchResults = results;
           isSearching = false;
         });
-      } catch (e, st) {
+      } catch (e) {
         if (!mounted) return;
         setState(() {
           searchResults = [];
@@ -774,15 +775,20 @@ class _AddUserDialogState extends ConsumerState<_AddUserDialog> {
     });
   }
 
+  double get _resultsPanelHeight {
+    const rowHeight = 58.0;
+    const maxHeight = 180.0;
+    return math.min(searchResults.length * rowHeight, maxHeight);
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Agregar usuario'),
       content: SizedBox(
         width: 400,
-        height: 450, // 🔥 CLAVE: tamaño fijo
         child: Column(
-          mainAxisSize: MainAxisSize.max,
+          mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: emailCtrl,
@@ -810,30 +816,59 @@ class _AddUserDialogState extends ConsumerState<_AddUserDialog> {
             const SizedBox(height: 8),
 
             if (searchResults.isNotEmpty && selectedUser == null)
-              Expanded(
-                // 🔥 CLAVE
-                child: Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.black12),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: ListView.builder(
-                    itemCount: searchResults.length,
-                    itemBuilder: (_, i) {
-                      final user = searchResults[i];
-                      return ListTile(
-                        title: Text(user.name),
-                        subtitle: Text(user.email),
-                        onTap: () {
-                          _debounce?.cancel();
-                          setState(() {
-                            selectedUser = user;
-                            searchResults = [];
-                            emailCtrl.text = user.email;
-                          });
-                        },
-                      );
-                    },
+              Container(
+                height: _resultsPanelHeight,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.black12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Material(
+                    color: Colors.white,
+                    child: ListView.builder(
+                      padding: EdgeInsets.zero,
+                      itemCount: searchResults.length,
+                      itemBuilder: (_, i) {
+                        final user = searchResults[i];
+                        return InkWell(
+                          onTap: () {
+                            _debounce?.cancel();
+                            setState(() {
+                              selectedUser = user;
+                              searchResults = [];
+                              emailCtrl.text = user.email;
+                            });
+                          },
+                          child: SizedBox(
+                            height: 58,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    user.name,
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    user.email,
+                                    style: const TextStyle(
+                                      color: Colors.black54,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),
@@ -841,7 +876,7 @@ class _AddUserDialogState extends ConsumerState<_AddUserDialog> {
             const SizedBox(height: 12),
 
             DropdownButtonFormField<String>(
-              value: selectedRole,
+              initialValue: selectedRole,
               items: const [
                 DropdownMenuItem(value: 'doctor', child: Text('Doctor')),
                 DropdownMenuItem(
@@ -882,30 +917,40 @@ class _AddUserDialogState extends ConsumerState<_AddUserDialog> {
                 ),
               ],
             ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () async {
+                  if (selectedUser == null) return;
+
+                  try {
+                    await widget.onAdd(selectedUser!.id, selectedRole, isAdmin);
+                    if (context.mounted) Navigator.pop(context);
+                  } on ApiException catch (e) {
+                    widget.onError(e.message);
+                  } catch (_) {
+                    widget.onError('Error al agregar el usuario.');
+                  }
+                },
+                child: const Text('Agregar'),
+              ),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey.shade500,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancelar'),
+              ),
+            ),
           ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancelar'),
-        ),
-        ElevatedButton(
-          onPressed: () async {
-            if (selectedUser == null) return;
-
-            try {
-              await widget.onAdd(selectedUser!.id, selectedRole, isAdmin);
-              if (context.mounted) Navigator.pop(context);
-            } on ApiException catch (e) {
-              widget.onError(e.message);
-            } catch (_) {
-              widget.onError('Error al agregar el usuario.');
-            }
-          },
-          child: const Text('Agregar'),
-        ),
-      ],
     );
   }
 }

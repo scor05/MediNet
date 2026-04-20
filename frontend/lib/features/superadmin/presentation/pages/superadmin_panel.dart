@@ -7,6 +7,7 @@ import '../providers/clients_provider.dart';
 import '../widgets/client_card.dart';
 import '../widgets/client_filter_chip.dart';
 import 'client_detail_screen.dart';
+import '../widgets/create_client_dialog.dart';
 
 class SuperadminPanel extends ConsumerStatefulWidget {
   const SuperadminPanel({super.key});
@@ -132,9 +133,10 @@ class _SuperadminPanelState extends ConsumerState<SuperadminPanel> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  onPressed: () {
-                    // TODO: navegar a pantalla de crear cliente
-                  },
+                  onPressed: () => showDialog(
+                    context: context,
+                    builder: (_) => const CreateClientDialog(),
+                  ),
                   icon: const Icon(Icons.add, size: 18),
                   label: const Text(
                     'Nuevo cliente',
@@ -160,7 +162,6 @@ class _SuperadminPanelState extends ConsumerState<SuperadminPanel> {
           ClientFilterChip(
             label: 'Todos',
             selected: currentFilter == null,
-            // ref.read para escrituras puntuales (no necesita observar cambios)
             onTap: () => ref.read(clientFilterProvider.notifier).state = null,
           ),
           const SizedBox(width: 8),

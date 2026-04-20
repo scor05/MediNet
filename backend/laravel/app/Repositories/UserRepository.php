@@ -122,12 +122,34 @@ class UserRepository
             })
             ->select('id', 'name', 'email')
             ->orderBy('name')
-            ->limit(15)
+            ->limit(8)
             ->get()
             ->toArray();
     }
 
-    // Se mapean los roles
+    // Se obtiene todos los usuarios que no son superadmins
+    public function findAvailable(string $search)
+    {
+        return User::whereNotIn('id', function ($query) {
+            $query->select('id_user')
+                ->from('superadmins');
+        })
+            ->when($search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'ilike', "%{$search}%")
+                        ->orWhere('email', 'ilike', "%{$search}%");
+                });
+            })
+            ->select('id', 'name', 'email')
+            ->orderBy('name')
+            ->limit(8)
+            ->get()
+            ->toArray();
+    }
+
+    /*
+    HELPERS
+    */
     private function _mapRole(int $role): string
     {
         return match ($role) {

@@ -7,6 +7,7 @@ use App\Http\Controllers\ScheduleController;
 
 Route::prefix('users')->group(function () {
     Route::get('/available/{clientId}', [UserController::class, 'availableForClient']);
+    Route::get('/available', [UserController::class, 'available']);
 
     Route::get('/', [UserController::class, 'index']);
     Route::get('/{id}', [UserController::class, 'show'])->whereNumber('id');

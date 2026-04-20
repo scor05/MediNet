@@ -9,4 +9,5 @@ abstract class UserRepository {
     int role,
     bool isAdmin,
   );
+  Future<List<User>> getAvailableUsers(String search);
 }

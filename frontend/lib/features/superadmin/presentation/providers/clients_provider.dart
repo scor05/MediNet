@@ -6,6 +6,7 @@ import '../../domain/repositories/client_repository.dart';
 import '../../domain/usecases/get_clients_usecase.dart';
 import '../../domain/usecases/toggle_client_status_usecase.dart';
 import '../../domain/usecases/edit_client_usecase.dart';
+import '../../domain/usecases/create_client_usecase.dart';
 
 // ── Repositorio y usecases ───────────────────────────────────────────────────
 
@@ -25,6 +26,10 @@ final toggleClientStatusUsecaseProvider = Provider<ToggleClientStatusUseCase>((
 
 final editClientUsecaseProvider = Provider<EditClientUsecase>((ref) {
   return EditClientUsecase(ref.read(clientRepositoryProvider));
+});
+
+final createClientUsecaseProvider = Provider<CreateClientUsecase>((ref) {
+  return CreateClientUsecase(ref.read(clientRepositoryProvider));
 });
 
 // Provee los filtros de los clientes (null = todos, true = activos, false = inactivos)
@@ -101,6 +106,21 @@ class ClientsNotifier extends AsyncNotifier<List<Client>> {
       state = previousState;
       rethrow;
     }
+  }
+
+  // Crea un cliente y actualiza la lista en memoria
+  Future<void> createClient({
+    required String name,
+    required String nit,
+    int? userId,
+  }) async {
+    final newClient = await ref
+        .read(createClientUsecaseProvider)
+        .call(name: name, nit: nit, userId: userId);
+
+    final current = state.valueOrNull ?? [];
+    state = AsyncData([...current, newClient]);
+    await refresh();
   }
 
   /*
