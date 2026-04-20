@@ -59,6 +59,36 @@ class UserRemoteDatasource {
     }
   }
 
+  Future<void> updateClientUserAdminPrivileges(
+    int clientId,
+    int userId,
+    int role,
+    bool isAdmin,
+    bool isActive,
+  ) async {
+    final token = Supabase.instance.client.auth.currentSession?.accessToken;
+
+    final response = await http
+        .patch(
+          Uri.parse('${AppConfig.apiUrl}/clients/$clientId/users/$userId'),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode({
+            'role': role,
+            'is_admin': isAdmin,
+            'is_active': isActive,
+          }),
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode != 200) {
+      throw handleApiError(response);
+    }
+  }
+
   // Se obtiene los usuarios que no están asociados ya al cliente y que no son superadmins
   Future<List<UserModel>> getAvailableUsersForClient(
     int clientId,

@@ -23,11 +23,17 @@ class ClientUserRepository
     // Se actualiza una asignación de usuario a un cliente
     public function update($clientId, $userId, $data)
     {
-        $record = ClientUser::where('id_client', $clientId)
+        ClientUser::where('id_client', $clientId)
             ->where('id_user', $userId)
             ->firstOrFail();
-        $record->update($data);
-        return $record;
+
+        ClientUser::where('id_client', $clientId)
+            ->where('id_user', $userId)
+            ->update($data);
+
+        return ClientUser::where('id_client', $clientId)
+            ->where('id_user', $userId)
+            ->first();
     }
 
     // Se elimina la asignación de un usuario a un cliente
@@ -35,7 +41,10 @@ class ClientUserRepository
     {
         ClientUser::where('id_client', $clientId)
             ->where('id_user', $userId)
-            ->firstOrFail()
+            ->firstOrFail();
+
+        ClientUser::where('id_client', $clientId)
+            ->where('id_user', $userId)
             ->delete();
     }
 

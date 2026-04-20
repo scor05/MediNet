@@ -4,7 +4,7 @@ namespace App\Repositories;
 
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use App\Models\Superadmin;
+use App\Models\SuperAdmin;
 
 class UserRepository
 {
@@ -87,7 +87,7 @@ class UserRepository
             ->unique('client_id')
             ->values();
 
-        $superadmin = Superadmin::where('id_user', $id)->exists();
+        $superadmin = SuperAdmin::where('id_user', $id)->exists();
 
         return [
             'id' => $user->id,
