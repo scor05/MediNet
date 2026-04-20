@@ -32,9 +32,9 @@ class ClientRepository
             if ($userId !== null) {
                 ClientUser::create([
                     'id_client' => $client->id,
-                    'id_user'   => $userId,
-                    'role'      => 0,
-                    'is_admin'  => true,
+                    'id_user' => $userId,
+                    'role' => 0,
+                    'is_admin' => true,
                     'is_active' => true,
                 ]);
             }

@@ -28,9 +28,9 @@ class ClientController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nit'     => 'required|string|max:20',
-            'name'    => 'required|string|max:255',
-            'id_user' => 'sometimes|integer|exists:users,id',
+            'nit' => 'required|string|max:20',
+            'name' => 'required|string|max:255',
+            'id_user' => 'sometimes|nullable|integer|exists:users,id',
         ]);
         return response()->json($this->service->create($validated), 201);
     }
