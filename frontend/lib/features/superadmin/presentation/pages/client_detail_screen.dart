@@ -8,6 +8,7 @@ import '../../domain/entities/clinic.dart';
 import '../providers/clients_provider.dart';
 import '../providers/client_users_provider.dart';
 import '../providers/client_clinics_provider.dart';
+import 'dart:async';
 
 class ClientDetailScreen extends ConsumerStatefulWidget {
   final int clientId;
@@ -120,6 +121,10 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen>
     String selectedRole = 'doctor';
     bool isAdmin = false;
     User? selectedUser;
+    List<User> searchResults = [];
+    bool isSearching = false;
+    final emailCtrl = TextEditingController();
+    Timer? _debounce;
 
     showDialog(
       context: context,
@@ -127,85 +132,128 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen>
         builder: (ctx, setDialogState) {
           return AlertDialog(
             title: const Text('Agregar usuario'),
-            insetPadding: const EdgeInsets.symmetric(
-              horizontal: 24,
-              vertical: 24,
-            ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // ── Autocomplete de email ─────────────────────
-                Autocomplete<User>(
-                  displayStringForOption: (user) => user.email,
+                // ── Campo de búsqueda ─────────────────────────
+                TextField(
+                  controller: emailCtrl,
+                  decoration: _inputDecoration('Correo electrónico').copyWith(
+                    suffixIcon: isSearching
+                        ? const Padding(
+                            padding: EdgeInsets.all(12),
+                            child: SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : selectedUser != null
+                        ? const Icon(
+                            Icons.check_circle,
+                            color: Colors.green,
+                            size: 20,
+                          )
+                        : null,
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                  onChanged: (value) {
+                    if (selectedUser != null) {
+                      setDialogState(() {
+                        selectedUser = null;
+                        searchResults = [];
+                      });
+                    }
 
-                  optionsBuilder: (textValue) async {
-                    final query = textValue.text.trim();
-                    if (query.length < 2) return [];
-                    return ref.read(
-                      availableUsersProvider((
-                        clientId: widget.clientId,
-                        search: query,
-                      )).future,
+                    _debounce?.cancel();
+                    if (value.trim().length < 2) {
+                      setDialogState(() => searchResults = []);
+                      return;
+                    }
+
+                    _debounce = Timer(
+                      const Duration(milliseconds: 400),
+                      () async {
+                        setDialogState(() => isSearching = true);
+                        try {
+                          final results = await ref.read(
+                            availableUsersProvider((
+                              clientId: widget.clientId,
+                              search: value.trim(),
+                            )).future,
+                          );
+                          setDialogState(() {
+                            searchResults = results;
+                            isSearching = false;
+                          });
+                        } catch (_) {
+                          setDialogState(() {
+                            searchResults = [];
+                            isSearching = false;
+                          });
+                        }
+                      },
                     );
                   },
-
-                  optionsViewBuilder: (ctx, onSelected, options) => Align(
-                    alignment: Alignment.topLeft,
-                    child: Material(
-                      elevation: 4,
-                      borderRadius: BorderRadius.circular(8),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxHeight: 200),
-                        child: ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: options.length,
-                          itemBuilder: (_, i) {
-                            final user = options.elementAt(i);
-                            return ListTile(
-                              dense: true,
-                              title: Text(
-                                user.name,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                ),
-                              ),
-                              subtitle: Text(
-                                user.email,
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                              onTap: () => onSelected(user),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  onSelected: (user) {
-                    setDialogState(() => selectedUser = user);
-                  },
-
-                  fieldViewBuilder: (ctx, ctrl, focusNode, _) => TextField(
-                    controller: ctrl,
-                    focusNode: focusNode,
-                    decoration: _inputDecoration('Correo electrónico').copyWith(
-                      suffixIcon: selectedUser != null
-                          ? const Icon(
-                              Icons.check_circle,
-                              color: Colors.green,
-                              size: 18,
-                            )
-                          : null,
-                    ),
-                    keyboardType: TextInputType.emailAddress,
-                    onChanged: (_) {
-                      if (selectedUser != null) {
-                        setDialogState(() => selectedUser = null);
-                      }
-                    },
-                  ),
                 ),
+
+                // ── Lista de resultados ───────────────────────
+                if (searchResults.isNotEmpty && selectedUser == null) ...[
+                  const SizedBox(height: 4),
+                  Container(
+                    constraints: const BoxConstraints(maxHeight: 160),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.black12),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      padding: EdgeInsets.zero,
+                      itemCount: searchResults.length,
+                      itemBuilder: (_, i) {
+                        final user = searchResults[i];
+                        return InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: () {
+                            _debounce?.cancel();
+                            setDialogState(() {
+                              selectedUser = user;
+                              searchResults = [];
+                              emailCtrl.text = user.email;
+                            });
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  user.name,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                Text(
+                                  user.email,
+                                  style: const TextStyle(
+                                    color: Colors.black45,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+
                 const SizedBox(height: 16),
 
                 // ── Rol ───────────────────────────────────────
@@ -270,7 +318,10 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen>
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(ctx),
+                onPressed: () {
+                  _debounce?.cancel();
+                  Navigator.pop(ctx);
+                },
                 child: const Text('Cancelar'),
               ),
               ElevatedButton(
@@ -288,6 +339,7 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen>
                     );
                     return;
                   }
+                  _debounce?.cancel();
                   Navigator.pop(ctx);
                   try {
                     await ref

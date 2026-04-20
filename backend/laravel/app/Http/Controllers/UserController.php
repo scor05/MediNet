@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\UserService;
+use App\Http\Requests\AvailableUsersRequest;
 
 class UserController extends Controller
 {
@@ -59,9 +60,9 @@ class UserController extends Controller
     }
 
     // Se obtiene los usuarios que no están asociados ya al cliente y que no son superadmins
-    public function availableForClient(Request $request, int $clientId)
+    public function availableForClient(AvailableUsersRequest $request, int $clientId)
     {
-        $users = $this->service->getAvailableForClient(
+        $users = $this->userService->getAvailableForClient(
             clientId: $clientId,
             search: $request->validated('search', ''),
         );
