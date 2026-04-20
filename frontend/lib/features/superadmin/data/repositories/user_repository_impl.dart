@@ -46,6 +46,33 @@ class UserRepositoryImpl implements UserRepository {
   }
 
   @override
+  Future<void> updateClientUserAdminPrivileges(
+    int clientId,
+    int userId,
+    int role,
+    bool isAdmin,
+    bool isActive,
+  ) async {
+    try {
+      await datasource.updateClientUserAdminPrivileges(
+        clientId,
+        userId,
+        role,
+        isAdmin,
+        isActive,
+      );
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw ApiException('Sin conexión. Verifica tu internet.');
+    } on TimeoutException {
+      throw ApiException('La solicitud tardó demasiado. Intenta de nuevo.');
+    } catch (e) {
+      throw ApiException('Error inesperado. Intenta de nuevo.');
+    }
+  }
+
+  @override
   Future<List<User>> getAvailableUsersForClient(
     int clientId,
     String search,

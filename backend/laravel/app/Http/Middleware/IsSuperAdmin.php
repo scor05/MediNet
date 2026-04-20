@@ -5,9 +5,9 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use App\Models\Superadmin;
+use App\Models\SuperAdmin;
 
-class IsSuperadmin
+class IsSuperAdmin
 {
     public function handle(Request $request, Closure $next): Response
     {
@@ -19,7 +19,7 @@ class IsSuperadmin
         }
 
         // Verificar si el usuario existe en la tabla superadmins
-        $isSuperadmin = Superadmin::where('id_user', $user->id)->exists();
+        $isSuperadmin = SuperAdmin::where('id_user', $user->id)->exists();
 
         if (!$isSuperadmin) {
             return response()->json([

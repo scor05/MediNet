@@ -9,5 +9,12 @@ abstract class UserRepository {
     int role,
     bool isAdmin,
   );
+  Future<void> updateClientUserAdminPrivileges(
+    int clientId,
+    int userId,
+    int role,
+    bool isAdmin,
+    bool isActive,
+  );
   Future<List<User>> getAvailableUsers(String search);
 }
