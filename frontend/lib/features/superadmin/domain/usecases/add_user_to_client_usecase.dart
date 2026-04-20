@@ -22,11 +22,11 @@ HELPERS
 int _mapRole(String role) {
   switch (role.toLowerCase()) {
     case 'administrador':
-      return 1;
+      return 0;
     case 'doctor':
-      return 2;
+      return 1;
     case 'secretaria':
-      return 3;
+      return 2;
     default:
       throw ArgumentError('Rol desconocido: $role');
   }

@@ -127,6 +127,7 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen>
               .read(clientUsersNotifierProvider(widget.clientId).notifier)
               .addUser(userId, role, isAdmin);
         },
+        onError: (message) => _showError(message),
       ),
     );
   }
@@ -703,8 +704,13 @@ class _AdminOption extends StatelessWidget {
 class _AddUserDialog extends ConsumerStatefulWidget {
   final int clientId;
   final Future<void> Function(int userId, String role, bool isAdmin) onAdd;
+  final void Function(String) onError;
 
-  const _AddUserDialog({required this.clientId, required this.onAdd});
+  const _AddUserDialog({
+    required this.clientId,
+    required this.onAdd,
+    required this.onError,
+  });
 
   @override
   ConsumerState<_AddUserDialog> createState() => _AddUserDialogState();
@@ -889,7 +895,13 @@ class _AddUserDialogState extends ConsumerState<_AddUserDialog> {
             if (selectedUser == null) return;
 
             Navigator.pop(context);
-            await widget.onAdd(selectedUser!.id, selectedRole, isAdmin);
+            try {
+              await widget.onAdd(selectedUser!.id, selectedRole, isAdmin);
+            } on ApiException catch (e) {
+              widget.onError(e.message);
+            } catch (_) {
+              widget.onError('Error al agregar el usuario.');
+            }
           },
           child: const Text('Agregar'),
         ),
