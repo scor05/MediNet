@@ -70,7 +70,7 @@ class ClientRemoteDatasource {
         )
         .timeout(const Duration(seconds: 10));
 
-    if (response.statusCode == 200) {
+    if (response.statusCode == 201) {
       return ClientModel.fromJson(jsonDecode(response.body));
     } else {
       throw handleApiError(response);

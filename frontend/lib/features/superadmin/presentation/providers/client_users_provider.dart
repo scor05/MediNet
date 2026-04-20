@@ -39,7 +39,6 @@ final availableUsersProvider = FutureProvider.family<List<User>, String>((
   ref,
   search,
 ) async {
-  if (search.length < 2) return [];
   return ref.read(getAvailableUsersUsecaseProvider).call(search);
 });
 
@@ -49,7 +48,6 @@ final availableUsersForClientProvider =
       ref,
       params,
     ) async {
-      if (params.search.length < 2) return [];
       return ref
           .read(getAvailableUsersForClientUsecaseProvider)
           .call(params.clientId, params.search);

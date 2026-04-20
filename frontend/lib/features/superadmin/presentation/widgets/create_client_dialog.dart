@@ -42,12 +42,6 @@ class _CreateClientDialogState extends ConsumerState<CreateClientDialog> {
       });
     }
 
-    _debounce?.cancel();
-    if (value.trim().length < 2) {
-      setState(() => searchResults = []);
-      return;
-    }
-
     _debounce = Timer(const Duration(milliseconds: 400), () async {
       if (!mounted) return;
       setState(() => isSearching = true);
