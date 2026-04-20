@@ -11,7 +11,9 @@ final clinicRepositoryProvider = Provider<ClinicRepository>((ref) {
   return ClinicRepositoryImpl(ClinicRemoteDatasource());
 });
 
-final getClientClinicsUsecaseProvider = Provider<GetClientClinicsUsecase>((ref) {
+final getClientClinicsUsecaseProvider = Provider<GetClientClinicsUsecase>((
+  ref,
+) {
   return GetClientClinicsUsecase(ref.read(clinicRepositoryProvider));
 });
 
@@ -38,5 +40,5 @@ class ClientClinicsNotifier extends FamilyAsyncNotifier<List<Clinic>, int> {
 
 final clientClinicsNotifierProvider =
     AsyncNotifierProvider.family<ClientClinicsNotifier, List<Clinic>, int>(
-  ClientClinicsNotifier.new,
-);
+      ClientClinicsNotifier.new,
+    );

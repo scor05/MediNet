@@ -34,7 +34,7 @@ class UserModel extends User {
   static String _mapRole(int role) {
     switch (role) {
       case 0:
-        return 'Admin';
+        return 'Administrador';
       case 1:
         return 'Doctor';
       case 2:

@@ -64,7 +64,7 @@ class UserRepository
                 'client_id' => $clientUser->id_client,
                 'client_name' => $clientUser->client?->name,
                 'role' => $clientUser->role,
-                'role_name' => $this->mapRole($clientUser->role),
+                'role_name' => $this->_mapRole($clientUser->role),
                 'is_admin' => $clientUser->is_admin,
                 'is_active' => $clientUser->is_active,
             ];
@@ -102,12 +102,28 @@ class UserRepository
         ];
     }
 
-    private function mapRole(int $role): ?string
+    // Se obtiene los usuarios que no están asociados ya al cliente y que no son superadmins
+    public function findAvailableForClient(int $clientId, string $search)
     {
-        return match ($role) {
-            0 => 'secretary',
-            1 => 'doctor',
-            default => null,
-        };
+        return User::whereNotIn('id', function ($query) use ($clientId) {
+            $query->select('user_id')
+                ->from('client_users')
+                ->where('client_id', $clientId);
+        })
+            ->whereNotIn('id', function ($query) {
+                $query->select('user_id')
+                    ->from('superadmins');
+            })
+            ->when($search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'ilike', "%{$search}%")
+                        ->orWhere('email', 'ilike', "%{$search}%");
+                });
+            })
+            ->select('id', 'name', 'email')
+            ->orderBy('name')
+            ->limit(15)
+            ->get()
+            ->toArray();
     }
 }

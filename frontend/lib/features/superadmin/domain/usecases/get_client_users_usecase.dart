@@ -7,6 +7,6 @@ class GetClientUsersUsecase {
   GetClientUsersUsecase(this.repository);
 
   Future<List<User>> call(int clientId) {
-    return repository.getUsers(clientId);
+    return repository.getClientUsers(clientId);
   }
 }

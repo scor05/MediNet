@@ -11,9 +11,47 @@ class UserRepositoryImpl implements UserRepository {
   UserRepositoryImpl(this.datasource);
 
   @override
-  Future<List<User>> getUsers(int clientId) async {
+  Future<List<User>> getClientUsers(int clientId) async {
     try {
-      return await datasource.getUsers(clientId);
+      return await datasource.getClientUsers(clientId);
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw ApiException('Sin conexión. Verifica tu internet.');
+    } on TimeoutException {
+      throw ApiException('La solicitud tardó demasiado. Intenta de nuevo.');
+    } catch (e) {
+      throw ApiException('Error inesperado. Intenta de nuevo.');
+    }
+  }
+
+  @override
+  Future<void> addUserToClient(
+    int clientId,
+    int userId,
+    int role,
+    bool isAdmin,
+  ) async {
+    try {
+      await datasource.addUserToClient(clientId, userId, role, isAdmin);
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw ApiException('Sin conexión. Verifica tu internet.');
+    } on TimeoutException {
+      throw ApiException('La solicitud tardó demasiado. Intenta de nuevo.');
+    } catch (e) {
+      throw ApiException('Error inesperado. Intenta de nuevo.');
+    }
+  }
+
+  @override
+  Future<List<User>> getAvailableUsersForClient(
+    int clientId,
+    String search,
+  ) async {
+    try {
+      return await datasource.getAvailableUsersForClient(clientId, search);
     } on ApiException {
       rethrow;
     } on SocketException {

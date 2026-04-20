@@ -47,4 +47,10 @@ class UserService
     {
         return $this->repository->getProfile($id);
     }
+
+    // Se obtiene los usuarios que no están asociados ya al cliente y que no son superadmins
+    public function getAvailableForClient(int $clientId, string $search)
+    {
+        return $this->repository->findAvailableForClient($clientId, $search);
+    }
 }

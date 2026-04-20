@@ -96,8 +96,6 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen>
                 await ref
                     .read(clientsNotifierProvider.notifier)
                     .editClient(widget.clientId, name: name, nit: nit);
-                // No hace falta syncClient — ref.watch(clientsNotifierProvider)
-                // ya reconstruye la pantalla automáticamente.
               } on ApiException catch (e) {
                 _showError(e.message);
               } catch (_) {
@@ -118,6 +116,200 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen>
     );
   }
 
+  void _showAddUserDialog() {
+    String selectedRole = 'doctor';
+    bool isAdmin = false;
+    User? selectedUser;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          return AlertDialog(
+            title: const Text('Agregar usuario'),
+            insetPadding: const EdgeInsets.symmetric(
+              horizontal: 24,
+              vertical: 24,
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // ── Autocomplete de email ─────────────────────
+                Autocomplete<User>(
+                  displayStringForOption: (user) => user.email,
+
+                  optionsBuilder: (textValue) async {
+                    final query = textValue.text.trim();
+                    if (query.length < 2) return [];
+                    return ref.read(
+                      availableUsersProvider((
+                        clientId: widget.clientId,
+                        search: query,
+                      )).future,
+                    );
+                  },
+
+                  optionsViewBuilder: (ctx, onSelected, options) => Align(
+                    alignment: Alignment.topLeft,
+                    child: Material(
+                      elevation: 4,
+                      borderRadius: BorderRadius.circular(8),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxHeight: 200),
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: options.length,
+                          itemBuilder: (_, i) {
+                            final user = options.elementAt(i);
+                            return ListTile(
+                              dense: true,
+                              title: Text(
+                                user.name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              subtitle: Text(
+                                user.email,
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              onTap: () => onSelected(user),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  onSelected: (user) {
+                    setDialogState(() => selectedUser = user);
+                  },
+
+                  fieldViewBuilder: (ctx, ctrl, focusNode, _) => TextField(
+                    controller: ctrl,
+                    focusNode: focusNode,
+                    decoration: _inputDecoration('Correo electrónico').copyWith(
+                      suffixIcon: selectedUser != null
+                          ? const Icon(
+                              Icons.check_circle,
+                              color: Colors.green,
+                              size: 18,
+                            )
+                          : null,
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                    onChanged: (_) {
+                      if (selectedUser != null) {
+                        setDialogState(() => selectedUser = null);
+                      }
+                    },
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // ── Rol ───────────────────────────────────────
+                DropdownButtonFormField<String>(
+                  value: selectedRole,
+                  decoration: _inputDecoration('Rol'),
+                  items: const [
+                    DropdownMenuItem(value: 'doctor', child: Text('Doctor')),
+                    DropdownMenuItem(
+                      value: 'secretaria',
+                      child: Text('Secretaria'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'administrador',
+                      child: Text('Administrador'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setDialogState(() {
+                      selectedRole = value;
+                      if (value == 'administrador') isAdmin = true;
+                    });
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // ── ¿Es admin? ────────────────────────────────
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '¿Es administrador?',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: selectedRole == 'administrador'
+                              ? Colors.black38
+                              : Colors.black87,
+                        ),
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        _AdminOption(
+                          label: 'Sí',
+                          selected: isAdmin,
+                          disabled: selectedRole == 'administrador',
+                          onTap: () => setDialogState(() => isAdmin = true),
+                        ),
+                        const SizedBox(width: 8),
+                        _AdminOption(
+                          label: 'No',
+                          selected: !isAdmin,
+                          disabled: selectedRole == 'administrador',
+                          onTap: () => setDialogState(() => isAdmin = false),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancelar'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.accent,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () async {
+                  if (selectedUser == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Selecciona un usuario de la lista.'),
+                        backgroundColor: Colors.orange,
+                      ),
+                    );
+                    return;
+                  }
+                  Navigator.pop(ctx);
+                  try {
+                    await ref
+                        .read(
+                          clientUsersNotifierProvider(widget.clientId).notifier,
+                        )
+                        .addUser(selectedUser!.id, selectedRole, isAdmin);
+                  } on ApiException catch (e) {
+                    _showError(e.message);
+                  } catch (_) {
+                    _showError('Error al agregar el usuario.');
+                  }
+                },
+                child: const Text('Agregar'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
   // ── Build ─────────────────────────────────────────────────
 
   @override
@@ -130,8 +322,8 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen>
       clientClinicsNotifierProvider(widget.clientId),
     );
 
-    // Derivamos el cliente de la lista. Si la lista aún está cargando o falló,
-    // mostramos los estados correspondientes.
+    // Se deriva el cliente de la lista. Si la lista aún está cargando o falló,
+    // se muestran los estados correspondientes.
     final clientAsync = clientsState.whenData(
       (list) => list.firstWhere((c) => c.id == widget.clientId),
     );
@@ -193,7 +385,7 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen>
                 onRetry: () => ref
                     .read(clientUsersNotifierProvider(widget.clientId).notifier)
                     .refresh(),
-                onAdd: () {}, // TODO
+                onAdd: () => _showAddUserDialog(),
                 itemBuilder: (i) => _UserTile(
                   user: usersAsync.requireValue[i],
                   onDelete: () {}, // TODO
@@ -634,6 +826,54 @@ class _EmptyState extends StatelessWidget {
       child: Text(
         label,
         style: const TextStyle(color: Colors.black45, fontSize: 14),
+      ),
+    );
+  }
+}
+
+class _AdminOption extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final bool disabled;
+  final VoidCallback onTap;
+
+  const _AdminOption({
+    required this.label,
+    required this.selected,
+    required this.disabled,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: disabled ? null : onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: selected && !disabled
+              ? AppTheme.accent
+              : disabled
+              ? Colors.black12
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: selected && !disabled ? AppTheme.accent : Colors.black26,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: selected && !disabled
+                ? Colors.white
+                : disabled
+                ? Colors.black38
+                : Colors.black54,
+          ),
+        ),
       ),
     );
   }
