@@ -42,20 +42,35 @@ class _CreateClientDialogState extends ConsumerState<CreateClientDialog> {
       });
     }
 
+    _debounce?.cancel();
+
+    if (value.trim().length < 2) {
+      setState(() {
+        searchResults = [];
+        isSearching = false;
+      });
+      return;
+    }
+
     _debounce = Timer(const Duration(milliseconds: 400), () async {
       if (!mounted) return;
+
       setState(() => isSearching = true);
+
       try {
         final results = await ref.read(
           availableUsersProvider(value.trim()).future,
         );
+
         if (!mounted) return;
+
         setState(() {
           searchResults = results;
           isSearching = false;
         });
       } catch (_) {
         if (!mounted) return;
+
         setState(() {
           searchResults = [];
           isSearching = false;
@@ -71,10 +86,12 @@ class _CreateClientDialogState extends ConsumerState<CreateClientDialog> {
     if (name.isEmpty || nit.isEmpty) return;
 
     setState(() => isSubmitting = true);
+
     try {
       await ref
           .read(clientsNotifierProvider.notifier)
           .createClient(name: name, nit: nit, userId: selectedAdmin?.id);
+
       if (context.mounted) Navigator.pop(context);
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -96,166 +113,180 @@ class _CreateClientDialogState extends ConsumerState<CreateClientDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Nuevo cliente'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // ── Nombre ────────────────────────────────────────
-          TextField(
-            controller: nameCtrl,
-            decoration: _inputDecoration('Nombre'),
-            textCapitalization: TextCapitalization.words,
-          ),
-          const SizedBox(height: 12),
-
-          // ── NIT ───────────────────────────────────────────
-          TextField(
-            controller: nitCtrl,
-            decoration: _inputDecoration('NIT'),
-            keyboardType: TextInputType.number,
-          ),
-          const SizedBox(height: 16),
-
-          // ── Admin (opcional) ──────────────────────────────
-          const Text(
-            'Usuario Administrador (opcional)',
-            style: TextStyle(fontSize: 12, color: Colors.black45),
-          ),
-          const SizedBox(height: 6),
-          TextField(
-            controller: adminEmailCtrl,
-            decoration: _inputDecoration('Buscar por email').copyWith(
-              suffixIcon: isSearching
-                  ? const Padding(
-                      padding: EdgeInsets.all(12),
-                      child: SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    )
-                  : selectedAdmin != null
-                  ? const Icon(
-                      Icons.check_circle,
-                      color: Colors.green,
-                      size: 20,
-                    )
-                  : null,
-            ),
-            keyboardType: TextInputType.emailAddress,
-            onChanged: _onAdminSearchChanged,
-          ),
-
-          // ── Resultados de búsqueda ────────────────────────
-          if (searchResults.isNotEmpty && selectedAdmin == null) ...[
-            const SizedBox(height: 4),
-            Container(
-              constraints: const BoxConstraints(maxHeight: 140),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.black12),
-                borderRadius: BorderRadius.circular(8),
+    // Se usa Dialog en vez de AlertDialog porque AlertDialog envuelve su
+    // contenido en IntrinsicWidth + Flexible internamente, lo que propaga
+    // consultas de dimensiones intrínsecas hasta el ListView/Viewport y
+    // causa el crash RenderShrinkWrappingViewport. Dialog no usa IntrinsicWidth.
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: SizedBox(
+        width: 400,
+        height: 460,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // ── Título ────────────────────────────────────────
+            const Padding(
+              padding: EdgeInsets.fromLTRB(24, 20, 24, 0),
+              child: Text(
+                'Nuevo cliente',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-              child: ListView.builder(
-                shrinkWrap: true,
-                padding: EdgeInsets.zero,
-                itemCount: searchResults.length,
-                itemBuilder: (_, i) {
-                  final user = searchResults[i];
-                  return InkWell(
-                    borderRadius: BorderRadius.circular(8),
-                    onTap: () {
-                      _debounce?.cancel();
-                      setState(() {
-                        selectedAdmin = user;
-                        searchResults = [];
-                        adminEmailCtrl.text = user.email;
-                      });
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
+            ),
+
+            // ── Contenido ─────────────────────────────────────
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextField(
+                      controller: nameCtrl,
+                      decoration: _inputDecoration('Nombre'),
+                      textCapitalization: TextCapitalization.words,
+                    ),
+                    const SizedBox(height: 12),
+
+                    TextField(
+                      controller: nitCtrl,
+                      decoration: _inputDecoration('NIT'),
+                      keyboardType: TextInputType.number,
+                    ),
+                    const SizedBox(height: 16),
+
+                    const Text(
+                      'Usuario Administrador (opcional)',
+                      style: TextStyle(fontSize: 12, color: Colors.black45),
+                    ),
+                    const SizedBox(height: 6),
+
+                    TextField(
+                      controller: adminEmailCtrl,
+                      decoration: _inputDecoration(
+                        'Buscar por email',
+                      ).copyWith(
+                        suffixIcon: isSearching
+                            ? const Padding(
+                                padding: EdgeInsets.all(12),
+                                child: SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              )
+                            : selectedAdmin != null
+                            ? const Icon(
+                                Icons.check_circle,
+                                color: Colors.green,
+                              )
+                            : null,
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      onChanged: _onAdminSearchChanged,
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // Resultados: Expanded + ListView funciona aquí porque
+                    // el Dialog (a diferencia de AlertDialog) NO usa
+                    // IntrinsicWidth, por lo que el ListView nunca recibe
+                    // una consulta de dimensión intrínseca.
+                    if (searchResults.isNotEmpty && selectedAdmin == null)
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.black12),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: ListView.builder(
+                            itemCount: searchResults.length,
+                            itemBuilder: (_, i) {
+                              final user = searchResults[i];
+                              return ListTile(
+                                title: Text(user.name),
+                                subtitle: Text(user.email),
+                                onTap: () {
+                                  _debounce?.cancel();
+                                  setState(() {
+                                    selectedAdmin = user;
+                                    searchResults = [];
+                                    adminEmailCtrl.text = user.email;
+                                  });
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+
+                    if (selectedAdmin != null) ...[
+                      const SizedBox(height: 8),
+                      Row(
                         children: [
-                          Text(
-                            user.name,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
+                          const Icon(
+                            Icons.person,
+                            size: 16,
+                            color: Colors.black45,
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              selectedAdmin!.name,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Colors.black54,
+                              ),
                             ),
                           ),
-                          Text(
-                            user.email,
-                            style: const TextStyle(
-                              color: Colors.black45,
-                              fontSize: 12,
-                            ),
+                          GestureDetector(
+                            onTap: () => setState(() {
+                              selectedAdmin = null;
+                              adminEmailCtrl.clear();
+                            }),
+                            child: const Icon(Icons.close, size: 16),
                           ),
                         ],
                       ),
-                    ),
-                  );
-                },
+                    ],
+                  ],
+                ),
+              ),
+            ),
+
+            // ── Acciones ──────────────────────────────────────
+            const Divider(height: 1),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed:
+                        isSubmitting ? null : () => Navigator.pop(context),
+                    child: const Text('Cancelar'),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: isSubmitting ? null : _submit,
+                    child: isSubmitting
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Crear'),
+                  ),
+                ],
               ),
             ),
           ],
-
-          // Muestra el admin seleccionado con opción de limpiar
-          if (selectedAdmin != null) ...[
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Icon(Icons.person, size: 16, color: Colors.black45),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    selectedAdmin!.name,
-                    style: const TextStyle(fontSize: 13, color: Colors.black54),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () => setState(() {
-                    selectedAdmin = null;
-                    adminEmailCtrl.clear();
-                  }),
-                  child: const Icon(
-                    Icons.close,
-                    size: 16,
-                    color: Colors.black38,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ],
+        ),
       ),
-      actions: [
-        TextButton(
-          onPressed: isSubmitting ? null : () => Navigator.pop(context),
-          child: const Text('Cancelar'),
-        ),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.accent,
-            foregroundColor: Colors.white,
-          ),
-          onPressed: isSubmitting ? null : _submit,
-          child: isSubmitting
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : const Text('Crear'),
-        ),
-      ],
     );
   }
 
