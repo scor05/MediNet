@@ -77,4 +77,36 @@ class AppointmentRemoteDatasource {
       throw handleApiError(response);
     }
   }
+
+  Future<List<AppointmentModel>> getSecretaryAppointments({
+    DateTime? dateFrom,
+    DateTime? dateTo,
+    int? doctorId,
+    int? clinicId,
+  }) async {
+    final token = Supabase.instance.client.auth.currentSession?.accessToken;
+
+    final queryParams = <String, String>{};
+    if (dateFrom != null) queryParams['date_from'] = dateFrom.toIso8601String().substring(0, 10);
+    if (dateTo != null) queryParams['date_to'] = dateTo.toIso8601String().substring(0, 10);
+    if (doctorId != null) queryParams['doctor_id'] = doctorId.toString();
+    if (clinicId != null) queryParams['clinic_id'] = clinicId.toString();
+
+    final uri = Uri.parse('${AppConfig.apiUrl}/calendar/secretary').replace(queryParameters: queryParams.isNotEmpty ? queryParams : null);
+
+    final response = await http.get(
+      uri,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    ).timeout(const Duration(seconds: 10));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((e) => AppointmentModel.fromJson(e)).toList();
+    } else {
+      throw handleApiError(response);
+    }
+  }
 }

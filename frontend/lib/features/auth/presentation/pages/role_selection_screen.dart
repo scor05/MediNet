@@ -3,6 +3,7 @@ import 'package:frontend/theme/app_theme.dart';
 import 'package:frontend/widgets/wave_header.dart';
 import 'package:frontend/features/auth/domain/entities/user_profile.dart';
 import 'package:frontend/features/calendar/presentation/pages/doctor_calendar_screen.dart';
+import 'package:frontend/features/calendar/presentation/pages/secretary_calendar_screen.dart';
 
 class RoleSelectionScreen extends StatelessWidget {
   final UserProfile profile;
@@ -18,7 +19,10 @@ class RoleSelectionScreen extends StatelessWidget {
         );
         break;
       case 'secretary':
-        // TODO: navegar a pantalla de secretaria
+        Navigator.pushReplacement(
+          context, 
+          MaterialPageRoute(builder: (_) => const SecretaryCalendarPage()),
+        );
         break;
       case 'admin':
         // TODO: navegar a pantalla de admin

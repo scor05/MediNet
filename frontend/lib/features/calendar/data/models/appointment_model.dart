@@ -9,6 +9,8 @@ class AppointmentModel extends Appointment {
     required super.status,
     required super.patientName,
     required super.clinicName,
+    super.doctorId,
+    super.doctorName,
   });
 
   factory AppointmentModel.fromJson(Map<String, dynamic> json) {
@@ -26,6 +28,8 @@ class AppointmentModel extends Appointment {
           : (json['schedule'] != null && json['schedule']['clinic'] != null
                 ? json['schedule']['clinic']['name']
                 : 'Clínica no asignada'),
+      doctorId: json['doctor_id'],
+      doctorName: json['doctor_name'],
     );
   }
 }

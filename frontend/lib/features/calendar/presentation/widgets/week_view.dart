@@ -5,11 +5,14 @@ import 'appointment_card.dart';
 class WeekView extends StatelessWidget {
   final DateTime weekStart;
   final List<Appointment> appointments;
+  final bool showDoctor;
+
 
   const WeekView({
     super.key,
     required this.weekStart,
     required this.appointments,
+    this.showDoctor = false,
   });
 
   @override
@@ -115,7 +118,7 @@ class WeekView extends StatelessWidget {
                     children: dayAppts.isEmpty
                         ? [const SizedBox.shrink()]
                         : dayAppts
-                              .map((a) => AppointmentCard(appointment: a))
+                              .map((a) => AppointmentCard(appointment: a, showDoctor: showDoctor))
                               .toList(),
                   ),
                 ),
