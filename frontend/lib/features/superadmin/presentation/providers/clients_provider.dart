@@ -118,7 +118,9 @@ class ClientsNotifier extends AsyncNotifier<List<Client>> {
         .read(createClientUsecaseProvider)
         .call(name: name, nit: nit, userId: userId);
 
-    state = AsyncData([...state.requireValue, newClient]);
+    final current = state.valueOrNull ?? [];
+    state = AsyncData([...current, newClient]);
+    await refresh();
   }
 
   /*
