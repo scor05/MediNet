@@ -3,8 +3,9 @@ import '../../domain/entities/appointment.dart';
 
 class AppointmentCard extends StatelessWidget {
   final Appointment appointment;
+  final bool showDoctor;
 
-  const AppointmentCard({super.key, required this.appointment});
+  const AppointmentCard({super.key, required this.appointment, this.showDoctor = false});
 
   Color _statusColor() {
     return switch (appointment.status) {
@@ -34,6 +35,11 @@ class AppointmentCard extends StatelessWidget {
               appointment.clinicName,
               style: const TextStyle(fontSize: 10, color: Colors.black54),
             ),
+            if(showDoctor && appointment.doctorName != null)
+              Text(
+                appointment.doctorName!,
+                style: const TextStyle(fontSize: 10, color: Colors.black54),
+              ),
           ],
         ),
       ),
