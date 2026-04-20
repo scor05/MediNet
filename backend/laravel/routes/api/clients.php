@@ -9,6 +9,7 @@ Route::prefix('clients')->group(function () {
     Route::middleware('is.superadmin')->group(function () {
         Route::get('/', [ClientController::class, 'index']);
         Route::get('/{clientId}', [ClientController::class, 'show']);
+        Route::get('/{clientId}/summary', [ClientController::class, 'summary']);
         Route::post('/', [ClientController::class, 'store']);
         Route::patch('/{clientId}', [ClientController::class, 'update']);
         Route::delete('/{clientId}', [ClientController::class, 'destroy']);
