@@ -2,8 +2,9 @@
 
 namespace App\Repositories;
 
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use App\Models\Client;
+use App\Models\ClientUser;
+use Illuminate\Support\Facades\DB;
 
 class ClientRepository
 {
@@ -19,10 +20,27 @@ class ClientRepository
         return Client::findOrFail($id);
     }
 
-    // Se crea un nuevo cliente
+    // Se crea un nuevo cliente (con ID de user aparte para vincularlo a client_users)
     public function create($data)
     {
-        return Client::create($data);
+        $userId = $data['id_user'] ?? null;
+        $clientData = collect($data)->except('id_user')->all();
+
+        return DB::transaction(function () use ($clientData, $userId) {
+            $client = Client::create($clientData);
+
+            if ($userId !== null) {
+                ClientUser::create([
+                    'id_client' => $client->id,
+                    'id_user'   => $userId,
+                    'role'      => 0,
+                    'is_admin'  => true,
+                    'is_active' => true,
+                ]);
+            }
+
+            return $client;
+        });
     }
 
     // Se actualiza un cliente
