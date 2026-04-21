@@ -21,7 +21,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'supabase.auth' => SupabaseAuth::class,
+            'role' => \App\Http\Middleware\RoleMiddleware::class,
             'is.superadmin' => IsSuperAdmin::class,
+            'is.client.admin' => \App\Http\Middleware\IsClientAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

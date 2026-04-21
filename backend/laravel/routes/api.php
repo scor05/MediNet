@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AdminController;
 
 // Rutas públicas
 Route::post('/auth/register', [AuthController::class, 'register']);
@@ -20,4 +21,5 @@ Route::middleware('supabase.auth')->group(function () {
 
     // Usuario autenticado
     Route::get('/profile', [UserController::class, 'profile']);
+    Route::get('/admin/dashboard', [AdminController::class, 'dashboard']);
 });
