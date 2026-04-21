@@ -111,6 +111,7 @@ class _UsersTable extends StatelessWidget {
 
     return Center(
       child: DecoratedBox(
+        position: DecorationPosition.foreground,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
@@ -134,6 +135,7 @@ class _UsersTable extends StatelessWidget {
                       _TableCell(
                         width: nameColumnWidth,
                         alignment: Alignment.centerLeft,
+                        showLeftBorder: true,
                         child: Text('Usuarios', style: columnTextStyle),
                       ),
                       _TableCell(
@@ -158,6 +160,7 @@ class _UsersTable extends StatelessWidget {
                         _TableCell(
                           width: nameColumnWidth,
                           alignment: Alignment.centerLeft,
+                          showLeftBorder: true,
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -211,26 +214,40 @@ class _UsersTable extends StatelessWidget {
   }
 }
 
-class _TableRow extends StatelessWidget {
+class _TableRow extends StatefulWidget {
   final List<Widget> children;
   final bool isHeader;
 
   const _TableRow({required this.children, this.isHeader = false});
 
   @override
+  State<_TableRow> createState() => _TableRowState();
+}
+
+class _TableRowState extends State<_TableRow> {
+  bool _hovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: AppTheme.accent.withValues(alpha: isHeader ? 0.35 : 0.2),
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: _hovered && !widget.isHeader ? Colors.grey.shade100 : null,
+          border: Border(
+            bottom: BorderSide(
+              color: AppTheme.accent.withValues(
+                alpha: widget.isHeader ? 0.35 : 0.2,
+              ),
+            ),
           ),
         ),
-      ),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: children,
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: widget.children,
+          ),
         ),
       ),
     );
@@ -241,11 +258,13 @@ class _TableCell extends StatelessWidget {
   final double width;
   final Widget child;
   final Alignment alignment;
+  final bool showLeftBorder;
 
   const _TableCell({
     required this.width,
     required this.child,
     required this.alignment,
+    this.showLeftBorder = false,
   });
 
   @override
@@ -256,7 +275,10 @@ class _TableCell extends StatelessWidget {
       alignment: alignment,
       decoration: BoxDecoration(
         border: Border(
-          right: BorderSide(color: AppTheme.accent.withValues(alpha: 0.2)),
+          left: showLeftBorder
+              ? BorderSide(color: AppTheme.accent.withValues(alpha: 0.26))
+              : BorderSide.none,
+          right: BorderSide(color: AppTheme.accent.withValues(alpha: 0.26)),
         ),
       ),
       child: child,
@@ -264,7 +286,7 @@ class _TableCell extends StatelessWidget {
   }
 }
 
-class _AdminPrivilegesCell extends StatelessWidget {
+class _AdminPrivilegesCell extends StatefulWidget {
   final int clientId;
   final User user;
   final bool isAdmin;
@@ -278,24 +300,39 @@ class _AdminPrivilegesCell extends StatelessWidget {
   });
 
   @override
+  State<_AdminPrivilegesCell> createState() => _AdminPrivilegesCellState();
+}
+
+class _AdminPrivilegesCellState extends State<_AdminPrivilegesCell> {
+  bool _hovered = false;
+
+  @override
   Widget build(BuildContext context) {
     return Center(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () => showDialog(
-          context: context,
-          builder: (_) => _EditAdminPrivilegesDialog(
-            clientId: clientId,
-            user: user,
-            currentIsAdmin: isAdmin,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => showDialog(
+            context: context,
+            builder: (_) => _EditAdminPrivilegesDialog(
+              clientId: widget.clientId,
+              user: widget.user,
+              currentIsAdmin: widget.isAdmin,
+            ),
           ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          child: Text(
-            isAdmin ? 'Sí' : 'No',
-            textAlign: TextAlign.center,
-            style: textStyle.copyWith(decoration: TextDecoration.underline),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            child: Text(
+              widget.isAdmin ? 'Sí' : 'No',
+              textAlign: TextAlign.center,
+              style: widget.textStyle.copyWith(
+                decoration: _hovered
+                    ? TextDecoration.underline
+                    : TextDecoration.none,
+              ),
+            ),
           ),
         ),
       ),
