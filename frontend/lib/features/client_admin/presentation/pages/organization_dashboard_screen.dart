@@ -1,8 +1,11 @@
+import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/features/client_admin/presentation/providers/organization_users_provider.dart';
 import 'package:frontend/features/superadmin/domain/entities/user.dart';
+import 'package:frontend/features/superadmin/presentation/providers/client_users_provider.dart';
 import 'package:frontend/theme/app_theme.dart';
 
 class OrganizationDashboardScreen extends ConsumerWidget {
@@ -50,6 +53,39 @@ class OrganizationDashboardScreen extends ConsumerWidget {
             const Text(
               'Resumen de usuarios asociados a tu organización.',
               style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+            ),
+            const SizedBox(height: 16),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: ElevatedButton.icon(
+                onPressed: () => showDialog(
+                  context: context,
+                  builder: (_) => _AddUserDialog(
+                    clientId: clientId,
+                    onAdd: (userId, role, isAdmin) => ref
+                        .read(
+                          organizationUsersNotifierProvider(clientId).notifier,
+                        )
+                        .addUser(userId, role, isAdmin),
+                    onError: (message) =>
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(message),
+                            backgroundColor: Colors.redAccent,
+                          ),
+                        ),
+                  ),
+                ),
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('Agregar usuario'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _panelColor,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                ),
+              ),
             ),
             const SizedBox(height: 20),
             usersAsync.when(
@@ -617,6 +653,288 @@ class _CenteredMessage extends StatelessWidget {
       constraints: const BoxConstraints(minHeight: 240),
       alignment: Alignment.center,
       child: child,
+    );
+  }
+}
+
+class _AddUserDialog extends ConsumerStatefulWidget {
+  final int clientId;
+  final Future<void> Function(int userId, String role, bool isAdmin) onAdd;
+  final void Function(String) onError;
+
+  const _AddUserDialog({
+    required this.clientId,
+    required this.onAdd,
+    required this.onError,
+  });
+
+  @override
+  ConsumerState<_AddUserDialog> createState() => _AddUserDialogState();
+}
+
+class _AddUserDialogState extends ConsumerState<_AddUserDialog> {
+  String _selectedRole = 'doctor';
+  bool _isAdmin = false;
+  User? _selectedUser;
+  List<User> _searchResults = [];
+  bool _isSearching = false;
+  bool _isSaving = false;
+  final _emailCtrl = TextEditingController();
+  Timer? _debounce;
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _emailCtrl.dispose();
+    super.dispose();
+  }
+
+  bool get _adminForced => _selectedRole == 'administrador';
+
+  void _onSearchChanged(String value) {
+    if (_selectedUser != null) {
+      setState(() {
+        _selectedUser = null;
+        _searchResults = [];
+      });
+    }
+    _debounce?.cancel();
+    if (value.trim().length < 2) {
+      setState(() => _searchResults = []);
+      return;
+    }
+    _debounce = Timer(const Duration(milliseconds: 400), () async {
+      if (!mounted) return;
+      setState(() => _isSearching = true);
+      try {
+        final results = await ref.read(
+          availableUsersForClientProvider((
+            clientId: widget.clientId,
+            search: value.trim(),
+          )).future,
+        );
+        if (!mounted) return;
+        setState(() {
+          _searchResults = results;
+          _isSearching = false;
+        });
+      } catch (_) {
+        if (!mounted) return;
+        setState(() {
+          _searchResults = [];
+          _isSearching = false;
+        });
+      }
+    });
+  }
+
+  double get _resultsPanelHeight {
+    const rowHeight = 58.0;
+    const maxHeight = 180.0;
+    return math.min(_searchResults.length * rowHeight, maxHeight);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      title: const Text('Agregar usuario'),
+      content: SizedBox(
+        width: 400,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _emailCtrl,
+              decoration: InputDecoration(
+                labelText: 'Correo electrónico',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                suffixIcon: _isSearching
+                    ? const Padding(
+                        padding: EdgeInsets.all(12),
+                        child: SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                    : _selectedUser != null
+                    ? const Icon(Icons.check_circle, color: Colors.green)
+                    : null,
+              ),
+              onChanged: _onSearchChanged,
+            ),
+            const SizedBox(height: 8),
+            if (_searchResults.isNotEmpty && _selectedUser == null)
+              Container(
+                height: _resultsPanelHeight,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.black12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Material(
+                    color: Colors.white,
+                    child: ListView.builder(
+                      padding: EdgeInsets.zero,
+                      itemCount: _searchResults.length,
+                      itemBuilder: (_, i) {
+                        final user = _searchResults[i];
+                        return InkWell(
+                          onTap: () {
+                            _debounce?.cancel();
+                            setState(() {
+                              _selectedUser = user;
+                              _searchResults = [];
+                              _emailCtrl.text = user.email;
+                            });
+                          },
+                          child: SizedBox(
+                            height: 58,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    user.name,
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    user.email,
+                                    style: const TextStyle(
+                                      color: Colors.black54,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              value: _selectedRole,
+              decoration: InputDecoration(
+                labelText: 'Rol',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              items: const [
+                DropdownMenuItem(value: 'doctor', child: Text('Doctor')),
+                DropdownMenuItem(
+                  value: 'secretaria',
+                  child: Text('Secretaria'),
+                ),
+                DropdownMenuItem(
+                  value: 'administrador',
+                  child: Text('Administrador'),
+                ),
+              ],
+              onChanged: (value) {
+                if (value == null) return;
+                setState(() {
+                  _selectedRole = value;
+                  if (value == 'administrador') _isAdmin = true;
+                });
+              },
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<bool>(
+              value: _adminForced ? true : _isAdmin,
+              decoration: InputDecoration(
+                labelText: 'Permisos administrativos',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              items: const [
+                DropdownMenuItem(
+                  value: true,
+                  child: Text('Administrador'),
+                ),
+                DropdownMenuItem(value: false, child: Text('Ninguno')),
+              ],
+              onChanged: _adminForced
+                  ? null
+                  : (value) {
+                      if (value == null) return;
+                      setState(() => _isAdmin = value);
+                    },
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.accent,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                ),
+                onPressed: _isSaving || _selectedUser == null
+                    ? null
+                    : () async {
+                        setState(() => _isSaving = true);
+                        try {
+                          await widget.onAdd(
+                            _selectedUser!.id,
+                            _selectedRole,
+                            _adminForced ? true : _isAdmin,
+                          );
+                          if (context.mounted) Navigator.pop(context);
+                        } on ApiException catch (e) {
+                          widget.onError(e.message);
+                        } catch (_) {
+                          widget.onError('Error al agregar el usuario.');
+                        } finally {
+                          if (mounted) setState(() => _isSaving = false);
+                        }
+                      },
+                child: _isSaving
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text('Agregar'),
+              ),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey.shade500,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                ),
+                onPressed: _isSaving ? null : () => Navigator.pop(context),
+                child: const Text('Cancelar'),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
