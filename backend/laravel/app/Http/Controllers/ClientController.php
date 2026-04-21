@@ -52,10 +52,4 @@ class ClientController extends Controller
         $this->service->delete($id);
         return response()->json(null, 204);
     }
-
-    // Endpoint que retorna el cliente con sus usuarios, roles y admin
-    public function summary($id)
-    {
-        return response()->json($this->service->getClientSummary($id));
-    }
 }

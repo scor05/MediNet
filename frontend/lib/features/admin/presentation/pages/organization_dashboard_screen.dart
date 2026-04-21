@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
-import 'package:frontend/features/client_admin/presentation/providers/organization_users_provider.dart';
+import 'package:frontend/features/admin/presentation/providers/organization_users_provider.dart';
 import 'package:frontend/features/superadmin/domain/entities/user.dart';
 import 'package:frontend/features/superadmin/presentation/providers/client_users_provider.dart';
 import 'package:frontend/theme/app_theme.dart';
@@ -862,10 +862,7 @@ class _AddUserDialogState extends ConsumerState<_AddUserDialog> {
                 ),
               ),
               items: const [
-                DropdownMenuItem(
-                  value: true,
-                  child: Text('Administrador'),
-                ),
+                DropdownMenuItem(value: true, child: Text('Administrador')),
                 DropdownMenuItem(value: false, child: Text('Ninguno')),
               ],
               onChanged: _adminForced

@@ -4,7 +4,7 @@ import 'package:frontend/widgets/wave_header.dart';
 import 'package:frontend/features/auth/domain/entities/user_profile.dart';
 import 'package:frontend/features/calendar/presentation/pages/doctor_calendar_screen.dart';
 import 'package:frontend/features/calendar/presentation/pages/secretary_calendar_screen.dart';
-import 'package:frontend/features/client_admin/presentation/pages/organization_dashboard_screen.dart';
+import 'package:frontend/features/admin/presentation/pages/organization_dashboard_screen.dart';
 
 class RoleSelectionScreen extends StatelessWidget {
   final UserProfile profile;
