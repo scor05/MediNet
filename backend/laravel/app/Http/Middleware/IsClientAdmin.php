@@ -11,7 +11,7 @@ class IsClientAdmin
 {
     public function handle(Request $request, Closure $next): Response
     {
-        // Obtener el usuario local del request (ya autenticado por SupabaseAuth)
+        // Obtener el usuario local del request
         $user = $request->user();
 
         if (!$user) {
