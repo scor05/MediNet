@@ -58,40 +58,4 @@ class ClientRepository
         $client = Client::findOrFail($id);
         $client->delete();
     }
-
-    // Retorna la información del cliente con sus usuarios, roles y estatus de admin
-    public function getClientSummary($id)
-    {
-        $client = Client::with(['clientUsers.user'])->findOrFail($id);
-
-        $users = $client->clientUsers->map(function ($clientUser) {
-            return [
-                'id' => $clientUser->user?->id,
-                'name' => $clientUser->user?->name,
-                'email' => $clientUser->user?->email,
-                'phone' => $clientUser->user?->phone,
-                'role' => $clientUser->role,
-                'role_name' => $this->mapRole($clientUser->role),
-                'is_admin' => $clientUser->is_admin,
-                'is_active' => $clientUser->is_active,
-            ];
-        })->values();
-
-        return [
-            'id' => $client->id,
-            'name' => $client->name,
-            'nit' => $client->nit,
-            'is_active' => $client->is_active,
-            'users' => $users,
-        ];
-    }
-
-    private function mapRole(int $role): ?string
-    {
-        return match ($role) {
-            0 => 'secretary',
-            1 => 'doctor',
-            default => null,
-        };
-    }
 }

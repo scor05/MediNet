@@ -47,10 +47,4 @@ class ClientService
     {
         $this->repository->delete($id);
     }
-
-    // Retorna la información del cliente con sus usuarios
-    public function getClientSummary($id)
-    {
-        return $this->repository->getClientSummary($id);
-    }
 }
