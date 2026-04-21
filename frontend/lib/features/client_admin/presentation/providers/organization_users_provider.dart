@@ -5,6 +5,7 @@ import 'package:frontend/features/superadmin/domain/entities/user.dart';
 import 'package:frontend/features/superadmin/domain/repositories/user_repository.dart';
 import 'package:frontend/features/superadmin/domain/usecases/get_client_users_usecase.dart';
 import 'package:frontend/features/superadmin/domain/usecases/update_client_user_admin_usecase.dart';
+import 'package:frontend/features/superadmin/domain/usecases/add_user_to_client_usecase.dart';
 
 final organizationUserRepositoryProvider = Provider<UserRepository>((ref) {
   return UserRepositoryImpl(UserRemoteDatasource());
@@ -19,6 +20,13 @@ final getOrganizationUsersUsecaseProvider = Provider<GetClientUsersUsecase>((
 final updateOrganizationUserAdminUsecaseProvider =
     Provider<UpdateClientUserAdminUsecase>((ref) {
       return UpdateClientUserAdminUsecase(
+        ref.read(organizationUserRepositoryProvider),
+      );
+    });
+
+final addOrganizationUserToClientUsecaseProvider =
+    Provider<AddUserToClientUsecase>((ref) {
+      return AddUserToClientUsecase(
         ref.read(organizationUserRepositoryProvider),
       );
     });
@@ -69,6 +77,17 @@ class OrganizationUsersNotifier extends FamilyAsyncNotifier<List<User>, int> {
       await refresh();
     } catch (e) {
       state = previousState;
+      rethrow;
+    }
+  }
+
+  Future<void> addUser(int userId, String role, bool isAdmin) async {
+    try {
+      await ref
+          .read(addOrganizationUserToClientUsecaseProvider)
+          .call(_clientId, userId, role, isAdmin);
+      await refresh();
+    } catch (e) {
       rethrow;
     }
   }
