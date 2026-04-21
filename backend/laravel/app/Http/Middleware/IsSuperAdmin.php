@@ -19,7 +19,7 @@ class IsSuperadmin
         }
 
         // Verificar si el usuario existe en la tabla superadmins
-        $isSuperadmin = SuperAdmin::where('id_user', $user->id)->exists();
+        $isSuperadmin = Superadmin::where('id_user', $user->id)->exists();
 
         if (!$isSuperadmin) {
             return response()->json([
