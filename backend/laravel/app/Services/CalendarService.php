@@ -92,7 +92,7 @@ class CalendarService
                     'name' => $appt->doctor_name,
                 ],
                 'patient' => [
-                    'id' => $appt->patient_id,
+                    'id' => $appt->id_patient,
                     'name' => $appt->patient_name,
                 ],
                 'clinic' => [
