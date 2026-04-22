@@ -113,7 +113,7 @@ class _UsersTable extends StatelessWidget {
   const _UsersTable({required this.clientId, required this.users});
 
   bool _hasAdminPrivileges(ClientUser user) {
-    return user.isAdmin || user.role == 'Administrador';
+    return user.isAdmin;
   }
 
   @override
