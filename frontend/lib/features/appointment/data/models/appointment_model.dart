@@ -22,22 +22,22 @@ class AppointmentModel extends Appointment {
 
   factory AppointmentModel.fromJson(Map<String, dynamic> json) {
     return AppointmentModel(
-      id: json['id'],
-      scheduleId: json['id_schedule'],
-      patientId: json['id_patient'],
-      patientName: json['patient_name'],
+      id: json['id'] as int,
+      scheduleId: json['schedule_id'] as int,
+      patientId: json['patient']?['id'] as int?,
+      patientName: json['patient']?['name'] ?? '',
       date: DateTime.parse(json['date']),
-      startTime: json['start_time'],
-      status: json['status'],
-      createdAt: DateTime.parse(json['created_at']),
-      createdBy: json['created_by'],
-      updatedAt: DateTime.parse(json['updated_at']),
-      updatedBy: json['updated_by'],
-      doctorId: json['doctor_id'],
-      doctorName: json['doctor_name'],
-      clinicId: json['clinic_id'],
-      clinicName: json['clinic_name'],
-      appointmentDuration: json['appointment_duration'],
+      startTime: json['start_time'] as String,
+      status: json['status'] as String,
+      createdAt: DateTime.now(),
+      createdBy: 0,
+      updatedAt: DateTime.now(),
+      updatedBy: 0,
+      doctorId: json['doctor']['id'] as int,
+      doctorName: json['doctor']['name'] as String,
+      clinicId: json['clinic']['id'] as int,
+      clinicName: json['clinic']['name'] as String,
+      appointmentDuration: 0,
     );
   }
 
@@ -58,7 +58,7 @@ class AppointmentModel extends Appointment {
       doctorName: '',
       clinicId: 0,
       clinicName: '',
-      appointmentDuration: json['appointment_duration'],
+      appointmentDuration: 0,
     );
   }
 
