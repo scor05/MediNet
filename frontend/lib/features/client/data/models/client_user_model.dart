@@ -36,6 +36,23 @@ class ClientUserModel extends ClientUser {
     );
   }
 
+  factory ClientUserModel.fromSummary(Map<String, dynamic> json) {
+    return ClientUserModel(
+      user: UserModel(
+        id: json['id_user'] as int,
+        name: '',
+        email: '',
+        phone: '',
+        isAccountActive: true,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+      role: _roleToString(json['role'] as int),
+      isAdmin: json['is_admin'] as bool,
+      isActiveInClient: json['is_active'] as bool,
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {'role': role, 'is_admin': isAdmin, 'is_active': isActiveInClient};
   }

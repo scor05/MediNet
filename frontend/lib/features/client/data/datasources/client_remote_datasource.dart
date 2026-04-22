@@ -166,7 +166,7 @@ class ClientRemoteDatasource {
         .timeout(const Duration(seconds: 10));
 
     if (response.statusCode == 201) {
-      return ClientUserModel.fromJson(jsonDecode(response.body));
+      return ClientUserModel.fromSummary(jsonDecode(response.body));
     } else {
       throw handleApiError(response);
     }
@@ -199,7 +199,7 @@ class ClientRemoteDatasource {
         .timeout(const Duration(seconds: 10));
 
     if (response.statusCode == 200) {
-      return ClientUserModel.fromJson(jsonDecode(response.body));
+      return ClientUserModel.fromSummary(jsonDecode(response.body));
     } else {
       throw handleApiError(response);
     }
