@@ -168,7 +168,7 @@ class AppointmentRemoteDatasource {
 
     if (response.statusCode == 201) {
       final Map<String, dynamic> data = jsonDecode(response.body);
-      return AppointmentModel.fromJson(data);
+      return AppointmentModel.fromCreation(data);
     } else {
       throw handleApiError(response);
     }

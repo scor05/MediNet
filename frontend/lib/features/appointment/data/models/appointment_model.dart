@@ -41,6 +41,27 @@ class AppointmentModel extends Appointment {
     );
   }
 
+  factory AppointmentModel.fromCreation(Map<String, dynamic> json) {
+    return AppointmentModel(
+      id: json['id'],
+      scheduleId: json['id_schedule'],
+      patientId: null,
+      patientName: json['name_patient'],
+      date: DateTime.parse(json['date']),
+      startTime: json['start_time'],
+      status: json['status'],
+      createdAt: DateTime.parse(json['created_at']),
+      createdBy: json['created_by'],
+      updatedAt: DateTime.parse(json['updated_at']),
+      updatedBy: json['updated_by'],
+      doctorId: 0,
+      doctorName: '',
+      clinicId: 0,
+      clinicName: '',
+      appointmentDuration: json['appointment_duration'],
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'id_schedule': scheduleId,
