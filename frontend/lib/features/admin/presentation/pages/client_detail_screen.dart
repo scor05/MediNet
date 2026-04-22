@@ -38,8 +38,6 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen>
     super.dispose();
   }
 
-  // ── Acciones ──────────────────────────────────────────────
-
   Future<void> _toggleStatus() async {
     if (_togglingStatus) return;
     setState(() => _togglingStatus = true);

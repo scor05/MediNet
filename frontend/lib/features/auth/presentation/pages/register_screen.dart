@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontend/theme/app_theme.dart';
-import 'package:frontend/widgets/wave_header.dart';
 import 'package:frontend/features/auth/presentation/pages/role_selection_screen.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
+import 'package:frontend/features/calendar/presentation/pages/patient_calendar_screen.dart';
+import 'package:frontend/theme/app_theme.dart';
+import 'package:frontend/widgets/wave_header.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -47,10 +48,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final roles = profile.roles;
 
     if (roles.length == 1) {
-      // TODO: navegar a pantalla de paciente
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const Text('Pantalla de paciente')),
+        MaterialPageRoute(builder: (_) => const PatientCalendarScreen()),
       );
     } else {
       Navigator.pushReplacement(
