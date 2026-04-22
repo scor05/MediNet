@@ -47,7 +47,7 @@ class AppointmentController extends Controller
                     'rescheduled',
                 ])
             ],
-            'start_time' => 'required|date_format:H:i:s',
+            'start_time' => 'required|date_format:H:i',
             'created_by' => 'required|integer|exists:users,id',
             'updated_by' => 'required|integer|exists:users,id',
         ], [
@@ -78,7 +78,7 @@ class AppointmentController extends Controller
                     'rescheduled',
                 ])
             ],
-            'start_time' => 'sometimes|date_format:H:i:s',
+            'start_time' => 'sometimes|date_format:H:i',
             'updated_by' => 'required|integer|exists:users,id',
         ]);
 
