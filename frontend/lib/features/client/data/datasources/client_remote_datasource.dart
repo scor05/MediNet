@@ -144,7 +144,7 @@ class ClientRemoteDatasource {
   Future<ClientUserModel> addUserToClient(
     int clientId,
     int userId,
-    int role,
+    String role,
     bool isAdmin,
   ) async {
     final token = Supabase.instance.client.auth.currentSession?.accessToken;
@@ -159,7 +159,7 @@ class ClientRemoteDatasource {
           },
           body: jsonEncode({
             'id_user': userId,
-            'role': role,
+            'role': _mapRole(role),
             'is_admin': isAdmin,
           }),
         )
@@ -176,7 +176,7 @@ class ClientRemoteDatasource {
   Future<ClientUserModel> editClientUser(
     int clientId,
     int userId,
-    int role,
+    String role,
     bool isAdmin,
     bool isActive,
   ) async {
@@ -191,7 +191,7 @@ class ClientRemoteDatasource {
             'Authorization': 'Bearer $token',
           },
           body: jsonEncode({
-            'role': role,
+            'role': _mapRole(role),
             'is_admin': isAdmin,
             'is_active': isActive,
           }),
@@ -227,9 +227,26 @@ class ClientRemoteDatasource {
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
-      return data.map((e) => ClientUserModel.fromJson(e)).toList();
+      return data.map((e) => ClientUserModel.fromSearch(e)).toList();
     } else {
       throw handleApiError(response);
     }
+  }
+}
+
+/*
+------------------------------------------ Helpers ------------------------------------------------
+*/
+
+int _mapRole(String role) {
+  switch (role.toLowerCase()) {
+    case 'administrador':
+      return 0;
+    case 'doctor':
+      return 1;
+    case 'secretaria':
+      return 2;
+    default:
+      throw ArgumentError('Rol desconocido: $role');
   }
 }

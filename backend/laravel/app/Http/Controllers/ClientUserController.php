@@ -21,11 +21,16 @@ class ClientUserController extends Controller
     // Se crea una nueva asignación de un usuario a un cliente
     public function store(Request $request, $clientId)
     {
-        $validated = $request->validate([
-            'id_user' => 'required|integer|exists:users,id',
-            'role' => 'required|integer|in:0,1,2',
-            'is_admin' => 'required|boolean',
-        ]);
+        $validated = $request->validate(
+            [
+                'id_user' => 'required|integer|exists:users,id',
+                'role' => 'required|integer|in:0,1,2',
+                'is_admin' => 'required|boolean',
+            ],
+            [
+                'role.in' => 'Ese rol no está permitido',
+            ]
+        );
         return response()->json($this->service->create($clientId, $validated), 201);
     }
 

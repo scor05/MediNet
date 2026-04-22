@@ -724,6 +724,7 @@ class _AddUserDialogState extends ConsumerState<_AddUserDialog> {
   bool isSearching = false;
   final emailCtrl = TextEditingController();
   Timer? _debounce;
+  String? _searchError;
 
   @override
   void dispose() {
@@ -733,6 +734,7 @@ class _AddUserDialogState extends ConsumerState<_AddUserDialog> {
   }
 
   void _onSearchChanged(String value) {
+    _searchError = null;
     if (selectedUser != null) {
       setState(() {
         selectedUser = null;
@@ -769,6 +771,9 @@ class _AddUserDialogState extends ConsumerState<_AddUserDialog> {
         setState(() {
           searchResults = [];
           isSearching = false;
+          _searchError = e is ApiException
+              ? e.message
+              : 'Error al buscar usuarios.';
         });
       }
     });
@@ -813,6 +818,30 @@ class _AddUserDialogState extends ConsumerState<_AddUserDialog> {
             ),
 
             const SizedBox(height: 8),
+
+            if (_searchError != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      size: 16,
+                      color: Colors.redAccent,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        _searchError!,
+                        style: const TextStyle(
+                          color: Colors.redAccent,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
             if (searchResults.isNotEmpty && selectedUser == null)
               Container(

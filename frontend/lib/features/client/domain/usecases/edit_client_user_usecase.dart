@@ -14,29 +14,6 @@ class EditClientUserUsecase {
     required bool isAdmin,
     required bool isActive,
   }) {
-    return repository.editClientUser(
-      clientId,
-      userId,
-      _mapRole(role),
-      isAdmin,
-      isActive,
-    );
-  }
-}
-
-/*
---------------------------------- HELPERS --------------------------------
-*/
-
-int _mapRole(String role) {
-  switch (role.toLowerCase()) {
-    case 'administrador':
-      return 0;
-    case 'doctor':
-      return 1;
-    case 'secretaria':
-      return 2;
-    default:
-      throw ArgumentError('Rol desconocido: $role');
+    return repository.editClientUser(clientId, userId, role, isAdmin, isActive);
   }
 }

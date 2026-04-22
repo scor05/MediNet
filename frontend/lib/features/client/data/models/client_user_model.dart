@@ -19,6 +19,23 @@ class ClientUserModel extends ClientUser {
     );
   }
 
+  factory ClientUserModel.fromSearch(Map<String, dynamic> json) {
+    return ClientUserModel(
+      user: UserModel(
+        id: json['id'] as int,
+        name: json['name'] as String,
+        email: json['email'] as String,
+        phone: '',
+        isAccountActive: true,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+      role: '',
+      isAdmin: false,
+      isActiveInClient: false,
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {'role': role, 'is_admin': isAdmin, 'is_active': isActiveInClient};
   }

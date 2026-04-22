@@ -136,7 +136,7 @@ class ClientRepositoryImpl implements ClientRepository {
   Future<ClientUser> addUserToClient(
     int clientId,
     int userId,
-    int role,
+    String role,
     bool isAdmin,
   ) async {
     try {
@@ -157,7 +157,7 @@ class ClientRepositoryImpl implements ClientRepository {
   Future<ClientUser> editClientUser(
     int clientId,
     int userId,
-    int role,
+    String role,
     bool isAdmin,
     bool isActive,
   ) async {
