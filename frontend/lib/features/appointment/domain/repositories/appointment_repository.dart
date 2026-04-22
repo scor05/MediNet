@@ -26,4 +26,10 @@ abstract class AppointmentRepository {
     required String patientName,
     required String status,
   });
+
+  // Obtener citas de un paciente
+  Future<List<Appointment>> getPatientAppointments({
+    DateTime? dateFrom,
+    DateTime? dateTo,
+  });
 }

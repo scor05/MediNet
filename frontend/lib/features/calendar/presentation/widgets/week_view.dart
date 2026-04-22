@@ -17,7 +17,7 @@ class WeekView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final days = List.generate(7, (i) => weekStart.add(Duration(days: i)));
-    final dayNames = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+    final dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
     final today = DateTime.now();
 
     return Column(
