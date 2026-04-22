@@ -1,5 +1,5 @@
-import 'package:frontend/features/superadmin/domain/entities/client.dart';
-import 'package:frontend/features/superadmin/domain/repositories/client_repository.dart';
+import 'package:frontend/features/admin/domain/entities/client.dart';
+import 'package:frontend/features/admin/domain/repositories/client_repository.dart';
 
 class CreateClientUsecase {
   final ClientRepository repository;

@@ -1,4 +1,4 @@
-import 'package:frontend/features/superadmin/domain/entities/user.dart';
+import 'package:frontend/features/admin/domain/entities/user.dart';
 
 abstract class UserRepository {
   Future<List<User>> getClientUsers(int clientId);
