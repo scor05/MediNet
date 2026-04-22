@@ -1,6 +1,6 @@
 import 'package:frontend/core/exceptions/api_exception.dart';
-import 'package:frontend/features/superadmin/domain/entities/user.dart';
-import 'package:frontend/features/superadmin/domain/repositories/user_repository.dart';
+import 'package:frontend/features/admin/domain/entities/user.dart';
+import 'package:frontend/features/admin/domain/repositories/user_repository.dart';
 
 class GetAvailableUsersUsecase {
   final UserRepository repository;

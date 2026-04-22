@@ -1,4 +1,4 @@
-import 'package:frontend/features/superadmin/domain/repositories/user_repository.dart';
+import 'package:frontend/features/admin/domain/repositories/user_repository.dart';
 
 class AddUserToClientUsecase {
   final UserRepository repository;
