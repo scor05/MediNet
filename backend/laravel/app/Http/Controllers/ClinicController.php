@@ -12,8 +12,14 @@ class ClinicController extends Controller
     {
     }
 
+    // Se obtienen todas las clínicas
+    public function index()
+    {
+        return response()->json($this->service->getAll());
+    }
+
     // Se obtienen todas las clínicas de un cliente
-    public function indexByClient(?int $clientId)
+    public function indexByClient(int $clientId)
     {
         return response()->json($this->service->getByClient($clientId));
     }

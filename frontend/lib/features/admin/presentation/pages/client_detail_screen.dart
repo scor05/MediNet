@@ -734,9 +734,9 @@ class _AddUserDialogState extends ConsumerState<_AddUserDialog> {
   }
 
   void _onSearchChanged(String value) {
-    _searchError = null;
     if (selectedUser != null) {
       setState(() {
+        _searchError = null;
         selectedUser = null;
         searchResults = [];
       });

@@ -24,6 +24,7 @@ class _CreateClientDialogState extends ConsumerState<CreateClientDialog> {
   bool isSearching = false;
   bool isSubmitting = false;
   Timer? _debounce;
+  String? _searchError;
 
   @override
   void dispose() {
@@ -37,6 +38,7 @@ class _CreateClientDialogState extends ConsumerState<CreateClientDialog> {
   void _onAdminSearchChanged(String value) {
     if (selectedAdmin != null) {
       setState(() {
+        _searchError = null;
         selectedAdmin = null;
         searchResults = [];
       });
@@ -68,12 +70,15 @@ class _CreateClientDialogState extends ConsumerState<CreateClientDialog> {
           searchResults = results;
           isSearching = false;
         });
-      } catch (_) {
+      } catch (e) {
         if (!mounted) return;
 
         setState(() {
           searchResults = [];
           isSearching = false;
+          _searchError = e is ApiException
+              ? e.message
+              : 'Error al buscar usuarios.';
         });
       }
     });
@@ -121,7 +126,6 @@ class _CreateClientDialogState extends ConsumerState<CreateClientDialog> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // ── Título ────────────────────────────────────────
             const Padding(
               padding: EdgeInsets.fromLTRB(24, 20, 24, 0),
               child: Text(
@@ -130,7 +134,6 @@ class _CreateClientDialogState extends ConsumerState<CreateClientDialog> {
               ),
             ),
 
-            // ── Contenido ─────────────────────────────────────
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
@@ -182,6 +185,30 @@ class _CreateClientDialogState extends ConsumerState<CreateClientDialog> {
                     ),
 
                     const SizedBox(height: 8),
+
+                    if (_searchError != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.error_outline,
+                              size: 16,
+                              color: Colors.redAccent,
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                _searchError!,
+                                style: const TextStyle(
+                                  color: Colors.redAccent,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
 
                     if (searchResults.isNotEmpty && selectedAdmin == null)
                       Expanded(
@@ -259,6 +286,10 @@ class _CreateClientDialogState extends ConsumerState<CreateClientDialog> {
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(0, 42),
+                      fixedSize: null,
+                    ),
                     onPressed: isSubmitting ? null : _submit,
                     child: isSubmitting
                         ? const SizedBox(

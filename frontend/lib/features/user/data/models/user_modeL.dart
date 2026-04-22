@@ -23,6 +23,18 @@ class UserModel extends User {
     );
   }
 
+  factory UserModel.fromSearch(Map<String, dynamic> json) {
+    return UserModel(
+      id: json['id'] as int,
+      name: json['name'] as String,
+      email: json['email'] as String,
+      phone: '',
+      isAccountActive: true,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'name': name,
