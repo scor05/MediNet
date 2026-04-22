@@ -26,7 +26,7 @@ class UserRemoteDatasource {
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
-      return data.map((e) => UserModel.fromJson(e)).toList();
+      return data.map((e) => UserModel.fromSearch(e)).toList();
     } else {
       throw handleApiError(response);
     }

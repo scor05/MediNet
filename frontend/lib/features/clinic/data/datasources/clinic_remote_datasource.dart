@@ -11,16 +11,31 @@ class ClinicRemoteDatasource {
   Future<List<ClinicModel>> getClinics(int? clientId) async {
     final token = Supabase.instance.client.auth.currentSession?.accessToken;
 
-    final response = await http
-        .get(
-          Uri.parse('${AppConfig.apiUrl}/clients/$clientId/clinics'),
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-        )
-        .timeout(const Duration(seconds: 10));
+    late final http.Response response;
+
+    if (clientId == null) {
+      response = await http
+          .get(
+            Uri.parse('${AppConfig.apiUrl}/clinics'),
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(const Duration(seconds: 10));
+    } else {
+      response = await http
+          .get(
+            Uri.parse('${AppConfig.apiUrl}/clients/$clientId/clinics'),
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(const Duration(seconds: 10));
+    }
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);

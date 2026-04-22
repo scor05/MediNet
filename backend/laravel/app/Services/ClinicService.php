@@ -11,8 +11,14 @@ class ClinicService
     {
     }
 
+    // Se obtienen todas las clínicas
+    public function getAll()
+    {
+        return $this->repository->findAll();
+    }
+
     // Se obtienen todas las clínicas de un cliente
-    public function getByClient(?int $clientId)
+    public function getByClient(int $clientId)
     {
         return $this->repository->findByClient($clientId);
     }

@@ -5,7 +5,6 @@ import 'package:frontend/features/calendar/presentation/pages/doctor_calendar_sc
 import 'package:frontend/features/calendar/presentation/pages/patient_calendar_screen.dart';
 import 'package:frontend/features/calendar/presentation/pages/secretary_calendar_screen.dart';
 import 'package:frontend/theme/app_theme.dart';
-import 'package:frontend/widgets/wave_header.dart';
 
 class RoleSelectionScreen extends StatelessWidget {
   final UserProfile profile;
@@ -66,10 +65,13 @@ class RoleSelectionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Seleccionar modo'),
+        backgroundColor: AppTheme.primary,
+      ),
       backgroundColor: AppTheme.background,
       body: Column(
         children: [
-          const WaveHeader(title: 'Seleccionar modo', showBack: false),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
@@ -94,7 +96,6 @@ class RoleSelectionScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 28),
 
-                  // profile.roles viene del getter de la entidad
                   ...profile.roles.map(
                     (role) => Padding(
                       padding: const EdgeInsets.only(bottom: 12),
