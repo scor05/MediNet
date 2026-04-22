@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
-import 'package:frontend/features/admin/domain/entities/user.dart';
 import 'package:frontend/features/admin/presentation/providers/client_users_provider.dart';
+import 'package:frontend/features/client/domain/entities/client_user.dart';
 import 'package:frontend/theme/app_theme.dart';
 
 class AdminPanel extends ConsumerWidget {
@@ -61,9 +62,7 @@ class AdminPanel extends ConsumerWidget {
                   builder: (_) => _AddUserDialog(
                     clientId: clientId,
                     onAdd: (userId, role, isAdmin) => ref
-                        .read(
-                          clientUsersNotifierProvider(clientId).notifier,
-                        )
+                        .read(clientUsersNotifierProvider(clientId).notifier)
                         .addUser(userId, role, isAdmin),
                     onError: (message) =>
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -109,11 +108,11 @@ class AdminPanel extends ConsumerWidget {
 
 class _UsersTable extends StatelessWidget {
   final int clientId;
-  final List<User> users;
+  final List<ClientUser> users;
 
   const _UsersTable({required this.clientId, required this.users});
 
-  bool _hasAdminPrivileges(User user) {
+  bool _hasAdminPrivileges(ClientUser user) {
     return user.isAdmin || user.role == 'Administrador';
   }
 
@@ -198,7 +197,7 @@ class _UsersTable extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                user.name,
+                                user.user.name,
                                 style: cellTextStyle.copyWith(
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -206,7 +205,7 @@ class _UsersTable extends StatelessWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                user.email,
+                                user.user.email,
                                 style: cellTextStyle.copyWith(
                                   color: AppTheme.textSecondary,
                                   fontSize: 12,
@@ -320,7 +319,7 @@ class _TableCell extends StatelessWidget {
 
 class _AdminPrivilegesCell extends StatefulWidget {
   final int clientId;
-  final User user;
+  final ClientUser user;
   final bool isAdmin;
   final TextStyle textStyle;
 
@@ -374,7 +373,7 @@ class _AdminPrivilegesCellState extends State<_AdminPrivilegesCell> {
 
 class _EditAdminPrivilegesDialog extends ConsumerStatefulWidget {
   final int clientId;
-  final User user;
+  final ClientUser user;
   final bool currentIsAdmin;
 
   const _EditAdminPrivilegesDialog({
@@ -436,7 +435,7 @@ class _EditAdminPrivilegesDialogState
                   text: 'Usuario: ',
                   style: TextStyle(fontWeight: FontWeight.w700),
                 ),
-                TextSpan(text: widget.user.name),
+                TextSpan(text: widget.user.user.name),
                 const TextSpan(text: '\n'),
                 const TextSpan(
                   text: 'Permisos actualizados: ',
@@ -469,8 +468,8 @@ class _EditAdminPrivilegesDialogState
     try {
       await ref
           .read(clientUsersNotifierProvider(widget.clientId).notifier)
-          .updateAdminPrivileges(
-            userId: widget.user.id,
+          .editUser(
+            userId: widget.user.user.id,
             role: widget.user.role,
             isAdmin: _selectedIsAdmin,
             isActiveInClient: widget.user.isActiveInClient,
@@ -506,7 +505,7 @@ class _EditAdminPrivilegesDialogState
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       title: Text(
-        'Modificando permisos de administrador para: ${widget.user.name}',
+        'Modificando permisos de administrador para: ${widget.user.user.name}',
         textAlign: TextAlign.center,
         style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
       ),
@@ -671,8 +670,8 @@ class _AddUserDialog extends ConsumerStatefulWidget {
 class _AddUserDialogState extends ConsumerState<_AddUserDialog> {
   String _selectedRole = 'doctor';
   bool _isAdmin = false;
-  User? _selectedUser;
-  List<User> _searchResults = [];
+  ClientUser? _selectedUser;
+  List<ClientUser> _searchResults = [];
   bool _isSearching = false;
   bool _isSaving = false;
   final _emailCtrl = TextEditingController();
@@ -785,7 +784,7 @@ class _AddUserDialogState extends ConsumerState<_AddUserDialog> {
                             setState(() {
                               _selectedUser = user;
                               _searchResults = [];
-                              _emailCtrl.text = user.email;
+                              _emailCtrl.text = user.user.email;
                             });
                           },
                           child: SizedBox(
@@ -799,12 +798,12 @@ class _AddUserDialogState extends ConsumerState<_AddUserDialog> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    user.name,
+                                    user.user.name,
                                     style: const TextStyle(fontSize: 14),
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    user.email,
+                                    user.user.email,
                                     style: const TextStyle(
                                       color: Colors.black54,
                                       fontSize: 12,
@@ -885,7 +884,7 @@ class _AddUserDialogState extends ConsumerState<_AddUserDialog> {
                         setState(() => _isSaving = true);
                         try {
                           await widget.onAdd(
-                            _selectedUser!.id,
+                            _selectedUser!.user.id,
                             _selectedRole,
                             _adminForced ? true : _isAdmin,
                           );

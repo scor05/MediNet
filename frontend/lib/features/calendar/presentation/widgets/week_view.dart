@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import '../../domain/entities/appointment.dart';
-import 'appointment_card.dart';
+import 'package:frontend/features/appointment/domain/entities/appointment.dart';
+import 'package:frontend/features/calendar/presentation/widgets/appointment_card.dart';
 
 class WeekView extends StatelessWidget {
   final DateTime weekStart;
   final List<Appointment> appointments;
   final bool showDoctor;
-
 
   const WeekView({
     super.key,
@@ -118,7 +117,12 @@ class WeekView extends StatelessWidget {
                     children: dayAppts.isEmpty
                         ? [const SizedBox.shrink()]
                         : dayAppts
-                              .map((a) => AppointmentCard(appointment: a, showDoctor: showDoctor))
+                              .map(
+                                (a) => AppointmentCard(
+                                  appointment: a,
+                                  showDoctor: showDoctor,
+                                ),
+                              )
                               .toList(),
                   ),
                 ),

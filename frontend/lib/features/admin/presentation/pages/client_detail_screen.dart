@@ -1,15 +1,16 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontend/theme/app_theme.dart';
-import 'package:frontend/core/exceptions/api_exception.dart';
-import '../../domain/entities/client.dart';
-import '../../domain/entities/user.dart';
-import '../../domain/entities/clinic.dart';
-import '../providers/clients_provider.dart';
-import '../providers/client_users_provider.dart';
-import '../providers/client_clinics_provider.dart';
 import 'dart:async';
 import 'dart:math' as math;
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/core/exceptions/api_exception.dart';
+import 'package:frontend/features/admin/presentation/providers/client_clinics_provider.dart';
+import 'package:frontend/features/admin/presentation/providers/client_users_provider.dart';
+import 'package:frontend/features/admin/presentation/providers/clients_provider.dart';
+import 'package:frontend/features/client/domain/entities/client.dart';
+import 'package:frontend/features/client/domain/entities/client_user.dart';
+import 'package:frontend/features/clinic/domain/entities/clinic.dart';
+import 'package:frontend/theme/app_theme.dart';
 
 class ClientDetailScreen extends ConsumerStatefulWidget {
   final int clientId;
@@ -165,7 +166,7 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen>
 
   Widget _buildContent(
     Client client,
-    AsyncValue<List<User>> usersAsync,
+    AsyncValue<List<ClientUser>> usersAsync,
     AsyncValue<List<Clinic>> clinicsAsync,
   ) {
     return Column(
@@ -504,7 +505,7 @@ class _StatusToggle extends StatelessWidget {
 }
 
 class _UserTile extends StatelessWidget {
-  final User user;
+  final ClientUser user;
   final VoidCallback onDelete;
 
   const _UserTile({required this.user, required this.onDelete});
@@ -530,7 +531,7 @@ class _UserTile extends StatelessWidget {
             radius: 18,
             backgroundColor: AppTheme.accent.withValues(alpha: 0.15),
             child: Text(
-              user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
+              user.user.name.isNotEmpty ? user.user.name[0].toUpperCase() : '?',
               style: const TextStyle(
                 color: AppTheme.accent,
                 fontWeight: FontWeight.w600,
@@ -543,14 +544,14 @@ class _UserTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  user.name,
+                  user.user.name,
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
                   ),
                 ),
                 Text(
-                  user.email,
+                  user.user.email,
                   style: const TextStyle(color: Colors.black45, fontSize: 12),
                 ),
               ],
@@ -720,8 +721,8 @@ class _AddUserDialog extends ConsumerStatefulWidget {
 class _AddUserDialogState extends ConsumerState<_AddUserDialog> {
   String selectedRole = 'doctor';
   bool isAdmin = false;
-  User? selectedUser;
-  List<User> searchResults = [];
+  ClientUser? selectedUser;
+  List<ClientUser> searchResults = [];
   bool isSearching = false;
   final emailCtrl = TextEditingController();
   Timer? _debounce;
@@ -837,7 +838,7 @@ class _AddUserDialogState extends ConsumerState<_AddUserDialog> {
                             setState(() {
                               selectedUser = user;
                               searchResults = [];
-                              emailCtrl.text = user.email;
+                              emailCtrl.text = user.user.email;
                             });
                           },
                           child: SizedBox(
@@ -851,12 +852,12 @@ class _AddUserDialogState extends ConsumerState<_AddUserDialog> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    user.name,
+                                    user.user.name,
                                     style: const TextStyle(fontSize: 14),
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    user.email,
+                                    user.user.email,
                                     style: const TextStyle(
                                       color: Colors.black54,
                                       fontSize: 12,
@@ -925,7 +926,11 @@ class _AddUserDialogState extends ConsumerState<_AddUserDialog> {
                   if (selectedUser == null) return;
 
                   try {
-                    await widget.onAdd(selectedUser!.id, selectedRole, isAdmin);
+                    await widget.onAdd(
+                      selectedUser!.user.id,
+                      selectedRole,
+                      isAdmin,
+                    );
                     if (context.mounted) Navigator.pop(context);
                   } on ApiException catch (e) {
                     widget.onError(e.message);

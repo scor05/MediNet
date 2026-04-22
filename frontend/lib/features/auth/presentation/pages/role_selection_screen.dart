@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/theme/app_theme.dart';
-import 'package:frontend/widgets/wave_header.dart';
+import 'package:frontend/features/admin/presentation/pages/admin_panel.dart';
 import 'package:frontend/features/auth/domain/entities/user_profile.dart';
 import 'package:frontend/features/calendar/presentation/pages/doctor_calendar_screen.dart';
 import 'package:frontend/features/calendar/presentation/pages/secretary_calendar_screen.dart';
-import 'package:frontend/features/admin/presentation/pages/admin_panel.dart';
+import 'package:frontend/theme/app_theme.dart';
+import 'package:frontend/widgets/wave_header.dart';
 
 class RoleSelectionScreen extends StatelessWidget {
   final UserProfile profile;
@@ -16,13 +16,13 @@ class RoleSelectionScreen extends StatelessWidget {
       case 'doctor':
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const DoctorCalendarPage()),
+          MaterialPageRoute(builder: (_) => const DoctorCalendarScreen()),
         );
         break;
       case 'secretary':
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const SecretaryCalendarPage()),
+          MaterialPageRoute(builder: (_) => const SecretaryCalendarScreen()),
         );
         break;
       case 'admin':

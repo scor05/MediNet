@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Services\CalendarService;
 use Illuminate\Http\Request;
-use Illuminate\Auth\AuthenticationException;
 
 class CalendarController extends Controller
 {

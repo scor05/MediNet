@@ -1,31 +1,20 @@
 import 'package:flutter/material.dart';
-
-import '../../../domain/entities/schedule.dart';
-import '../../../data/datasources/schedule_remote_datasource.dart';
-import '../../../data/repositories/schedule_repository_impl.dart';
-import '../../../domain/usecases/get_doctor_schedules.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
-import '../../../data/datasources/appointment_remote_datasource.dart';
-import '../../../data/repositories/appointment_repository_impl.dart';
-import '../../../domain/usecases/create_appointment.dart';
+import 'package:frontend/features/calendar/presentation/providers/doctor_calendar_provider.dart';
+import 'package:frontend/features/schedule/domain/entities/schedule.dart';
 
-class CreateAppointmentDialog extends StatefulWidget {
+class CreateAppointmentDialog extends ConsumerStatefulWidget {
   final DateTime weekStart;
   const CreateAppointmentDialog({super.key, required this.weekStart});
 
   @override
-  State<CreateAppointmentDialog> createState() =>
+  ConsumerState<CreateAppointmentDialog> createState() =>
       _CreateAppointmentDialogState();
 }
 
-class _CreateAppointmentDialogState extends State<CreateAppointmentDialog> {
-  final _getSchedulesUsecase = GetDoctorSchedules(
-    ScheduleRepositoryImpl(ScheduleRemoteDatasource()),
-  );
-  final _createAppointmentUsecase = CreateAppointment(
-    AppointmentRepositoryImpl(AppointmentRemoteDatasource()),
-  );
-
+class _CreateAppointmentDialogState
+    extends ConsumerState<CreateAppointmentDialog> {
   final _formKey = GlobalKey<FormState>();
   List<Schedule> _schedules = [];
   Schedule? _selectedSchedule;
@@ -72,42 +61,32 @@ class _CreateAppointmentDialogState extends State<CreateAppointmentDialog> {
     });
 
     try {
-      final schedules = await _getSchedulesUsecase();
+      final schedules = await ref
+          .read(doctorCalendarNotifierProvider.notifier)
+          .getDoctorSchedules();
 
       if (!mounted) return;
 
       setState(() {
         _schedules = schedules;
-
         if (_schedules.isNotEmpty) {
           _selectedSchedule = _schedules.first;
           _updateDate(_selectedSchedule!);
           _updateTimeSlots(_selectedSchedule!);
         }
       });
-    } catch (e, st) {
-      debugPrint('Error loading schedules: $e');
-      debugPrintStack(stackTrace: st);
-
+    } catch (e) {
       if (!mounted) return;
-
       setState(() {
         _schedules = [];
         _selectedSchedule = null;
         _selectedDate = null;
         _selectedTime = null;
         _timeSlots = [];
-
-        if (e is ApiException) {
-          _error = e.message;
-        } else {
-          _error = 'Ocurrió un error inesperado.';
-        }
+        _error = e is ApiException ? e.message : 'Ocurrió un error inesperado.';
       });
     } finally {
-      if (mounted) {
-        setState(() => _loadingSchedules = false);
-      }
+      if (mounted) setState(() => _loadingSchedules = false);
     }
   }
 
@@ -148,7 +127,6 @@ class _CreateAppointmentDialogState extends State<CreateAppointmentDialog> {
 
   void _onScheduleChanged(Schedule? s) {
     if (s == null) return;
-
     setState(() {
       _error = null;
       _selectedSchedule = s;
@@ -157,18 +135,13 @@ class _CreateAppointmentDialogState extends State<CreateAppointmentDialog> {
     });
   }
 
-  String _fmtDate(DateTime d) =>
-      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
     if (_selectedSchedule == null ||
         _selectedDate == null ||
         _selectedTime == null) {
-      setState(() {
-        _error = 'Completa todos los campos requeridos.';
-      });
+      setState(() => _error = 'Completa todos los campos requeridos.');
       return;
     }
 
@@ -178,38 +151,35 @@ class _CreateAppointmentDialogState extends State<CreateAppointmentDialog> {
     });
 
     try {
-      final created = await _createAppointmentUsecase(
-        idSchedule: _selectedSchedule!.id,
-        date: _fmtDate(_selectedDate!),
-        startTime: '$_selectedTime:00',
-        patientName: _patientCtrl.text.trim(),
-        status: _status,
+      final parts = _selectedTime!.split(':');
+      final startTime = TimeOfDay(
+        hour: int.parse(parts[0]),
+        minute: int.parse(parts[1]),
       );
+
+      final created = await ref
+          .read(doctorCalendarNotifierProvider.notifier)
+          .createAppointment(
+            scheduleId: _selectedSchedule!.id,
+            date: _selectedDate!,
+            startTime: startTime,
+            patientName: _patientCtrl.text.trim(),
+            status: _status,
+          );
 
       if (!mounted) return;
 
       Navigator.of(context).pop(created);
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Cita agendada exitosamente')),
       );
-    } catch (e, st) {
-      debugPrint('Error creating appointment: $e');
-      debugPrintStack(stackTrace: st);
-
+    } catch (e) {
       if (!mounted) return;
-
       setState(() {
-        if (e is ApiException) {
-          _error = e.message;
-        } else {
-          _error = 'No se pudo agendar la cita.';
-        }
+        _error = e is ApiException ? e.message : 'No se pudo agendar la cita.';
       });
     } finally {
-      if (mounted) {
-        setState(() => _saving = false);
-      }
+      if (mounted) setState(() => _saving = false);
     }
   }
 
@@ -244,7 +214,7 @@ class _CreateAppointmentDialogState extends State<CreateAppointmentDialog> {
 
             if (_loadingSchedules)
               const Center(child: CircularProgressIndicator())
-            else if (_error != null)
+            else if (_error != null && _schedules.isEmpty)
               Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -303,12 +273,10 @@ class _CreateAppointmentDialogState extends State<CreateAppointmentDialog> {
                 items: _timeSlots
                     .map((t) => DropdownMenuItem(value: t, child: Text(t)))
                     .toList(),
-                onChanged: (v) {
-                  setState(() {
-                    _selectedTime = v;
-                    _error = null;
-                  });
-                },
+                onChanged: (v) => setState(() {
+                  _selectedTime = v;
+                  _error = null;
+                }),
                 validator: (v) => v == null ? 'Selecciona una hora' : null,
               ),
               const SizedBox(height: 10),
@@ -321,9 +289,7 @@ class _CreateAppointmentDialogState extends State<CreateAppointmentDialog> {
                 validator: (v) =>
                     (v == null || v.trim().isEmpty) ? 'Requerido' : null,
                 onChanged: (_) {
-                  if (_error != null) {
-                    setState(() => _error = null);
-                  }
+                  if (_error != null) setState(() => _error = null);
                 },
               ),
               const SizedBox(height: 10),
@@ -336,12 +302,10 @@ class _CreateAppointmentDialogState extends State<CreateAppointmentDialog> {
                       (o) => DropdownMenuItem(value: o.$1, child: Text(o.$2)),
                     )
                     .toList(),
-                onChanged: (v) {
-                  setState(() {
-                    _status = v!;
-                    _error = null;
-                  });
-                },
+                onChanged: (v) => setState(() {
+                  _status = v!;
+                  _error = null;
+                }),
               ),
 
               if (_error != null) ...[

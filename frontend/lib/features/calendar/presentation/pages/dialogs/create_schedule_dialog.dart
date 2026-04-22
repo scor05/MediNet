@@ -1,30 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
+import 'package:frontend/features/calendar/presentation/providers/doctor_calendar_provider.dart';
+import 'package:frontend/features/clinic/domain/entities/clinic.dart';
+import 'package:frontend/features/clinic/domain/providers/clinic_domain_providers.dart';
 
-import '../../../domain/entities/clinic.dart';
-import '../../../data/datasources/clinic_remote_datasource.dart';
-import '../../../data/repositories/clinic_repository_impl.dart';
-import '../../../domain/usecases/get_clinics.dart';
-
-import '../../../data/datasources/schedule_remote_datasource.dart';
-import '../../../data/repositories/schedule_repository_impl.dart';
-import '../../../domain/usecases/create_schedule.dart';
-
-class CreateScheduleDialog extends StatefulWidget {
+class CreateScheduleDialog extends ConsumerStatefulWidget {
   const CreateScheduleDialog({super.key});
 
   @override
-  State<CreateScheduleDialog> createState() => _CreateScheduleDialogState();
+  ConsumerState<CreateScheduleDialog> createState() =>
+      _CreateScheduleDialogState();
 }
 
-class _CreateScheduleDialogState extends State<CreateScheduleDialog> {
-  final _getClinicsUsecase = GetClinics(
-    ClinicRepositoryImpl(ClinicRemoteDatasource()),
-  );
-  final _createScheduleUsecase = CreateSchedule(
-    ScheduleRepositoryImpl(ScheduleRemoteDatasource()),
-  );
-
+class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
   final _formKey = GlobalKey<FormState>();
   List<Clinic> _clinics = [];
   int? _selectedClinic;
@@ -67,36 +56,23 @@ class _CreateScheduleDialogState extends State<CreateScheduleDialog> {
     });
 
     try {
-      final clinics = await _getClinicsUsecase();
+      final clinics = await ref.read(getClinicsUsecaseProvider).call(null);
 
       if (!mounted) return;
 
       setState(() {
         _clinics = clinics;
-        if (_clinics.isNotEmpty) {
-          _selectedClinic = _clinics.first.id;
-        }
+        if (_clinics.isNotEmpty) _selectedClinic = _clinics.first.id;
       });
-    } catch (e, st) {
-      debugPrint('Error loading clinics: $e');
-      debugPrintStack(stackTrace: st);
-
+    } catch (e) {
       if (!mounted) return;
-
       setState(() {
         _clinics = [];
         _selectedClinic = null;
-
-        if (e is ApiException) {
-          _error = e.message;
-        } else {
-          _error = 'Ocurrió un error inesperado.';
-        }
+        _error = e is ApiException ? e.message : 'Ocurrió un error inesperado.';
       });
     } finally {
-      if (mounted) {
-        setState(() => _loadingClinics = false);
-      }
+      if (mounted) setState(() => _loadingClinics = false);
     }
   }
 
@@ -105,7 +81,6 @@ class _CreateScheduleDialogState extends State<CreateScheduleDialog> {
       context: context,
       initialTime: isStart ? _startTime : _endTime,
     );
-
     if (picked != null) {
       setState(() {
         _error = null;
@@ -131,16 +106,14 @@ class _CreateScheduleDialogState extends State<CreateScheduleDialog> {
     if (!_formKey.currentState!.validate()) return;
 
     if (_selectedClinic == null) {
-      setState(() {
-        _error = 'Selecciona una clínica.';
-      });
+      setState(() => _error = 'Selecciona una clínica.');
       return;
     }
 
     if (!_isValidRange()) {
-      setState(() {
-        _error = 'La hora de inicio debe ser anterior a la de fin.';
-      });
+      setState(
+        () => _error = 'La hora de inicio debe ser anterior a la de fin.',
+      );
       return;
     }
 
@@ -150,48 +123,35 @@ class _CreateScheduleDialogState extends State<CreateScheduleDialog> {
     });
 
     try {
-      await _createScheduleUsecase(
-        idClinic: _selectedClinic!,
-        dayOfWeek: _dayOfWeek,
-        startTime: _fmt(_startTime),
-        endTime: _fmt(_endTime),
-        duration: int.parse(_durationCtrl.text.trim()),
-      );
+      await ref
+          .read(doctorCalendarNotifierProvider.notifier)
+          .createSchedule(
+            clinicId: _selectedClinic!,
+            dayOfWeek: _dayOfWeek,
+            startTime: _startTime,
+            endTime: _endTime,
+            duration: int.parse(_durationCtrl.text.trim()),
+          );
 
       if (!mounted) return;
 
       Navigator.of(context).pop();
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Horario creado exitosamente')),
       );
-    } catch (e, st) {
-      debugPrint('Error creating schedule: $e');
-      debugPrintStack(stackTrace: st);
-
+    } catch (e) {
       if (!mounted) return;
-
       setState(() {
         if (e is ApiException) {
           _error = e.message;
         } else {
           String msg = e.toString();
-          if (msg.startsWith('Exception: ')) {
-            msg = msg.substring(11);
-          }
+          if (msg.startsWith('Exception: ')) msg = msg.substring(11);
           _error = msg.isEmpty ? 'Ocurrió un error inesperado.' : msg;
         }
       });
     } finally {
-      if (mounted) {
-        setState(() => _saving = false);
-      }
-    }
-  }
-
-  void _clearError() {
-    if (_error != null) {
-      setState(() => _error = null);
+      if (mounted) setState(() => _saving = false);
     }
   }
 
@@ -242,7 +202,7 @@ class _CreateScheduleDialogState extends State<CreateScheduleDialog> {
                   ],
                 ),
               )
-            else
+            else ...[
               DropdownButtonFormField<int>(
                 initialValue: _selectedClinic,
                 decoration: const InputDecoration(labelText: 'Clínica'),
@@ -251,80 +211,80 @@ class _CreateScheduleDialogState extends State<CreateScheduleDialog> {
                       (c) => DropdownMenuItem(value: c.id, child: Text(c.name)),
                     )
                     .toList(),
-                onChanged: (v) {
-                  setState(() {
-                    _selectedClinic = v;
-                    _error = null;
-                  });
-                },
+                onChanged: (v) => setState(() {
+                  _selectedClinic = v;
+                  _error = null;
+                }),
                 validator: (v) => v == null ? 'Selecciona una clínica' : null,
               ),
+              const SizedBox(height: 10),
 
-            const SizedBox(height: 10),
-
-            DropdownButtonFormField<int>(
-              initialValue: _dayOfWeek,
-              decoration: const InputDecoration(labelText: 'Día de la semana'),
-              items: List.generate(
-                7,
-                (i) => DropdownMenuItem(value: i, child: Text(_days[i])),
-              ),
-              onChanged: (v) {
-                setState(() {
+              DropdownButtonFormField<int>(
+                initialValue: _dayOfWeek,
+                decoration: const InputDecoration(
+                  labelText: 'Día de la semana',
+                ),
+                items: List.generate(
+                  7,
+                  (i) => DropdownMenuItem(value: i, child: Text(_days[i])),
+                ),
+                onChanged: (v) => setState(() {
                   _dayOfWeek = v!;
                   _error = null;
-                });
-              },
-            ),
-
-            const SizedBox(height: 10),
-
-            Row(
-              children: [
-                Expanded(
-                  child: InkWell(
-                    onTap: () => _pickTime(true),
-                    child: InputDecorator(
-                      decoration: const InputDecoration(
-                        labelText: 'Hora inicio',
-                      ),
-                      child: Text(_fmt(_startTime)),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: InkWell(
-                    onTap: () => _pickTime(false),
-                    child: InputDecorator(
-                      decoration: const InputDecoration(labelText: 'Hora fin'),
-                      child: Text(_fmt(_endTime)),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 10),
-
-            TextFormField(
-              controller: _durationCtrl,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Duración por cita (minutos)',
+                }),
               ),
-              validator: (v) {
-                if (v == null || v.trim().isEmpty) return 'Requerido';
-                final n = int.tryParse(v.trim());
-                if (n == null || n < 5) return 'Mínimo 5 min';
-                return null;
-              },
-              onChanged: (_) => _clearError(),
-            ),
+              const SizedBox(height: 10),
 
-            if (_error != null) ...[
-              const SizedBox(height: 12),
-              Text(_error!, style: const TextStyle(color: Colors.red)),
+              Row(
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => _pickTime(true),
+                      child: InputDecorator(
+                        decoration: const InputDecoration(
+                          labelText: 'Hora inicio',
+                        ),
+                        child: Text(_fmt(_startTime)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => _pickTime(false),
+                      child: InputDecorator(
+                        decoration: const InputDecoration(
+                          labelText: 'Hora fin',
+                        ),
+                        child: Text(_fmt(_endTime)),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+
+              TextFormField(
+                controller: _durationCtrl,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Duración por cita (minutos)',
+                ),
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return 'Requerido';
+                  final n = int.tryParse(v.trim());
+                  if (n == null || n < 5) return 'Mínimo 5 min';
+                  return null;
+                },
+                onChanged: (_) {
+                  if (_error != null) setState(() => _error = null);
+                },
+              ),
+
+              if (_error != null) ...[
+                const SizedBox(height: 12),
+                Text(_error!, style: const TextStyle(color: Colors.red)),
+              ],
             ],
 
             const SizedBox(height: 20),

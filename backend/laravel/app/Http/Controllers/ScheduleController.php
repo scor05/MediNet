@@ -13,7 +13,7 @@ class ScheduleController extends Controller
     }
 
     // Se obtienen los horarios de un doctor
-    public function index(Request $request, $doctorId = null)
+    public function indexByDoctor(Request $request, $doctorId = null)
     {
         if ($doctorId === null || !is_numeric($doctorId)) {
             $doctorId = $request->user()->id;

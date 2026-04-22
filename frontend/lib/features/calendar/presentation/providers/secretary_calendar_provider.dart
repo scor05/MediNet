@@ -1,137 +1,99 @@
-import 'package:flutter/foundation.dart';
-import '../../domain/entities/appointment.dart';
-import '../../domain/usecases/get_secretary_appointments.dart';
-import '../../data/datasources/appointment_remote_datasource.dart';
-import '../../data/repositories/appointment_repository_impl.dart';
-import 'package:frontend/core/exceptions/api_exception.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/features/appointment/domain/entities/appointment.dart';
+import 'package:frontend/features/appointment/domain/providers/appointment_domain_providers.dart';
+import 'package:frontend/features/schedule/domain/entities/schedule.dart';
+import 'package:frontend/features/schedule/domain/providers/schedule_domain_providers.dart';
 
-// ── Estado ────────────────────────────────────────────────────────────────────
+/*
+-------------------------------------- Notifier -----------------------------------------
+*/
 
-class SecretaryCalendarState {
-  final DateTime weekStart;
-  final List<Appointment> appointments;
-  final bool loading;
-  final String? error;
-  final int? filterDoctorId;
-  final int? filterClinicId;
-
-  const SecretaryCalendarState({
-    required this.weekStart,
-    this.appointments = const [],
-    this.loading = true,
-    this.error,
-    this.filterDoctorId,
-    this.filterClinicId,
-  });
-
-  SecretaryCalendarState copyWith({
-    DateTime? weekStart,
-    List<Appointment>? appointments,
-    bool? loading,
-    String? error,
-    Object? filterDoctorId = _sentinel,   
-    Object? filterClinicId = _sentinel,
-  }) {
-    return SecretaryCalendarState(
-      weekStart: weekStart ?? this.weekStart,
-      appointments: appointments ?? this.appointments,
-      loading: loading ?? this.loading,
-      error: error,
-      filterDoctorId: filterDoctorId == _sentinel
-          ? this.filterDoctorId
-          : filterDoctorId as int?,
-      filterClinicId: filterClinicId == _sentinel
-          ? this.filterClinicId
-          : filterClinicId as int?,
+class DoctorCalendarNotifier extends AsyncNotifier<List<Appointment>> {
+  // Estado inicial
+  @override
+  Future<List<Appointment>> build() {
+    return _fetch(
+      ref.watch(weekStartProvider), // Se re-ejecuta si cambia la semana
     );
   }
-}
 
-const _sentinel = Object();
-
-//  Notifier 
-
-class SecretaryCalendarNotifier extends ChangeNotifier {
-  final GetSecretaryAppointments _usecase;
-
-  SecretaryCalendarNotifier(this._usecase) {
-    load();
+  // Método privado para obtener las citas del doctor
+  Future<List<Appointment>> _fetch(DateTime weekStart) {
+    return ref
+        .read(getSecretaryAppointmentsUsecaseProvider)
+        .call(
+          dateFrom: weekStart,
+          dateTo: weekStart.add(const Duration(days: 6)),
+        );
   }
 
-  late SecretaryCalendarState _state = SecretaryCalendarState(
-    weekStart: _getMonday(DateTime.now()),
-  );
-
-  SecretaryCalendarState get state => _state;
-
-  DateTime _getMonday(DateTime d) => d.subtract(Duration(days: d.weekday - 1));
-
-  // Navegar semanas
-  void previousWeek() {
-    _state = _state.copyWith(weekStart: _state.weekStart.subtract(const Duration(days: 7)));
-    load();
+  // Método para recargar la lista de citas
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() => _fetch(ref.read(weekStartProvider)));
   }
 
-  void nextWeek() {
-    _state = _state.copyWith(weekStart: _state.weekStart.add(const Duration(days: 7)));
-    load();
+  // Método para agregar una cita de forma optimista (Se actualiza la UI antes de obtener la respuesta del backend)
+  Future<Appointment> createAppointment({
+    required int scheduleId,
+    required DateTime date,
+    required TimeOfDay startTime,
+    required String patientName,
+    required String status,
+  }) async {
+    final newAppointment = await ref
+        .read(createAppointmentUsecaseProvider)
+        .call(
+          scheduleId: scheduleId,
+          date: date,
+          startTime: startTime,
+          patientName: patientName,
+          status: status,
+        );
+    await refresh();
+    return newAppointment;
   }
 
-  // Cambiar filtros
-  void setDoctorFilter(int? doctorId) {
-    _state = _state.copyWith(filterDoctorId: doctorId ?? _sentinel);
-    load();
+  // Método para obtener los horarios del doctor
+  Future<List<Schedule>> getDoctorSchedules() async {
+    return ref.read(getDoctorSchedulesUsecaseProvider).call();
   }
 
-  void setClinicFilter(int? clinicId) {
-    _state = _state.copyWith(filterClinicId: clinicId ?? _sentinel);
-    load();
-  }
-
-  // Añadir cita localmente (retroalimentación inmediata)
-  void addAppointment(Appointment a) {
-    _state = _state.copyWith(appointments: [..._state.appointments, a]);
-    notifyListeners();
-    load(); // recarga desde el servidor
-  }
-
-  // Carga principal
-  Future<void> load() async {
-    _state = _state.copyWith(loading: true, error: null);
-    notifyListeners();
-
-    try {
-      final dateFrom = _state.weekStart;
-      final dateTo = _state.weekStart.add(const Duration(days: 6));
-
-      final result = await _usecase(
-        dateFrom: dateFrom,
-        dateTo: dateTo,
-        doctorId: _state.filterDoctorId,
-        clinicId: _state.filterClinicId,
-      );
-
-      _state = _state.copyWith(appointments: result, loading: false);
-    } on ApiException catch (e) {
-      _state = _state.copyWith(appointments: [], loading: false, error: e.message);
-    } catch (_) {
-      _state = _state.copyWith(
-        appointments: [],
-        loading: false,
-        error: 'Ocurrió un error inesperado.',
-      );
-    }
-
-    notifyListeners();
+  // Método para crear un horario de forma optimista (Se actualiza la UI antes de obtener la respuesta del backend)
+  Future<Schedule> createSchedule({
+    required int clinicId,
+    required int dayOfWeek,
+    required TimeOfDay startTime,
+    required TimeOfDay endTime,
+    required int duration,
+  }) async {
+    final newSchedule = await ref
+        .read(createScheduleUsecaseProvider)
+        .call(
+          clinicId: clinicId,
+          dayOfWeek: dayOfWeek,
+          startTime: startTime,
+          endTime: endTime,
+          duration: duration,
+        );
+    await refresh();
+    return newSchedule;
   }
 }
 
-//  Factory helper (para usarlo en la pantalla sin Riverpod) 
+/*
+-------------------------------------- Providers -----------------------------------------
+*/
 
-SecretaryCalendarNotifier createSecretaryCalendarNotifier() {
-  return SecretaryCalendarNotifier(
-    GetSecretaryAppointments(
-      AppointmentRepositoryImpl(AppointmentRemoteDatasource()),
-    ),
-  );
-}
+// Provider del inicio de la semana
+final weekStartProvider = StateProvider<DateTime>((ref) {
+  final now = DateTime.now();
+  return now.subtract(Duration(days: now.weekday - 1));
+});
+
+// Provider del notifier
+final doctorCalendarNotifierProvider =
+    AsyncNotifierProvider<DoctorCalendarNotifier, List<Appointment>>(
+      DoctorCalendarNotifier.new,
+    );

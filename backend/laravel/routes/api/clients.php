@@ -19,8 +19,5 @@ Route::prefix('clients')->group(function () {
     Route::patch('/{clientId}/users/{userId}', [ClientUserController::class, 'update']);
     Route::delete('/{clientId}/users/{userId}', [ClientUserController::class, 'destroy']);
 
-    Route::get('/{clientId}/clinics', [ClinicController::class, 'index']);
-    Route::post('/{clientId}/clinics', [ClinicController::class, 'store']);
-    Route::patch('/{clientId}/clinics/{clinicId}', [ClinicController::class, 'update']);
-    Route::delete('/{clientId}/clinics/{clinicId}', [ClinicController::class, 'destroy']);
+    Route::get('/{clientId}/clinics', [ClinicController::class, 'indexByClient']);
 });

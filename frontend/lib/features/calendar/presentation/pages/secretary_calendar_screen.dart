@@ -1,119 +1,112 @@
 import 'package:flutter/material.dart';
-import '../providers/secretary_calendar_provider.dart';
-import '../widgets/week_view.dart';
-import 'dialogs/create_appointment_dialog.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/core/exceptions/api_exception.dart';
+import 'package:frontend/features/appointment/domain/entities/appointment.dart';
+import 'package:frontend/features/calendar/presentation/pages/dialogs/create_appointment_dialog.dart';
+import 'package:frontend/features/calendar/presentation/pages/dialogs/create_schedule_dialog.dart';
+import 'package:frontend/features/calendar/presentation/providers/doctor_calendar_provider.dart';
+import 'package:frontend/features/calendar/presentation/widgets/week_view.dart';
 
-class SecretaryCalendarPage extends StatefulWidget {
-  const SecretaryCalendarPage({super.key});
+class SecretaryCalendarScreen extends ConsumerStatefulWidget {
+  const SecretaryCalendarScreen({super.key});
 
   @override
-  State<SecretaryCalendarPage> createState() => _SecretaryCalendarPageState();
+  ConsumerState<SecretaryCalendarScreen> createState() =>
+      _SecretaryCalendarScreenState();
 }
 
-class _SecretaryCalendarPageState extends State<SecretaryCalendarPage> {
-  late final SecretaryCalendarNotifier _notifier;
+class _SecretaryCalendarScreenState
+    extends ConsumerState<SecretaryCalendarScreen> {
   bool _fabOpen = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _notifier = createSecretaryCalendarNotifier();
-  }
-
-  @override
-  void dispose() {
-    _notifier.dispose();
-    super.dispose();
-  }
 
   void _toggleFab() => setState(() => _fabOpen = !_fabOpen);
   void _closeFab() => setState(() => _fabOpen = false);
 
   Future<void> _openCreateAppointment() async {
     _closeFab();
-    final created = await showModalBottomSheet(
+    final weekStart = ref.read(weekStartProvider);
+    final created = await showModalBottomSheet<Appointment>(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (_) => CreateAppointmentDialog(weekStart: _notifier.state.weekStart),
+      builder: (_) => CreateAppointmentDialog(weekStart: weekStart),
     );
-    if (created != null) _notifier.addAppointment(created);
+    if (created != null) {
+      ref.read(doctorCalendarNotifierProvider.notifier).refresh();
+    }
+  }
+
+  Future<void> _openCreateSchedule() async {
+    _closeFab();
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => const CreateScheduleDialog(),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final calendarAsync = ref.watch(doctorCalendarNotifierProvider);
+    final weekStart = ref.watch(weekStartProvider);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Calendario'),
+        title: const Text('Calendario de citas'),
         actions: [
-          IconButton(icon: const Icon(Icons.chevron_left),  onPressed: _notifier.previousWeek),
-          IconButton(icon: const Icon(Icons.chevron_right), onPressed: _notifier.nextWeek),
+          IconButton(
+            icon: const Icon(Icons.chevron_left),
+            onPressed: () => ref
+                .read(weekStartProvider.notifier)
+                .update((d) => d.subtract(const Duration(days: 7))),
+          ),
+          IconButton(
+            icon: const Icon(Icons.chevron_right),
+            onPressed: () => ref
+                .read(weekStartProvider.notifier)
+                .update((d) => d.add(const Duration(days: 7))),
+          ),
         ],
       ),
-      body: ListenableBuilder(
-        listenable: _notifier,
-        builder: (context, _) {
-          final s = _notifier.state;
-
-          //Obtener listas únicas de doctores/clínicas del resultado 
-          final doctors = { for (final a in s.appointments) a.doctorId: a.doctorName }
-              .entries
-              .where((e) => e.key != null)
-              .toList();
-          final clinics = s.appointments.map((a) => a.clinicName).toSet().toList();
-
-          return Stack(
-            children: [
-              Column(
+      body: Stack(
+        children: [
+          calendarAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  
-                  _FilterBar(
-                    doctors: doctors,
-                    clinics: clinics,
-                    selectedDoctorId: s.filterDoctorId,
-                    selectedClinic: clinics.isNotEmpty &&
-                            s.filterClinicId != null
-                        ? clinics.first 
-                        : null,
-                    onDoctorChanged: _notifier.setDoctorFilter,
-                    onClinicChanged: (_) {}, 
-                  ),
-
-                  // ── Contenido ────────────────────────────────────────────
-                  Expanded(
-                    child: s.loading
-                        ? const Center(child: CircularProgressIndicator())
-                        : s.error != null
-                            ? _ErrorView(
-                                message: s.error!,
-                                onRetry: _notifier.load,
-                              )
-                            : WeekView(
-                                weekStart: s.weekStart,
-                                appointments: s.appointments,
-                                showDoctor: true,  
-                              ),
+                  Text(e is ApiException ? e.message : 'Error inesperado.'),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: ref
+                        .read(doctorCalendarNotifierProvider.notifier)
+                        .refresh,
+                    child: const Text('Reintentar'),
                   ),
                 ],
               ),
-
-              // ── FAB overlay ──────────────────────────────────────────────
-              if (_fabOpen)
-                GestureDetector(
-                  onTap: _closeFab,
-                  child: Container(color: Colors.black26),
-                ),
-              _buildFab(),
-            ],
-          );
-        },
+            ),
+            data: (appointments) =>
+                WeekView(weekStart: weekStart, appointments: appointments),
+          ),
+          if (_fabOpen)
+            GestureDetector(
+              onTap: _closeFab,
+              child: Container(color: Colors.black26),
+            ),
+          _buildFab(context),
+        ],
       ),
     );
   }
 
-  Widget _buildFab() {
+  Widget _buildFab(BuildContext context) {
     return Positioned(
       bottom: 20,
       right: 16,
@@ -128,7 +121,13 @@ class _SecretaryCalendarPageState extends State<SecretaryCalendarPage> {
               color: Colors.green.shade700,
               onTap: _openCreateAppointment,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
+            _FabMenuItem(
+              label: 'Nuevo horario',
+              icon: Icons.schedule,
+              color: Colors.orange.shade700,
+              onTap: _openCreateSchedule,
+            ),
           ],
           FloatingActionButton(
             onPressed: _toggleFab,
@@ -138,102 +137,6 @@ class _SecretaryCalendarPageState extends State<SecretaryCalendarPage> {
               child: const Icon(Icons.add),
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-// Widgets privados
-
-
-class _FilterBar extends StatelessWidget {
-  final List<MapEntry<int?, String?>> doctors;
-  final List<String> clinics;
-  final int? selectedDoctorId;
-  final String? selectedClinic;
-  final ValueChanged<int?> onDoctorChanged;
-  final ValueChanged<String?> onClinicChanged;
-
-  const _FilterBar({
-    required this.doctors,
-    required this.clinics,
-    required this.selectedDoctorId,
-    required this.selectedClinic,
-    required this.onDoctorChanged,
-    required this.onClinicChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: Row(
-        children: [
-          Expanded(
-            child: DropdownButtonFormField<int?>(
-              value: selectedDoctorId,
-              decoration: const InputDecoration(
-                labelText: 'Doctor',
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(vertical: 6),
-              ),
-              items: [
-                const DropdownMenuItem(value: null, child: Text('Todos')),
-                ...doctors.map(
-                  (e) => DropdownMenuItem(
-                    value: e.key,
-                    child: Text(e.value ?? '—', overflow: TextOverflow.ellipsis),
-                  ),
-                ),
-              ],
-              onChanged: onDoctorChanged,
-            ),
-          ),
-          const SizedBox(width: 12),
-          // Filtro Clínica (por nombre por ahora)
-          Expanded(
-            child: DropdownButtonFormField<String?>(
-              value: selectedClinic,
-              decoration: const InputDecoration(
-                labelText: 'Clínica',
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(vertical: 6),
-              ),
-              items: [
-                const DropdownMenuItem(value: null, child: Text('Todas')),
-                ...clinics.map(
-                  (c) => DropdownMenuItem(
-                    value: c,
-                    child: Text(c, overflow: TextOverflow.ellipsis),
-                  ),
-                ),
-              ],
-              onChanged: onClinicChanged,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ErrorView extends StatelessWidget {
-  final String message;
-  final VoidCallback onRetry;
-
-  const _ErrorView({required this.message, required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(message),
-          const SizedBox(height: 12),
-          ElevatedButton(onPressed: onRetry, child: const Text('Reintentar')),
         ],
       ),
     );
@@ -263,7 +166,7 @@ class _FabMenuItem extends StatelessWidget {
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(20),
-            boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
+            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
           ),
           child: Text(label, style: const TextStyle(fontSize: 13)),
         ),

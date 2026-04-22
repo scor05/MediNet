@@ -1,43 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/datasources/client_remote_datasource.dart';
-import '../../data/repositories/client_repository_impl.dart';
-import '../../domain/entities/client.dart';
-import '../../domain/repositories/client_repository.dart';
-import '../../domain/usecases/get_clients_usecase.dart';
-import '../../domain/usecases/toggle_client_status_usecase.dart';
-import '../../domain/usecases/edit_client_usecase.dart';
-import '../../domain/usecases/create_client_usecase.dart';
+import 'package:frontend/features/client/domain/entities/client.dart';
+import 'package:frontend/features/client/domain/providers/client_domain_providers.dart';
 
-// ── Repositorio y usecases ───────────────────────────────────────────────────
-
-final clientRepositoryProvider = Provider<ClientRepository>((ref) {
-  return ClientRepositoryImpl(ClientRemoteDatasource());
-});
-
-final getClientsUsecaseProvider = Provider<GetClientsUsecase>((ref) {
-  return GetClientsUsecase(ref.read(clientRepositoryProvider));
-});
-
-final toggleClientStatusUsecaseProvider = Provider<ToggleClientStatusUseCase>((
-  ref,
-) {
-  return ToggleClientStatusUseCase(ref.read(clientRepositoryProvider));
-});
-
-final editClientUsecaseProvider = Provider<EditClientUsecase>((ref) {
-  return EditClientUsecase(ref.read(clientRepositoryProvider));
-});
-
-final createClientUsecaseProvider = Provider<CreateClientUsecase>((ref) {
-  return CreateClientUsecase(ref.read(clientRepositoryProvider));
-});
-
-// Provee los filtros de los clientes (null = todos, true = activos, false = inactivos)
-final clientFilterProvider = StateProvider<bool?>((ref) => null);
-
-// ── Notifier ──────────────────────────────────────────────────────────────────
+/*
+-------------------------------------- Notifier -----------------------------------------
+*/
 
 class ClientsNotifier extends AsyncNotifier<List<Client>> {
+  // Estado inicial
   @override
   Future<List<Client>> build() async {
     return _fetchClients();
@@ -123,16 +93,19 @@ class ClientsNotifier extends AsyncNotifier<List<Client>> {
     await refresh();
   }
 
-  /*
-  HELPERS
-  */
-
   // Método privado para obtener los clientes
   Future<List<Client>> _fetchClients() async {
     final getClients = ref.read(getClientsUsecaseProvider);
     return getClients();
   }
 }
+
+/*
+-------------------------------------- Providers -----------------------------------------
+*/
+
+// Provee los filtros de los clientes (null = todos, true = activos, false = inactivos)
+final clientFilterProvider = StateProvider<bool?>((ref) => null);
 
 // Provider para el notifier
 final clientsNotifierProvider =

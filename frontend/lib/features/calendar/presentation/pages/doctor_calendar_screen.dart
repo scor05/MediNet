@@ -1,100 +1,40 @@
 import 'package:flutter/material.dart';
-import '../../domain/entities/appointment.dart';
-import '../../domain/usecases/get_doctor_appointments.dart';
-import '../../data/datasources/appointment_remote_datasource.dart';
-import '../../data/repositories/appointment_repository_impl.dart';
-import '../widgets/week_view.dart';
-import 'dialogs/create_clinic_dialog.dart';
-import 'dialogs/create_schedule_dialog.dart';
-import 'dialogs/create_appointment_dialog.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
+import 'package:frontend/features/appointment/domain/entities/appointment.dart';
+import 'package:frontend/features/calendar/presentation/pages/dialogs/create_appointment_dialog.dart';
+import 'package:frontend/features/calendar/presentation/pages/dialogs/create_schedule_dialog.dart';
+import 'package:frontend/features/calendar/presentation/providers/doctor_calendar_provider.dart';
+import 'package:frontend/features/calendar/presentation/widgets/week_view.dart';
 
-class DoctorCalendarPage extends StatefulWidget {
-  const DoctorCalendarPage({super.key});
+class DoctorCalendarScreen extends ConsumerStatefulWidget {
+  const DoctorCalendarScreen({super.key});
 
   @override
-  State<DoctorCalendarPage> createState() => _DoctorCalendarPageState();
+  ConsumerState<DoctorCalendarScreen> createState() =>
+      _DoctorCalendarScreenState();
 }
 
-class _DoctorCalendarPageState extends State<DoctorCalendarPage> {
-  final _getCalendarUsecase = GetDoctorCalendar(
-    AppointmentRepositoryImpl(AppointmentRemoteDatasource()),
-  );
-
-  // Estado
-  late DateTime _weekStart;
-  List<Appointment> _appointments = [];
-  bool _loading = true;
-  String? _error;
+class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
   bool _fabOpen = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _weekStart = _getMonday(DateTime.now());
-    _loadAppointments();
-  }
-
-  DateTime _getMonday(DateTime date) {
-    return date.subtract(Duration(days: date.weekday - 1));
-  }
-
-  Future<void> _loadAppointments() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      final dateFrom = _weekStart;
-      final dateTo = _weekStart.add(const Duration(days: 6));
-      final result = await _getCalendarUsecase(
-        dateFrom: dateFrom,
-        dateTo: dateTo,
-      );
-      setState(() => _appointments = result);
-    } catch (e, st) {
-      debugPrint('Error loading appointments: $e');
-      debugPrintStack(stackTrace: st);
-
-      if (e is ApiException) {
-        setState(() {
-          _appointments = [];
-          _error = e.message;
-        });
-      } else {
-        setState(() {
-          _appointments = [];
-          _error = 'Ocurrió un error inesperado.';
-        });
-      }
-    } finally {
-      setState(() => _loading = false);
-    }
-  }
-
-  void _previousWeek() {
-    setState(() => _weekStart = _weekStart.subtract(const Duration(days: 7)));
-    _loadAppointments();
-  }
-
-  void _nextWeek() {
-    setState(() => _weekStart = _weekStart.add(const Duration(days: 7)));
-    _loadAppointments();
-  }
 
   void _toggleFab() => setState(() => _fabOpen = !_fabOpen);
   void _closeFab() => setState(() => _fabOpen = false);
 
-  Future<void> _openCreateClinic() async {
+  Future<void> _openCreateAppointment() async {
     _closeFab();
-    await showModalBottomSheet(
+    final weekStart = ref.read(weekStartProvider);
+    final created = await showModalBottomSheet<Appointment>(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (_) => const CreateClinicDialog(),
+      builder: (_) => CreateAppointmentDialog(weekStart: weekStart),
     );
+    if (created != null) {
+      ref.read(doctorCalendarNotifierProvider.notifier).refresh();
+    }
   }
 
   Future<void> _openCreateSchedule() async {
@@ -109,58 +49,51 @@ class _DoctorCalendarPageState extends State<DoctorCalendarPage> {
     );
   }
 
-  Future<void> _openCreateAppointment() async {
-    _closeFab();
-    final created = await showModalBottomSheet<Appointment>(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (_) => CreateAppointmentDialog(weekStart: _weekStart),
-    );
-    if (created != null) {
-      // Agrega la cita localmente para retroalimentación inmediata, luego recarga desde el servidor
-      setState(() => _appointments = [..._appointments, created]);
-      _loadAppointments();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final calendarAsync = ref.watch(doctorCalendarNotifierProvider);
+    final weekStart = ref.watch(weekStartProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mi Calendario'),
         actions: [
           IconButton(
             icon: const Icon(Icons.chevron_left),
-            onPressed: _previousWeek,
+            onPressed: () => ref
+                .read(weekStartProvider.notifier)
+                .update((d) => d.subtract(const Duration(days: 7))),
           ),
           IconButton(
             icon: const Icon(Icons.chevron_right),
-            onPressed: _nextWeek,
+            onPressed: () => ref
+                .read(weekStartProvider.notifier)
+                .update((d) => d.add(const Duration(days: 7))),
           ),
         ],
       ),
       body: Stack(
         children: [
-          _loading
-              ? const Center(child: CircularProgressIndicator())
-              : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(_error!),
-                      const SizedBox(height: 12),
-                      ElevatedButton(
-                        onPressed: _loadAppointments,
-                        child: const Text('Reintentar'),
-                      ),
-                    ],
+          calendarAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(e is ApiException ? e.message : 'Error inesperado.'),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: ref
+                        .read(doctorCalendarNotifierProvider.notifier)
+                        .refresh,
+                    child: const Text('Reintentar'),
                   ),
-                )
-              : WeekView(weekStart: _weekStart, appointments: _appointments),
+                ],
+              ),
+            ),
+            data: (appointments) =>
+                WeekView(weekStart: weekStart, appointments: appointments),
+          ),
           if (_fabOpen)
             GestureDetector(
               onTap: _closeFab,
@@ -194,14 +127,6 @@ class _DoctorCalendarPageState extends State<DoctorCalendarPage> {
               color: Colors.orange.shade700,
               onTap: _openCreateSchedule,
             ),
-            const SizedBox(height: 8),
-            _FabMenuItem(
-              label: 'Nueva clínica',
-              icon: Icons.local_hospital_outlined,
-              color: Colors.deepPurple,
-              onTap: _openCreateClinic,
-            ),
-            const SizedBox(height: 12),
           ],
           FloatingActionButton(
             onPressed: _toggleFab,

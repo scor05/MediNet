@@ -17,16 +17,20 @@ class CalendarRepository
             ->select([
                 'a.id',
                 'a.id_schedule',
+                'a.id_patient',
                 'a.date',
                 'a.start_time',
                 'a.status',
-                'doctor.id   AS doctor_id',
-                'doctor.name AS doctor_name',
-                'a.id_patient AS patient_id',
-                DB::raw('COALESCE(patient.name, a.name_patient) AS patient_name'),
+                'a.created_at',
+                'a.created_by',
+                'a.updated_at',
+                'a.updated_by',
+                'doctor.id    AS doctor_id',
+                'doctor.name  AS doctor_name',
                 'cl.id        AS clinic_id',
                 'cl.name      AS clinic_name',
-                'cl.address   AS clinic_address',
+                's.duration   AS appointment_duration',
+                DB::raw('COALESCE(patient.name, a.name_patient) AS patient_name'),
             ]);
     }
 

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontend/theme/app_theme.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
-import '../../domain/entities/client.dart';
-import '../providers/clients_provider.dart';
-import '../widgets/client_card.dart';
-import '../widgets/client_filter_chip.dart';
-import 'client_detail_screen.dart';
-import '../widgets/create_client_dialog.dart';
+import 'package:frontend/features/admin/presentation/pages/client_detail_screen.dart';
+import 'package:frontend/features/admin/presentation/providers/clients_provider.dart';
+import 'package:frontend/features/admin/presentation/widgets/client_card.dart';
+import 'package:frontend/features/admin/presentation/widgets/client_filter_chip.dart';
+import 'package:frontend/features/admin/presentation/widgets/create_client_dialog.dart';
+import 'package:frontend/features/client/domain/entities/client.dart';
+import 'package:frontend/theme/app_theme.dart';
 
 class SuperadminPanel extends ConsumerStatefulWidget {
   const SuperadminPanel({super.key});

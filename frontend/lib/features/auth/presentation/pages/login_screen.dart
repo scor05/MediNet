@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontend/theme/app_theme.dart';
-import 'package:frontend/widgets/wave_header.dart';
+import 'package:frontend/features/admin/presentation/pages/superadmin_panel.dart';
 import 'package:frontend/features/auth/presentation/pages/register_screen.dart';
 import 'package:frontend/features/auth/presentation/pages/role_selection_screen.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
-import 'package:frontend/features/admin/presentation/pages/superadmin_panel.dart';
+import 'package:frontend/theme/app_theme.dart';
+import 'package:frontend/widgets/wave_header.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
