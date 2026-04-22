@@ -23,7 +23,7 @@ return new class extends Migration {
         DB::statement("
             ALTER TABLE client_users
             ADD CONSTRAINT client_users_role_check
-            CHECK (role IN (0, 1))
+            CHECK (role IN (0, 1, 2))
         ");
     }
 
