@@ -1,3 +1,4 @@
+import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/features/client/domain/entities/client_user.dart';
 import 'package:frontend/features/user/data/models/user_model.dart';
 
@@ -12,7 +13,7 @@ class ClientUserModel extends ClientUser {
   factory ClientUserModel.fromJson(Map<String, dynamic> json) {
     return ClientUserModel(
       user: UserModel.fromJson(json['user']),
-      role: json['role'],
+      role: _roleToString(json['role']),
       isAdmin: json['is_admin'],
       isActiveInClient: json['is_active'],
     );
@@ -20,5 +21,22 @@ class ClientUserModel extends ClientUser {
 
   Map<String, dynamic> toJson() {
     return {'role': role, 'is_admin': isAdmin, 'is_active': isActiveInClient};
+  }
+}
+
+/*
+-------------------------------- Helpers ------------------------------------
+*/
+
+String _roleToString(int role) {
+  switch (role) {
+    case 0:
+      return 'Administrador';
+    case 1:
+      return 'Doctor';
+    case 2:
+      return 'Paciente';
+    default:
+      throw ApiException('Rol desconocido: $role');
   }
 }
