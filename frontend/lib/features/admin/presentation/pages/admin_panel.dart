@@ -3,16 +3,15 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
-import 'package:frontend/features/admin/presentation/providers/organization_users_provider.dart';
-import 'package:frontend/features/superadmin/domain/entities/user.dart';
-import 'package:frontend/features/superadmin/presentation/providers/client_users_provider.dart';
+import 'package:frontend/features/admin/domain/entities/user.dart';
+import 'package:frontend/features/admin/presentation/providers/client_users_provider.dart';
 import 'package:frontend/theme/app_theme.dart';
 
-class OrganizationDashboardScreen extends ConsumerWidget {
+class AdminPanel extends ConsumerWidget {
   final int clientId;
   final String clientName;
 
-  const OrganizationDashboardScreen({
+  const AdminPanel({
     super.key,
     required this.clientId,
     required this.clientName,
@@ -23,7 +22,7 @@ class OrganizationDashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final usersAsync = ref.watch(organizationUsersNotifierProvider(clientId));
+    final usersAsync = ref.watch(clientUsersNotifierProvider(clientId));
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4F8F8),
@@ -35,9 +34,8 @@ class OrganizationDashboardScreen extends ConsumerWidget {
       ),
       body: RefreshIndicator(
         color: _panelColor,
-        onRefresh: () => ref
-            .read(organizationUsersNotifierProvider(clientId).notifier)
-            .refresh(),
+        onRefresh: () =>
+            ref.read(clientUsersNotifierProvider(clientId).notifier).refresh(),
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
           children: [
@@ -64,7 +62,7 @@ class OrganizationDashboardScreen extends ConsumerWidget {
                     clientId: clientId,
                     onAdd: (userId, role, isAdmin) => ref
                         .read(
-                          organizationUsersNotifierProvider(clientId).notifier,
+                          clientUsersNotifierProvider(clientId).notifier,
                         )
                         .addUser(userId, role, isAdmin),
                     onError: (message) =>
@@ -97,7 +95,7 @@ class OrganizationDashboardScreen extends ConsumerWidget {
                     ? error.message
                     : 'No se pudo cargar la organización.',
                 onRetry: () => ref
-                    .read(organizationUsersNotifierProvider(clientId).notifier)
+                    .read(clientUsersNotifierProvider(clientId).notifier)
                     .refresh(),
               ),
               data: (users) => _UsersTable(clientId: clientId, users: users),
@@ -151,9 +149,7 @@ class _UsersTable extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: OrganizationDashboardScreen._panelBorder.withValues(
-              alpha: 0.35,
-            ),
+            color: AdminPanel._panelBorder.withValues(alpha: 0.35),
           ),
         ),
         child: ClipRRect(
@@ -472,7 +468,7 @@ class _EditAdminPrivilegesDialogState
 
     try {
       await ref
-          .read(organizationUsersNotifierProvider(widget.clientId).notifier)
+          .read(clientUsersNotifierProvider(widget.clientId).notifier)
           .updateAdminPrivileges(
             userId: widget.user.id,
             role: widget.user.role,
@@ -631,7 +627,7 @@ class _ErrorState extends StatelessWidget {
           const SizedBox(height: 16),
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: OrganizationDashboardScreen._panelColor,
+              backgroundColor: AdminPanel._panelColor,
             ),
             onPressed: onRetry,
             child: const Text('Reintentar'),

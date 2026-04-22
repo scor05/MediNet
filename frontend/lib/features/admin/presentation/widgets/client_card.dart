@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/theme/app_theme.dart';
-import 'package:frontend/features/superadmin/domain/entities/client.dart';
+import 'package:frontend/features/admin/domain/entities/client.dart';
 
 class ClientCard extends StatelessWidget {
   final Client client;

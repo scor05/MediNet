@@ -1,12 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontend/features/superadmin/domain/usecases/get_available_users_for_client_usecase.dart';
 import '../../data/datasources/user_remote_datasource.dart';
 import '../../data/repositories/user_repository_impl.dart';
 import '../../domain/repositories/user_repository.dart';
 import '../../domain/usecases/get_client_users_usecase.dart';
 import '../../domain/usecases/add_user_to_client_usecase.dart';
-import '../../domain/entities/user.dart';
+import '../../domain/usecases/update_client_user_admin_usecase.dart';
+import '../../domain/usecases/get_available_users_for_client_usecase.dart';
 import '../../domain/usecases/get_available_users_usecase.dart';
+import '../../domain/entities/user.dart';
 
 // ── Repositorio y usecases ────────────────────────────────────────────────────
 
@@ -21,6 +22,11 @@ final getClientUsersUsecaseProvider = Provider<GetClientUsersUsecase>((ref) {
 final addUserToClientUsecaseProvider = Provider<AddUserToClientUsecase>((ref) {
   return AddUserToClientUsecase(ref.read(userRepositoryProvider));
 });
+
+final updateClientUserAdminUsecaseProvider =
+    Provider<UpdateClientUserAdminUsecase>((ref) {
+      return UpdateClientUserAdminUsecase(ref.read(userRepositoryProvider));
+    });
 
 final getAvailableUsersForClientUsecaseProvider =
     Provider<GetAvailableUsersForClientUsecase>((ref) {
@@ -76,6 +82,39 @@ class ClientUsersNotifier extends FamilyAsyncNotifier<List<User>, int> {
           .call(_clientId, userId, role, isAdmin);
       await refresh();
     } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> updateAdminPrivileges({
+    required int userId,
+    required String role,
+    required bool isAdmin,
+    required bool isActiveInClient,
+  }) async {
+    final previousState = state;
+
+    if (state.hasValue) {
+      state = AsyncData(
+        state.requireValue
+            .map((u) => u.id == userId ? u.copyWith(isAdmin: isAdmin) : u)
+            .toList(),
+      );
+    }
+
+    try {
+      await ref
+          .read(updateClientUserAdminUsecaseProvider)
+          .call(
+            clientId: _clientId,
+            userId: userId,
+            role: role,
+            isAdmin: isAdmin,
+            isActive: isActiveInClient,
+          );
+      await refresh();
+    } catch (e) {
+      state = previousState;
       rethrow;
     }
   }

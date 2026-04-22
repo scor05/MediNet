@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'dart:async';
 import 'package:frontend/core/exceptions/api_exception.dart';
-import 'package:frontend/features/superadmin/domain/entities/clinic.dart';
-import 'package:frontend/features/superadmin/domain/repositories/clinic_repository.dart';
-import 'package:frontend/features/superadmin/data/datasources/clinic_remote_datasource.dart';
+import 'package:frontend/features/admin/domain/entities/clinic.dart';
+import 'package:frontend/features/admin/domain/repositories/clinic_repository.dart';
+import 'package:frontend/features/admin/data/datasources/clinic_remote_datasource.dart';
 
 class ClinicRepositoryImpl implements ClinicRepository {
   final ClinicRemoteDatasource datasource;
