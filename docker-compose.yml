@@ -17,7 +17,7 @@ services:
     build: ./frontend
     container_name: medinet_frontend
     ports:
-      - "8881:80"
+      - "80:80"
     restart: unless-stopped
 
 volumes:
