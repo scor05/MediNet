@@ -15,13 +15,13 @@ class RoleSelectionScreen extends StatelessWidget {
   void _navigateByRole(BuildContext context, String role) {
     switch (role) {
       case 'doctor':
-        Navigator.pushReplacement(
+        Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const DoctorCalendarPage()),
         );
         break;
       case 'secretary':
-        Navigator.pushReplacement(
+        Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const SecretaryCalendarPage()),
         );
@@ -29,7 +29,7 @@ class RoleSelectionScreen extends StatelessWidget {
       case 'admin':
         if (profile.adminOf.isEmpty) return;
         final organization = profile.adminOf.first;
-        Navigator.pushReplacement(
+        Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => AdminPanel(
@@ -40,7 +40,7 @@ class RoleSelectionScreen extends StatelessWidget {
         );
         break;
       case 'patient':
-        Navigator.pushReplacement(
+        Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const PatientCalendarPage()),
         );
