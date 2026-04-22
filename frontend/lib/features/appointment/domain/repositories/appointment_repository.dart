@@ -18,6 +18,12 @@ abstract class AppointmentRepository {
     int? clinicId,
   });
 
+  // Obtener citas de un paciente
+  Future<List<Appointment>> getPatientAppointments({
+    DateTime? dateFrom,
+    DateTime? dateTo,
+  });
+
   // Crear una cita
   Future<Appointment> createAppointment({
     required int scheduleId,
@@ -25,11 +31,5 @@ abstract class AppointmentRepository {
     required TimeOfDay startTime,
     required String patientName,
     required String status,
-  });
-
-  // Obtener citas de un paciente
-  Future<List<Appointment>> getPatientAppointments({
-    DateTime? dateFrom,
-    DateTime? dateTo,
   });
 }

@@ -4,7 +4,7 @@ import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/calendar/presentation/pages/dialogs/create_appointment_dialog.dart';
 import 'package:frontend/features/calendar/presentation/pages/dialogs/create_schedule_dialog.dart';
-import 'package:frontend/features/calendar/presentation/providers/doctor_calendar_provider.dart';
+import 'package:frontend/features/calendar/presentation/providers/secretary_calendar_provider.dart';
 import 'package:frontend/features/calendar/presentation/widgets/week_view.dart';
 
 class SecretaryCalendarScreen extends ConsumerStatefulWidget {
@@ -24,7 +24,7 @@ class _SecretaryCalendarScreenState
 
   Future<void> _openCreateAppointment() async {
     _closeFab();
-    final weekStart = ref.read(weekStartProvider);
+    final weekStart = ref.read(secretaryWeekStartProvider);
     final created = await showModalBottomSheet<Appointment>(
       context: context,
       isScrollControlled: true,
@@ -34,7 +34,7 @@ class _SecretaryCalendarScreenState
       builder: (_) => CreateAppointmentDialog(weekStart: weekStart),
     );
     if (created != null) {
-      ref.read(doctorCalendarNotifierProvider.notifier).refresh();
+      ref.read(secretaryCalendarNotifierProvider.notifier).refresh();
     }
   }
 
@@ -52,8 +52,8 @@ class _SecretaryCalendarScreenState
 
   @override
   Widget build(BuildContext context) {
-    final calendarAsync = ref.watch(doctorCalendarNotifierProvider);
-    final weekStart = ref.watch(weekStartProvider);
+    final calendarAsync = ref.watch(secretaryCalendarNotifierProvider);
+    final weekStart = ref.watch(secretaryWeekStartProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -62,13 +62,13 @@ class _SecretaryCalendarScreenState
           IconButton(
             icon: const Icon(Icons.chevron_left),
             onPressed: () => ref
-                .read(weekStartProvider.notifier)
+                .read(secretaryWeekStartProvider.notifier)
                 .update((d) => d.subtract(const Duration(days: 7))),
           ),
           IconButton(
             icon: const Icon(Icons.chevron_right),
             onPressed: () => ref
-                .read(weekStartProvider.notifier)
+                .read(secretaryWeekStartProvider.notifier)
                 .update((d) => d.add(const Duration(days: 7))),
           ),
         ],
@@ -85,7 +85,7 @@ class _SecretaryCalendarScreenState
                   const SizedBox(height: 12),
                   ElevatedButton(
                     onPressed: ref
-                        .read(doctorCalendarNotifierProvider.notifier)
+                        .read(secretaryCalendarNotifierProvider.notifier)
                         .refresh,
                     child: const Text('Reintentar'),
                   ),

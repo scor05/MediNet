@@ -23,7 +23,7 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
 
   Future<void> _openCreateAppointment() async {
     _closeFab();
-    final weekStart = ref.read(weekStartProvider);
+    final weekStart = ref.read(doctorWeekStartProvider);
     final created = await showModalBottomSheet<Appointment>(
       context: context,
       isScrollControlled: true,
@@ -52,7 +52,7 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
   @override
   Widget build(BuildContext context) {
     final calendarAsync = ref.watch(doctorCalendarNotifierProvider);
-    final weekStart = ref.watch(weekStartProvider);
+    final weekStart = ref.watch(doctorWeekStartProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -61,13 +61,13 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
           IconButton(
             icon: const Icon(Icons.chevron_left),
             onPressed: () => ref
-                .read(weekStartProvider.notifier)
+                .read(doctorWeekStartProvider.notifier)
                 .update((d) => d.subtract(const Duration(days: 7))),
           ),
           IconButton(
             icon: const Icon(Icons.chevron_right),
             onPressed: () => ref
-                .read(weekStartProvider.notifier)
+                .read(doctorWeekStartProvider.notifier)
                 .update((d) => d.add(const Duration(days: 7))),
           ),
         ],

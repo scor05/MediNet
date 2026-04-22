@@ -9,12 +9,14 @@ import 'package:frontend/features/schedule/domain/providers/schedule_domain_prov
 -------------------------------------- Notifier -----------------------------------------
 */
 
-class DoctorCalendarNotifier extends AsyncNotifier<List<Appointment>> {
+class SecretaryCalendarNotifier extends AsyncNotifier<List<Appointment>> {
   // Estado inicial
   @override
   Future<List<Appointment>> build() {
     return _fetch(
-      ref.watch(weekStartProvider), // Se re-ejecuta si cambia la semana
+      ref.watch(
+        secretaryWeekStartProvider,
+      ), // Se re-ejecuta si cambia la semana
     );
   }
 
@@ -31,7 +33,9 @@ class DoctorCalendarNotifier extends AsyncNotifier<List<Appointment>> {
   // Método para recargar la lista de citas
   Future<void> refresh() async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() => _fetch(ref.read(weekStartProvider)));
+    state = await AsyncValue.guard(
+      () => _fetch(ref.read(secretaryWeekStartProvider)),
+    );
   }
 
   // Método para agregar una cita de forma optimista (Se actualiza la UI antes de obtener la respuesta del backend)
@@ -87,13 +91,13 @@ class DoctorCalendarNotifier extends AsyncNotifier<List<Appointment>> {
 */
 
 // Provider del inicio de la semana
-final weekStartProvider = StateProvider<DateTime>((ref) {
+final secretaryWeekStartProvider = StateProvider<DateTime>((ref) {
   final now = DateTime.now();
   return now.subtract(Duration(days: now.weekday - 1));
 });
 
 // Provider del notifier
-final doctorCalendarNotifierProvider =
-    AsyncNotifierProvider<DoctorCalendarNotifier, List<Appointment>>(
-      DoctorCalendarNotifier.new,
+final secretaryCalendarNotifierProvider =
+    AsyncNotifierProvider<SecretaryCalendarNotifier, List<Appointment>>(
+      SecretaryCalendarNotifier.new,
     );
