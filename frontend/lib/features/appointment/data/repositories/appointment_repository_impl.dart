@@ -40,6 +40,27 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
 
   // Obtiene las citas de una secretaria
   @override
+  Future<List<Appointment>> getPatientAppointments({
+    DateTime? dateFrom,
+    DateTime? dateTo,
+  }) async {
+    try {
+      return await datasource.getPatientAppointments(
+        dateFrom: dateFrom,
+        dateTo: dateTo,
+      );
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw ApiException('Sin conexión. Verifica tu internet.');
+    } on TimeoutException {
+      throw ApiException('La solicitud tardó demasiado. Intenta de nuevo.');
+    } catch (e) {
+      throw ApiException('Error inesperado. Intenta de nuevo.');
+    }
+  }
+
+  @override
   Future<List<Appointment>> getSecretaryAppointments({
     DateTime? dateFrom,
     DateTime? dateTo,
