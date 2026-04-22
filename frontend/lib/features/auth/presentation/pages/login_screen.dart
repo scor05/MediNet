@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/features/admin/presentation/pages/superadmin_panel.dart';
 import 'package:frontend/features/auth/presentation/pages/register_screen.dart';
 import 'package:frontend/features/auth/presentation/pages/role_selection_screen.dart';
-import 'package:frontend/features/calendar/presentation/pages/patient_calendar_screen.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
+import 'package:frontend/features/calendar/presentation/pages/patient_calendar_screen.dart';
 import 'package:frontend/theme/app_theme.dart';
 import 'package:frontend/widgets/wave_header.dart';
 
@@ -45,7 +45,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (roles.length == 1) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const PatientCalendarPage()),
+        MaterialPageRoute(builder: (_) => const PatientCalendarScreen()),
       );
     } else {
       Navigator.pushReplacement(

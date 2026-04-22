@@ -1,95 +1,51 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../domain/entities/appointment.dart';
-import '../../domain/usecases/get_patient_appointments.dart';
-import '../../data/datasources/appointment_remote_datasource.dart';
-import '../../data/repositories/appointment_repository_impl.dart';
-import 'package:frontend/core/exceptions/api_exception.dart';
+import 'package:frontend/features/appointment/domain/entities/appointment.dart';
+import 'package:frontend/features/appointment/domain/providers/appointment_domain_providers.dart';
 
-// ── Estado ────────────────────────────────────────────────────────────────────
+/*
+-------------------------------------- Notifier -----------------------------------------
+*/
 
-class PatientCalendarState {
-  final DateTime weekStart;
-  final List<Appointment> appointments;
-  final bool loading;
-  final String? error;
+class PatientCalendarNotifier extends AsyncNotifier<List<Appointment>> {
+  // Estado inicial
+  @override
+  Future<List<Appointment>> build() {
+    return _fetch(
+      ref.watch(patientWeekStartProvider), // Se re-ejecuta si cambia la semana
+    );
+  }
 
-  const PatientCalendarState({
-    required this.weekStart,
-    this.appointments = const [],
-    this.loading = true,
-    this.error,
-  });
+  // Método privado para obtener las citas del paciente
+  Future<List<Appointment>> _fetch(DateTime weekStart) {
+    return ref
+        .read(getPatientAppointmentsUsecaseProvider)
+        .call(
+          dateFrom: weekStart,
+          dateTo: weekStart.add(const Duration(days: 6)),
+        );
+  }
 
-  PatientCalendarState copyWith({
-    DateTime? weekStart,
-    List<Appointment>? appointments,
-    bool? loading,
-    String? error,
-  }) {
-    return PatientCalendarState(
-      weekStart: weekStart ?? this.weekStart,
-      appointments: appointments ?? this.appointments,
-      loading: loading ?? this.loading,
-      error: error,
+  // Método para recargar la lista de citas
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(
+      () => _fetch(ref.read(patientWeekStartProvider)),
     );
   }
 }
 
-// ── Providers de dependencias ─────────────────────────────────────────────────
+/*
+-------------------------------------- Providers -----------------------------------------
+*/
 
-final _patientAppointmentsUsecaseProvider = Provider<GetPatientAppointments>((ref) {
-  return GetPatientAppointments(
-    AppointmentRepositoryImpl(AppointmentRemoteDatasource()),
-  );
+// Provider del inicio de la semana
+final patientWeekStartProvider = StateProvider<DateTime>((ref) {
+  final now = DateTime.now();
+  return now.subtract(Duration(days: now.weekday - 1));
 });
 
-// ── Notifier ──────────────────────────────────────────────────────────────────
-
-class PatientCalendarNotifier extends Notifier<PatientCalendarState> {
-  DateTime _getMonday(DateTime d) => d.subtract(Duration(days: d.weekday - 1));
-
-  @override
-  PatientCalendarState build() {
-    Future.microtask(load);
-    return PatientCalendarState(weekStart: _getMonday(DateTime.now()));
-  }
-
-  void previousWeek() {
-    state = state.copyWith(weekStart: state.weekStart.subtract(const Duration(days: 7)));
-    load();
-  }
-
-  void nextWeek() {
-    state = state.copyWith(weekStart: state.weekStart.add(const Duration(days: 7)));
-    load();
-  }
-
-  Future<void> load() async {
-    state = state.copyWith(loading: true, error: null);
-
-    try {
-      final dateFrom = state.weekStart;
-      final dateTo = state.weekStart.add(const Duration(days: 6));
-      final result = await ref.read(_patientAppointmentsUsecaseProvider)(
-        dateFrom: dateFrom,
-        dateTo: dateTo,
-      );
-      state = state.copyWith(appointments: result, loading: false);
-    } on ApiException catch (e) {
-      state = state.copyWith(appointments: [], loading: false, error: e.message);
-    } catch (_) {
-      state = state.copyWith(
-        appointments: [],
-        loading: false,
-        error: 'Ocurrió un error inesperado.',
-      );
-    }
-  }
-}
-
-// ── Provider global ───────────────────────────────────────────────────────────
-
-final patientCalendarProvider =
-    NotifierProvider<PatientCalendarNotifier, PatientCalendarState>(
+// Provider del notifier
+final patientCalendarNotifierProvider =
+    AsyncNotifierProvider<PatientCalendarNotifier, List<Appointment>>(
       PatientCalendarNotifier.new,
     );

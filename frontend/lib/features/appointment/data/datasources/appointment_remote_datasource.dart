@@ -100,6 +100,44 @@ class AppointmentRemoteDatasource {
     }
   }
 
+  // Obtiene las citas de un paciente
+  Future<List<AppointmentModel>> getPatientAppointments({
+    DateTime? dateFrom,
+    DateTime? dateTo,
+  }) async {
+    final token = Supabase.instance.client.auth.currentSession?.accessToken;
+
+    final queryParams = <String, String>{};
+    if (dateFrom != null) {
+      queryParams['date_from'] = dateFrom.toIso8601String().substring(0, 10);
+    }
+    if (dateTo != null) {
+      queryParams['date_to'] = dateTo.toIso8601String().substring(0, 10);
+    }
+
+    final uri = Uri.parse(
+      '${AppConfig.apiUrl}/calendar/patient',
+    ).replace(queryParameters: queryParams.isNotEmpty ? queryParams : null);
+
+    final response = await http
+        .get(
+          uri,
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((e) => AppointmentModel.fromJson(e)).toList();
+    } else {
+      throw handleApiError(response);
+    }
+  }
+
   // Crea una cita
   Future<AppointmentModel> createAppointment({
     required int scheduleId,
@@ -131,40 +169,6 @@ class AppointmentRemoteDatasource {
     if (response.statusCode == 201) {
       final Map<String, dynamic> data = jsonDecode(response.body);
       return AppointmentModel.fromJson(data);
-    } else {
-      throw handleApiError(response);
-    }
-  }
-
-  Future<List<AppointmentModel>> getPatientAppointments({
-    DateTime? dateFrom,
-    DateTime? dateTo,
-  }) async {
-    final token = Supabase.instance.client.auth.currentSession?.accessToken;
-
-    final queryParams = <String, String>{};
-    if (dateFrom != null)
-      queryParams['date_from'] = dateFrom.toIso8601String().substring(0, 10);
-    if (dateTo != null)
-      queryParams['date_to'] = dateTo.toIso8601String().substring(0, 10);
-
-    final uri = Uri.parse(
-      '${AppConfig.apiUrl}/calendar/patient',
-    ).replace(queryParameters: queryParams.isNotEmpty ? queryParams : null);
-
-    final response = await http
-        .get(
-          uri,
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-        )
-        .timeout(const Duration(seconds: 10));
-
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.map((e) => AppointmentModel.fromJson(e)).toList();
     } else {
       throw handleApiError(response);
     }

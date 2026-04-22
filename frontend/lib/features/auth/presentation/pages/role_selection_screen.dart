@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/features/admin/presentation/pages/admin_panel.dart';
 import 'package:frontend/features/auth/domain/entities/user_profile.dart';
 import 'package:frontend/features/calendar/presentation/pages/doctor_calendar_screen.dart';
+import 'package:frontend/features/calendar/presentation/pages/patient_calendar_screen.dart';
 import 'package:frontend/features/calendar/presentation/pages/secretary_calendar_screen.dart';
 import 'package:frontend/theme/app_theme.dart';
 import 'package:frontend/widgets/wave_header.dart';
@@ -41,7 +42,7 @@ class RoleSelectionScreen extends StatelessWidget {
       case 'patient':
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const PatientCalendarPage()),
+          MaterialPageRoute(builder: (_) => const PatientCalendarScreen()),
         );
         break;
     }

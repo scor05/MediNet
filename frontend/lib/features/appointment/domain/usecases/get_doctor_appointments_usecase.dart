@@ -7,7 +7,17 @@ class GetDoctorAppointmentsUsecase {
   GetDoctorAppointmentsUsecase(this.repository);
 
   // Obtiene las citas de un doctor
-  Future<List<Appointment>> call({DateTime? dateFrom, DateTime? dateTo}) {
-    return repository.getDoctorAppointments(dateFrom: dateFrom, dateTo: dateTo);
+  Future<List<Appointment>> call({
+    DateTime? dateFrom,
+    DateTime? dateTo,
+    int? clientId,
+    int? clinicId,
+  }) {
+    return repository.getDoctorAppointments(
+      dateFrom: dateFrom,
+      dateTo: dateTo,
+      clientId: clientId,
+      clinicId: clinicId,
+    );
   }
 }
