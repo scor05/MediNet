@@ -98,7 +98,6 @@ class CalendarService
                 'clinic' => [
                     'id' => $appt->clinic_id,
                     'name' => $appt->clinic_name,
-                    'address' => $appt->clinic_address,
                 ],
                 'schedule_id' => $appt->id_schedule,
             ];
