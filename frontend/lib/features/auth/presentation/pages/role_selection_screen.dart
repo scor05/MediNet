@@ -5,6 +5,7 @@ import 'package:frontend/features/auth/domain/entities/user_profile.dart';
 import 'package:frontend/features/calendar/presentation/pages/doctor_calendar_screen.dart';
 import 'package:frontend/features/calendar/presentation/pages/secretary_calendar_screen.dart';
 import 'package:frontend/features/admin/presentation/pages/organization_dashboard_screen.dart';
+import 'package:frontend/features/calendar/presentation/pages/patient_calendar_screen.dart';
 
 class RoleSelectionScreen extends StatelessWidget {
   final UserProfile profile;
@@ -39,7 +40,10 @@ class RoleSelectionScreen extends StatelessWidget {
         );
         break;
       case 'patient':
-        // TODO: navegar a pantalla de paciente
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const PatientCalendarPage()),
+        );
         break;
     }
   }

@@ -20,4 +20,9 @@ abstract class AppointmentRepository {
     int? doctorId,
     int? clinicId,
   });
+
+  Future<List<Appointment>> getPatientAppointments({
+    DateTime? dateFrom,
+    DateTime? dateTo,
+  });
 }
