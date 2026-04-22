@@ -1,11 +1,11 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
-import 'package:frontend/theme/app_theme.dart';
-import '../../domain/entities/user.dart';
-import '../providers/client_users_provider.dart';
-import '../providers/clients_provider.dart';
+import 'package:frontend/features/admin/presentation/providers/clients_provider.dart';
+import 'package:frontend/features/user/domain/entities/user.dart';
+import 'package:frontend/features/user/domain/providers/user_domain_providers.dart';
 
 class CreateClientDialog extends ConsumerStatefulWidget {
   const CreateClientDialog({super.key});
@@ -58,9 +58,9 @@ class _CreateClientDialogState extends ConsumerState<CreateClientDialog> {
       setState(() => isSearching = true);
 
       try {
-        final results = await ref.read(
-          availableUsersProvider(value.trim()).future,
-        );
+        final results = await ref
+            .read(getAvailableUsersUsecaseProvider)
+            .call(value.trim());
 
         if (!mounted) return;
 
@@ -113,10 +113,6 @@ class _CreateClientDialogState extends ConsumerState<CreateClientDialog> {
 
   @override
   Widget build(BuildContext context) {
-    // Se usa Dialog en vez de AlertDialog porque AlertDialog envuelve su
-    // contenido en IntrinsicWidth + Flexible internamente, lo que propaga
-    // consultas de dimensiones intrínsecas hasta el ListView/Viewport y
-    // causa el crash RenderShrinkWrappingViewport. Dialog no usa IntrinsicWidth.
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: SizedBox(
@@ -130,10 +126,7 @@ class _CreateClientDialogState extends ConsumerState<CreateClientDialog> {
               padding: EdgeInsets.fromLTRB(24, 20, 24, 0),
               child: Text(
                 'Nuevo cliente',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
               ),
             ),
 
@@ -166,9 +159,7 @@ class _CreateClientDialogState extends ConsumerState<CreateClientDialog> {
 
                     TextField(
                       controller: adminEmailCtrl,
-                      decoration: _inputDecoration(
-                        'Buscar por email',
-                      ).copyWith(
+                      decoration: _inputDecoration('Buscar por email').copyWith(
                         suffixIcon: isSearching
                             ? const Padding(
                                 padding: EdgeInsets.all(12),
@@ -192,10 +183,6 @@ class _CreateClientDialogState extends ConsumerState<CreateClientDialog> {
 
                     const SizedBox(height: 8),
 
-                    // Resultados: Expanded + ListView funciona aquí porque
-                    // el Dialog (a diferencia de AlertDialog) NO usa
-                    // IntrinsicWidth, por lo que el ListView nunca recibe
-                    // una consulta de dimensión intrínseca.
                     if (searchResults.isNotEmpty && selectedAdmin == null)
                       Expanded(
                         child: Container(
@@ -258,7 +245,6 @@ class _CreateClientDialogState extends ConsumerState<CreateClientDialog> {
               ),
             ),
 
-            // ── Acciones ──────────────────────────────────────
             const Divider(height: 1),
             Padding(
               padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
@@ -266,8 +252,9 @@ class _CreateClientDialogState extends ConsumerState<CreateClientDialog> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    onPressed:
-                        isSubmitting ? null : () => Navigator.pop(context),
+                    onPressed: isSubmitting
+                        ? null
+                        : () => Navigator.pop(context),
                     child: const Text('Cancelar'),
                   ),
                   const SizedBox(width: 8),

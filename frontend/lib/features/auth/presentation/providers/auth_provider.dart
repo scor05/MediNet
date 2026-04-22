@@ -1,12 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:frontend/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:frontend/features/auth/domain/entities/user_profile.dart';
 import 'package:frontend/features/auth/domain/repositories/auth_repository.dart';
+import 'package:frontend/features/auth/domain/usecases/get_profile_usecase.dart';
 import 'package:frontend/features/auth/domain/usecases/login_usecase.dart';
 import 'package:frontend/features/auth/domain/usecases/register_usecase.dart';
-import 'package:frontend/features/auth/domain/usecases/get_profile_usecase.dart';
-import 'package:frontend/core/exceptions/api_exception.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepositoryImpl(AuthRemoteDatasource());
