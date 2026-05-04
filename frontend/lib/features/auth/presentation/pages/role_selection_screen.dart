@@ -16,13 +16,13 @@ class RoleSelectionScreen extends StatelessWidget {
       case 'doctor':
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const DoctorShellScreen()),
+          MaterialPageRoute(builder: (_) => DoctorShellScreen(roles: profile.roles)),
         );
         break;
       case 'secretary':
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const SecretaryShellScreen()),
+          MaterialPageRoute(builder: (_) => SecretaryShellScreen(roles: profile.roles)),
         );
         break;
       case 'admin':

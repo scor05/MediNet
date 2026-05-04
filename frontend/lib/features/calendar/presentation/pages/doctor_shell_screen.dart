@@ -5,7 +5,9 @@ import 'package:frontend/features/calendar/presentation/pages/settings_screen.da
 /// Shell screen that wraps [DoctorCalendarScreen] and [SettingsScreen]
 /// inside a [BottomNavigationBar] with tabs "Calendario" and "Ajustes".
 class DoctorShellScreen extends StatefulWidget {
-  const DoctorShellScreen({super.key});
+  final List<String> roles;
+
+  const DoctorShellScreen({super.key, this.roles = const []});
 
   @override
   State<DoctorShellScreen> createState() => _DoctorShellScreenState();
@@ -14,9 +16,9 @@ class DoctorShellScreen extends StatefulWidget {
 class _DoctorShellScreenState extends State<DoctorShellScreen> {
   int _currentIndex = 0;
 
-  static const List<Widget> _pages = [
-    DoctorCalendarScreen(),
-    SettingsScreen(),
+  late final List<Widget> _pages = [
+    const DoctorCalendarScreen(),
+    SettingsScreen(roles: widget.roles),
   ];
 
   @override
