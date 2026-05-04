@@ -1,20 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
+import 'package:frontend/features/auth/presentation/pages/welcome_screen.dart';
+import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
 import 'package:frontend/features/calendar/presentation/providers/patient_calendar_provider.dart';
 import 'package:frontend/features/calendar/presentation/widgets/week_view.dart';
 
-class PatientCalendarScreen extends ConsumerWidget {
+class PatientCalendarScreen extends ConsumerStatefulWidget {
   const PatientCalendarScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PatientCalendarScreen> createState() =>
+      _PatientCalendarScreenState();
+}
+
+class _PatientCalendarScreenState extends ConsumerState<PatientCalendarScreen> {
+
+  Future<void> _logout() async {
+    await ref.read(authNotifierProvider.notifier).logout();
+    if (!mounted) return;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+      (route) => false,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final calendarAsync = ref.watch(patientCalendarNotifierProvider);
     final weekStart = ref.watch(patientWeekStartProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mis citas'),
+        leading: IconButton(
+          icon: const Icon(Icons.logout),
+          onPressed: _logout,
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.chevron_left),

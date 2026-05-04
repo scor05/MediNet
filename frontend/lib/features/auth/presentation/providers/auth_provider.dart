@@ -24,36 +24,28 @@ final getProfileUsecaseProvider = Provider<GetProfileUsecase>((ref) {
   return GetProfileUsecase(ref.watch(authRepositoryProvider));
 });
 
-// Representa los posibles estados del flujo de autenticación
 sealed class AuthState {}
 
-// Estado inicial de pantallas de login y registro
 class AuthIdle extends AuthState {}
 
-// Cargando (login, register o getProfile en curso)
 class AuthLoading extends AuthState {}
 
-// Login o register exitoso y perfil cargado
 class AuthAuthenticated extends AuthState {
   final UserProfile profile;
   AuthAuthenticated(this.profile);
 }
 
-// Error en cualquier paso del flujo
 class AuthError extends AuthState {
   final String message;
   AuthError(this.message);
 }
 
-// Login exitoso como superadmin
 class AuthSuperadmin extends AuthState {}
 
-// Provee los estados del flujo de autenticación
 class AuthNotifier extends Notifier<AuthState> {
   @override
   AuthState build() => AuthIdle();
 
-  // Ejecuta login y luego carga el perfil en un solo flujo
   Future<void> login({required String email, required String password}) async {
     state = AuthLoading();
 
@@ -70,7 +62,6 @@ class AuthNotifier extends Notifier<AuthState> {
     await _loadProfile();
   }
 
-  // Ejecuta registro y luego carga el perfil en un solo flujo
   Future<void> register({
     required String name,
     required String email,
@@ -94,7 +85,6 @@ class AuthNotifier extends Notifier<AuthState> {
     await _loadProfile();
   }
 
-  // Carga el perfil del usuario autenticado
   Future<void> _loadProfile() async {
     try {
       final profile = await ref.read(getProfileUsecaseProvider)();
@@ -113,11 +103,16 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
-  // Resetea el estado
+  // Cierra sesión, limpia Riverpod y resetea el estado
+  Future<void> logout() async {
+    await ref.read(authRepositoryProvider).logout();
+    ref.invalidateSelf();
+    state = AuthIdle();
+  }
+
   void reset() => state = AuthIdle();
 }
 
-// Provider para el notifier
 final authNotifierProvider = NotifierProvider<AuthNotifier, AuthState>(() {
   return AuthNotifier();
 });
