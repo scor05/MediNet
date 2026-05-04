@@ -6,6 +6,8 @@ import 'package:frontend/features/admin/presentation/providers/clients_provider.
 import 'package:frontend/features/admin/presentation/widgets/client_card.dart';
 import 'package:frontend/features/admin/presentation/widgets/client_filter_chip.dart';
 import 'package:frontend/features/admin/presentation/widgets/create_client_dialog.dart';
+import 'package:frontend/features/auth/presentation/pages/welcome_screen.dart';
+import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
 import 'package:frontend/features/client/domain/entities/client.dart';
 import 'package:frontend/theme/app_theme.dart';
 
@@ -17,7 +19,6 @@ class SuperadminPanel extends ConsumerStatefulWidget {
 }
 
 class _SuperadminPanelState extends ConsumerState<SuperadminPanel> {
-  // IDs de clientes cuyo toggle está en curso (para mostrar spinner individual)
   final Set<int> _togglingIds = {};
 
   Future<void> _toggleStatus(Client client) async {
@@ -43,6 +44,17 @@ class _SuperadminPanelState extends ConsumerState<SuperadminPanel> {
     } finally {
       if (mounted) setState(() => _togglingIds.remove(client.id));
     }
+  }
+
+  // Logout: cierra sesión, limpia estado y redirige al WelcomeScreen
+  Future<void> _logout() async {
+    await ref.read(authNotifierProvider.notifier).logout();
+    if (!mounted) return;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+      (route) => false,
+    );
   }
 
   @override
@@ -71,8 +83,6 @@ class _SuperadminPanelState extends ConsumerState<SuperadminPanel> {
     );
   }
 
-  // Header
-
   Widget _buildHeader(BuildContext context) {
     return Container(
       width: double.infinity,
@@ -83,10 +93,11 @@ class _SuperadminPanelState extends ConsumerState<SuperadminPanel> {
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
           child: Row(
             children: [
+              // Botón de logout reemplaza el de atrás
               IconButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: _logout,
                 icon: const Icon(
-                  Icons.arrow_back_ios_new,
+                  Icons.logout,
                   color: AppTheme.background,
                   size: 20,
                 ),
@@ -151,8 +162,6 @@ class _SuperadminPanelState extends ConsumerState<SuperadminPanel> {
     );
   }
 
-  // Filter bar
-
   Widget _buildFilterBar(bool? currentFilter) {
     return Container(
       color: AppTheme.background,
@@ -181,8 +190,6 @@ class _SuperadminPanelState extends ConsumerState<SuperadminPanel> {
     );
   }
 
-  // Estados
-
   Widget _buildError(Object error) {
     final message = error is ApiException
         ? error.message
@@ -194,11 +201,7 @@ class _SuperadminPanelState extends ConsumerState<SuperadminPanel> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 48,
-              color: Colors.redAccent.shade200,
-            ),
+            Icon(Icons.error_outline, size: 48, color: Colors.redAccent.shade200),
             const SizedBox(height: 16),
             Text(
               message,
