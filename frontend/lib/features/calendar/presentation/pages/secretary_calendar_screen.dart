@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
-import 'package:frontend/features/auth/presentation/pages/welcome_screen.dart';
-import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
 import 'package:frontend/features/calendar/presentation/pages/dialogs/create_appointment_dialog.dart';
 import 'package:frontend/features/calendar/presentation/pages/dialogs/create_schedule_dialog.dart';
 import 'package:frontend/features/calendar/presentation/providers/secretary_calendar_provider.dart';
@@ -23,16 +21,6 @@ class _SecretaryCalendarScreenState
 
   void _toggleFab() => setState(() => _fabOpen = !_fabOpen);
   void _closeFab() => setState(() => _fabOpen = false);
-
-  Future<void> _logout() async {
-    await ref.read(authNotifierProvider.notifier).logout();
-    if (!mounted) return;
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const WelcomeScreen()),
-      (route) => false,
-    );
-  }
 
   Future<void> _openCreateAppointment() async {
     _closeFab();
@@ -70,10 +58,7 @@ class _SecretaryCalendarScreenState
     return Scaffold(
       appBar: AppBar(
         title: const Text('Calendario de citas'),
-        leading: IconButton(
-          icon: const Icon(Icons.logout),
-          onPressed: _logout,
-        ),
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.chevron_left),

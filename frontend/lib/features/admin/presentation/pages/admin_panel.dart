@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/features/admin/presentation/providers/client_users_provider.dart';
+import 'package:frontend/features/auth/presentation/pages/welcome_screen.dart';
+import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
 import 'package:frontend/features/client/domain/entities/client_user.dart';
 import 'package:frontend/theme/app_theme.dart';
 
@@ -21,6 +23,16 @@ class AdminPanel extends ConsumerWidget {
   static const _panelColor = AppTheme.accent;
   static const _panelBorder = AppTheme.accent;
 
+  Future<void> _logout(BuildContext context, WidgetRef ref) async {
+    await ref.read(authNotifierProvider.notifier).logout();
+    if (!context.mounted) return;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+      (route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final usersAsync = ref.watch(clientUsersNotifierProvider(clientId));
@@ -32,6 +44,11 @@ class AdminPanel extends ConsumerWidget {
         foregroundColor: Colors.white,
         title: const Text('Mi Organización'),
         elevation: 0,
+        // Botón de logout reemplaza el de atrás
+        leading: IconButton(
+          onPressed: () => _logout(context, ref),
+          icon: const Icon(Icons.logout),
+        ),
       ),
       body: RefreshIndicator(
         color: _panelColor,
