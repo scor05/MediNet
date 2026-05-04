@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/core/services/default_role_service.dart';
+import 'package:frontend/features/admin/presentation/pages/admin_panel.dart';
 import 'package:frontend/features/admin/presentation/pages/superadmin_panel.dart';
 import 'package:frontend/features/auth/presentation/pages/register_screen.dart';
 import 'package:frontend/features/auth/presentation/pages/role_selection_screen.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
+import 'package:frontend/features/auth/domain/entities/user_profile.dart';
+import 'package:frontend/features/calendar/presentation/pages/doctor_shell_screen.dart';
 import 'package:frontend/features/calendar/presentation/pages/patient_calendar_screen.dart';
+import 'package:frontend/features/calendar/presentation/pages/secretary_shell_screen.dart';
 import 'package:frontend/theme/app_theme.dart';
 import 'package:frontend/widgets/wave_header.dart';
 
@@ -38,7 +43,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   // Navega según los roles cuando el estado pasa a AuthAuthenticated
-  void _handleAuthenticated(AuthAuthenticated authState) {
+  Future<void> _handleAuthenticated(AuthAuthenticated authState) async {
     final profile = authState.profile;
     final roles = profile.roles;
 
@@ -47,14 +52,51 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         context,
         MaterialPageRoute(builder: (_) => const PatientCalendarScreen()),
       );
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => RoleSelectionScreen(profile: profile),
-        ),
-      );
+      return;
     }
+
+    // Verificar si hay un rol predeterminado guardado
+    final defaultRole = await DefaultRoleService.getDefaultRole();
+    if (defaultRole != null && roles.contains(defaultRole)) {
+      if (!mounted) return;
+      _navigateToRole(defaultRole, profile);
+      return;
+    }
+
+    if (!mounted) return;
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => RoleSelectionScreen(profile: profile),
+      ),
+    );
+  }
+
+  /// Navega directamente a la pantalla del rol indicado.
+  void _navigateToRole(String role, UserProfile profile) {
+    Widget destination;
+    switch (role) {
+      case 'doctor':
+        destination = DoctorShellScreen(roles: profile.roles);
+        break;
+      case 'secretary':
+        destination = SecretaryShellScreen(roles: profile.roles);
+        break;
+      case 'admin':
+        if (profile.adminOf.isEmpty) return;
+        final org = profile.adminOf.first;
+        destination = AdminPanel(clientId: org.clientId, clientName: org.clientName);
+        break;
+      case 'patient':
+        destination = const PatientCalendarScreen();
+        break;
+      default:
+        destination = RoleSelectionScreen(profile: profile);
+    }
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => destination),
+    );
   }
 
   @override

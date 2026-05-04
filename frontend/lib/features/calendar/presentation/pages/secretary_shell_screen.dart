@@ -5,7 +5,9 @@ import 'package:frontend/features/calendar/presentation/pages/settings_screen.da
 /// Shell screen that wraps [SecretaryCalendarScreen] and [SettingsScreen]
 /// inside a [BottomNavigationBar] with tabs "Calendario" and "Ajustes".
 class SecretaryShellScreen extends StatefulWidget {
-  const SecretaryShellScreen({super.key});
+  final List<String> roles;
+
+  const SecretaryShellScreen({super.key, this.roles = const []});
 
   @override
   State<SecretaryShellScreen> createState() => _SecretaryShellScreenState();
@@ -14,9 +16,9 @@ class SecretaryShellScreen extends StatefulWidget {
 class _SecretaryShellScreenState extends State<SecretaryShellScreen> {
   int _currentIndex = 0;
 
-  static const List<Widget> _pages = [
-    SecretaryCalendarScreen(),
-    SettingsScreen(),
+  late final List<Widget> _pages = [
+    const SecretaryCalendarScreen(),
+    SettingsScreen(roles: widget.roles),
   ];
 
   @override
