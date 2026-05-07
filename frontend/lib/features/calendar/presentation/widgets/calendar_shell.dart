@@ -6,11 +6,19 @@ class CalendarShell extends StatefulWidget {
   final Widget calendarScreen;
   final List<String> roles;
 
+  final List<Widget> extraPages;
+  final List<BottomNavigationBarItem> extraItems;
+
   const CalendarShell({
     super.key,
     required this.calendarScreen,
     this.roles = const [],
-  });
+    this.extraPages = const [],
+    this.extraItems = const [],
+  }) : assert(
+         extraPages.length == extraItems.length,
+         'extraPages y extraItems deben tener la misma cantidad de elementos.',
+       );
 
   @override
   State<CalendarShell> createState() => _CalendarShellState();
@@ -21,7 +29,17 @@ class _CalendarShellState extends State<CalendarShell> {
 
   late final List<Widget> _pages = [
     widget.calendarScreen,
+    ...widget.extraPages,
     SettingsScreen(roles: widget.roles),
+  ];
+
+  late final List<BottomNavigationBarItem> _items = [
+    const BottomNavigationBarItem(
+      icon: Icon(Icons.calendar_month),
+      label: 'Calendario',
+    ),
+    ...widget.extraItems,
+    const BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Ajustes'),
   ];
 
   @override
@@ -35,13 +53,7 @@ class _CalendarShellState extends State<CalendarShell> {
         },
         selectedItemColor: Theme.of(context).colorScheme.primary,
         unselectedItemColor: CalendarColors.navUnselected,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_month),
-            label: 'Calendario',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Ajustes'),
-        ],
+        items: _items,
       ),
     );
   }
