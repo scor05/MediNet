@@ -7,6 +7,7 @@ class DayColumn extends StatelessWidget {
   final int dayIndex;
   final List<Appointment> appointments;
   final bool showDoctor;
+  final bool showPatient;
   final int startHour;
   final int endHour;
   final double hourHeight;
@@ -16,6 +17,7 @@ class DayColumn extends StatelessWidget {
     required this.dayIndex,
     required this.appointments,
     required this.showDoctor,
+    required this.showPatient,
     required this.startHour,
     required this.endHour,
     required this.hourHeight,
@@ -80,6 +82,7 @@ class DayColumn extends StatelessWidget {
               child: AppointmentCard(
                 appointment: appointment,
                 showDoctor: showDoctor,
+                showPatient: showPatient,
               ),
             );
           }),

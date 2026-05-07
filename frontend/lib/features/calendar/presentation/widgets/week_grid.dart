@@ -6,6 +6,7 @@ class WeekGrid extends StatelessWidget {
   final List<DateTime> days;
   final List<Appointment> appointments;
   final bool showDoctor;
+  final bool showPatient;
   final int startHour;
   final int endHour;
   final double hourHeight;
@@ -15,6 +16,7 @@ class WeekGrid extends StatelessWidget {
     required this.days,
     required this.appointments,
     required this.showDoctor,
+    required this.showPatient,
     required this.startHour,
     required this.endHour,
     required this.hourHeight,
@@ -42,6 +44,7 @@ class WeekGrid extends StatelessWidget {
               dayIndex: i,
               appointments: dayAppointments,
               showDoctor: showDoctor,
+              showPatient: showPatient,
               startHour: startHour,
               endHour: endHour,
               hourHeight: hourHeight,

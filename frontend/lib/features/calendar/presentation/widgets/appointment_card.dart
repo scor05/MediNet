@@ -5,11 +5,13 @@ import 'package:frontend/theme/calendar_theme.dart';
 class AppointmentCard extends StatelessWidget {
   final Appointment appointment;
   final bool showDoctor;
+  final bool showPatient;
 
   const AppointmentCard({
     super.key,
     required this.appointment,
     this.showDoctor = false,
+    this.showPatient = false,
   });
 
   Color _statusColor() {
@@ -57,19 +59,26 @@ class AppointmentCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              appointment.patientName,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-            ),
+            if (showDoctor)
+              Text(
+                appointment.doctorName,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            if (showPatient)
+              Text(
+                appointment.patientName,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
             Text(
               '${_formatTime(appointment.startTime)} - ${_calculateEndTime(appointment.startTime, appointment.appointmentDuration)}',
               style: const TextStyle(fontSize: 12),
             ),
-            if (showDoctor)
-              Text(
-                appointment.doctorName,
-                style: const TextStyle(fontSize: 10, color: Colors.black54),
-              ),
           ],
         ),
       ),
