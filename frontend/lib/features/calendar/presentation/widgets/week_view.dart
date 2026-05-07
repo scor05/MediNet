@@ -8,12 +8,14 @@ class WeekView extends StatelessWidget {
   final DateTime weekStart;
   final List<Appointment> appointments;
   final bool showDoctor;
+  final bool showPatient;
 
   const WeekView({
     super.key,
     required this.weekStart,
     required this.appointments,
     this.showDoctor = false,
+    this.showPatient = false,
   });
 
   static const int startHour = 0;
@@ -45,6 +47,7 @@ class WeekView extends StatelessWidget {
                     days: days,
                     appointments: appointments,
                     showDoctor: showDoctor,
+                    showPatient: showPatient,
                     startHour: startHour,
                     endHour: endHour,
                     hourHeight: hourHeight,
