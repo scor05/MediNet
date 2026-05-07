@@ -7,6 +7,7 @@ class ClientFilterChip extends StatelessWidget {
   final VoidCallback onTap;
 
   const ClientFilterChip({
+    super.key,
     required this.label,
     required this.selected,
     required this.onTap,
