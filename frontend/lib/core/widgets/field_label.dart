@@ -12,11 +12,7 @@ class FieldLabel extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 4),
       child: Text(
         label,
-        style: const TextStyle(
-          color: AppTheme.textSecondary,
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-        ),
+        style: AppTextStyles.label,
       ),
     );
   }

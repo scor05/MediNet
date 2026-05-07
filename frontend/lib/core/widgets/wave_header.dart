@@ -42,7 +42,7 @@ class WaveHeader extends StatelessWidget {
                     child: IconButton(
                       icon: const Icon(
                         Icons.arrow_back_ios_rounded,
-                        color: AppTheme.textPrimary,
+                        color: AppColors.textInverse,
                         size: 20,
                       ),
                       onPressed: () => Navigator.pop(context),
@@ -54,11 +54,7 @@ class WaveHeader extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 20),
                     child: Text(
                       title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: AppTextStyles.inverseTitle,
                     ),
                   ),
                 ),

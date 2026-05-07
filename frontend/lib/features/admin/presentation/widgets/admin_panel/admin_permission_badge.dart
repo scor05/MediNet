@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/theme/admin_theme.dart';
 import 'package:frontend/theme/app_theme.dart';
 
 class AdminPermissionBadge extends StatelessWidget {
@@ -11,7 +12,7 @@ class AdminPermissionBadge extends StatelessWidget {
     final color = isAdmin ? AppTheme.accent : AppTheme.textSecondary;
     final background = isAdmin
         ? AppTheme.accent.withValues(alpha: 0.10)
-        : Colors.black.withValues(alpha: 0.05);
+        : AdminColors.disabledFill;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
@@ -21,10 +22,8 @@ class AdminPermissionBadge extends StatelessWidget {
       ),
       child: Text(
         isAdmin ? 'Admin: Sí' : 'Admin: No',
-        style: TextStyle(
+        style: AdminTextStyles.badge.copyWith(
           color: color,
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
         ),
       ),
     );

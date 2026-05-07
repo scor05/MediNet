@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/theme/admin_theme.dart';
 import 'package:frontend/theme/app_theme.dart';
 
 class ClientFilterChip extends StatelessWidget {
@@ -21,19 +22,18 @@ class ClientFilterChip extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? AppTheme.accent : Colors.transparent,
+          color: selected ? AdminColors.selected : AppColors.transparent,
           border: Border.all(
-            color: selected ? AppTheme.accent : Colors.black26,
+            color: selected ? AdminColors.selected : AdminColors.iconMuted,
             width: 1.5,
           ),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
           label,
-          style: TextStyle(
-            color: selected ? AppTheme.background : Colors.black54,
+          style: AdminTextStyles.chip.copyWith(
+            color: selected ? AdminColors.selectedText : AdminColors.mutedText,
             fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-            fontSize: 13,
           ),
         ),
       ),

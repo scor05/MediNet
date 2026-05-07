@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/theme/calendar_theme.dart';
 
 class FabMenuItem extends StatelessWidget {
   final String label;
@@ -24,16 +25,25 @@ class FabMenuItem extends StatelessWidget {
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(20),
-            boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
+            boxShadow: const [
+              BoxShadow(
+                color: CalendarColors.lightShadow,
+                blurRadius: CalendarSizes.fabLabelShadowBlur,
+              ),
+            ],
           ),
-          child: Text(label, style: const TextStyle(fontSize: 13)),
+          child: Text(label, style: CalendarTextStyles.fabMenuLabel),
         ),
         const SizedBox(width: 8),
         FloatingActionButton.small(
           heroTag: label,
           backgroundColor: color,
           onPressed: onTap,
-          child: Icon(icon, size: 18, color: Colors.white),
+          child: Icon(
+            icon,
+            size: CalendarSizes.fabIconSize,
+            color: CalendarColors.textInverse,
+          ),
         ),
       ],
     );
