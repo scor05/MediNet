@@ -87,6 +87,11 @@ class CalendarService
                 'date' => $appt->date,
                 'start_time' => $appt->start_time,
                 'status' => $appt->status,
+                'duration' => $appt->appointment_duration,
+                'created_at' => $appt->created_at,
+                'created_by' => $appt->created_by,
+                'updated_at' => $appt->updated_at,
+                'updated_by' => $appt->updated_by,
                 'doctor' => [
                     'id' => $appt->doctor_id,
                     'name' => $appt->doctor_name,

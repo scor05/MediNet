@@ -29,15 +29,15 @@ class AppointmentModel extends Appointment {
       date: DateTime.parse(json['date']),
       startTime: json['start_time'] as String,
       status: json['status'] as String,
-      createdAt: DateTime.now(),
-      createdBy: 0,
-      updatedAt: DateTime.now(),
-      updatedBy: 0,
+      createdAt: DateTime.parse(json['created_at']),
+      createdBy: json['created_by'] as int,
+      updatedAt: DateTime.parse(json['updated_at']),
+      updatedBy: json['updated_by'] as int,
       doctorId: json['doctor']['id'] as int,
       doctorName: json['doctor']['name'] as String,
       clinicId: json['clinic']['id'] as int,
       clinicName: json['clinic']['name'] as String,
-      appointmentDuration: 0,
+      appointmentDuration: json['duration'] as int,
     );
   }
 
