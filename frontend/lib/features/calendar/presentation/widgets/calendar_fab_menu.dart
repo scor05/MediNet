@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/features/calendar/presentation/widgets/fab_menu_item.dart';
+import 'package:frontend/theme/calendar_theme.dart';
 
 class CalendarFabMenu extends StatelessWidget {
   final bool isOpen;
@@ -28,14 +29,14 @@ class CalendarFabMenu extends StatelessWidget {
             FabMenuItem(
               label: 'Nueva cita',
               icon: Icons.event_available,
-              color: Colors.green.shade700,
+              color: CalendarColors.createAppointmentFab,
               onTap: onCreateAppointment,
             ),
             const SizedBox(height: 8),
             FabMenuItem(
               label: 'Nuevo horario',
               icon: Icons.schedule,
-              color: Colors.orange.shade700,
+              color: CalendarColors.createScheduleFab,
               onTap: onCreateSchedule,
             ),
           ],

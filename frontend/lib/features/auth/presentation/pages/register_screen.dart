@@ -144,17 +144,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               children: [
                 const Text(
                   'Volver a ',
-                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                  style: AppTextStyles.caption,
                 ),
                 GestureDetector(
                   onTap: isLoading ? null : () => Navigator.pop(context),
                   child: const Text(
                     'Login',
-                    style: TextStyle(
-                      color: AppTheme.secondary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
+                    style: AppTextStyles.link,
                   ),
                 ),
               ],

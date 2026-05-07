@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/features/client/domain/entities/client.dart';
+import 'package:frontend/theme/admin_theme.dart';
 import 'package:frontend/theme/app_theme.dart';
 
 class ClientCard extends StatelessWidget {
@@ -18,7 +19,7 @@ class ClientCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      color: AdminColors.surface,
       borderRadius: BorderRadius.circular(14),
       elevation: 0,
       child: InkWell(
@@ -28,7 +29,7 @@ class ClientCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.black12),
+            border: Border.all(color: AdminColors.border),
           ),
           child: Row(
             children: [
@@ -43,10 +44,8 @@ class ClientCard extends StatelessWidget {
                 child: Center(
                   child: Text(
                     client.name.isNotEmpty ? client.name[0].toUpperCase() : '?',
-                    style: TextStyle(
+                    style: AdminTextStyles.cardTitle.copyWith(
                       color: AppTheme.accent,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 18,
                     ),
                   ),
                 ),
@@ -60,11 +59,7 @@ class ClientCard extends StatelessWidget {
                   children: [
                     Text(
                       client.name,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
+                      style: AdminTextStyles.tileTitle,
                     ),
                     const SizedBox(height: 4),
                     Container(
@@ -74,18 +69,17 @@ class ClientCard extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: client.isActive
-                            ? Colors.green.shade50
-                            : Colors.red.shade50,
+                            ? AdminColors.successBackground
+                            : AdminColors.dangerBackground,
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
                         client.isActive ? 'Activo' : 'Inactivo',
-                        style: TextStyle(
-                          fontSize: 11,
+                        style: AdminTextStyles.badge.copyWith(
                           fontWeight: FontWeight.w600,
                           color: client.isActive
-                              ? Colors.green.shade700
-                              : Colors.red.shade700,
+                              ? AdminColors.success
+                              : AdminColors.error,
                         ),
                       ),
                     ),
@@ -122,7 +116,7 @@ class ClientCard extends StatelessWidget {
                             size: 36,
                             color: client.isActive
                                 ? AppTheme.accent
-                                : Colors.black26,
+                                : AdminColors.iconMuted,
                           ),
                         ),
                 ),
@@ -130,7 +124,11 @@ class ClientCard extends StatelessWidget {
 
               const SizedBox(width: 6),
 
-              const Icon(Icons.chevron_right, color: Colors.black26, size: 20),
+              const Icon(
+                Icons.chevron_right,
+                color: AdminColors.iconMuted,
+                size: 20,
+              ),
             ],
           ),
         ),

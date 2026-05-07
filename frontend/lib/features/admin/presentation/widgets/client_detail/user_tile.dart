@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/features/client/domain/entities/client_user.dart';
+import 'package:frontend/theme/admin_theme.dart';
 import 'package:frontend/theme/app_theme.dart';
 
 class UserTile extends StatelessWidget {
@@ -17,11 +18,11 @@ class UserTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AdminColors.surface,
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: AppColors.shadow.withValues(alpha: 0.30),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -34,10 +35,7 @@ class UserTile extends StatelessWidget {
             backgroundColor: AppTheme.accent.withValues(alpha: 0.15),
             child: Text(
               initial,
-              style: const TextStyle(
-                color: AppTheme.accent,
-                fontWeight: FontWeight.w600,
-              ),
+              style: AdminTextStyles.chip.copyWith(color: AppTheme.accent),
             ),
           ),
           const SizedBox(width: 12),
@@ -47,14 +45,11 @@ class UserTile extends StatelessWidget {
               children: [
                 Text(
                   user.user.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
+                  style: AdminTextStyles.tileTitle,
                 ),
                 Text(
                   user.user.email,
-                  style: const TextStyle(color: Colors.black45, fontSize: 12),
+                  style: AdminTextStyles.tileSubtitle,
                 ),
               ],
             ),
@@ -67,9 +62,8 @@ class UserTile extends StatelessWidget {
             ),
             child: Text(
               user.role,
-              style: const TextStyle(
+              style: AdminTextStyles.badge.copyWith(
                 color: AppTheme.accent,
-                fontSize: 11,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -79,7 +73,7 @@ class UserTile extends StatelessWidget {
             onPressed: onDelete,
             icon: const Icon(
               Icons.delete_outline,
-              color: Colors.redAccent,
+              color: AdminColors.error,
               size: 20,
             ),
             padding: EdgeInsets.zero,

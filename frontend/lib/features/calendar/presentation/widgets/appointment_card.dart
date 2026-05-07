@@ -62,22 +62,16 @@ class AppointmentCard extends StatelessWidget {
             if (showDoctor)
               Text(
                 appointment.doctorName,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
+                style: CalendarTextStyles.appointmentTime,
               ),
             if (showPatient)
               Text(
                 appointment.patientName,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
+                style: CalendarTextStyles.appointmentTime,
               ),
             Text(
               '${_formatTime(appointment.startTime)} - ${_calculateEndTime(appointment.startTime, appointment.appointmentDuration)}',
-              style: const TextStyle(fontSize: 12),
+              style: CalendarTextStyles.appointmentPatient,
             ),
           ],
         ),

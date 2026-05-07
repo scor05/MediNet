@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/theme/calendar_theme.dart';
 
 class DialogHandle extends StatelessWidget {
   const DialogHandle({super.key});
@@ -10,7 +11,7 @@ class DialogHandle extends StatelessWidget {
         width: 32,
         height: 4,
         decoration: BoxDecoration(
-          color: Colors.grey.shade300,
+          color: CalendarColors.dialogHandle,
           borderRadius: BorderRadius.circular(2),
         ),
       ),

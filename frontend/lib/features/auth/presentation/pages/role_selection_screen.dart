@@ -24,16 +24,12 @@ class RoleSelectionScreen extends StatelessWidget {
           children: [
             Text(
               'Hola, ${profile.name}',
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimary,
-              ),
+              style: AppTextStyles.screenTitle,
             ),
             const SizedBox(height: 8),
             const Text(
               'Selecciona el modo en el que deseas ingresar.',
-              style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+              style: AppTextStyles.screenSubtitle,
             ),
             const SizedBox(height: 28),
 

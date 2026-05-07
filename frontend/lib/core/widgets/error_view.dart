@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/theme/app_theme.dart';
 
 class ErrorView extends StatelessWidget {
   final String message;
@@ -16,7 +17,7 @@ class ErrorView extends StatelessWidget {
           children: [
             Text(
               message,
-              style: const TextStyle(color: Colors.red),
+              style: AppTextStyles.error,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/theme/app_theme.dart';
 
 class WaveBlob extends StatelessWidget {
   final double size;
@@ -12,7 +13,7 @@ class WaveBlob extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.white.withAlpha(38),
+        color: AppColors.textInverse.withAlpha(38),
       ),
     );
   }

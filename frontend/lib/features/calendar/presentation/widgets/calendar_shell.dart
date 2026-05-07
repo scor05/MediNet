@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/features/calendar/presentation/pages/settings_screen.dart';
+import 'package:frontend/theme/calendar_theme.dart';
 
 class CalendarShell extends StatefulWidget {
   final Widget calendarScreen;
@@ -33,7 +34,7 @@ class _CalendarShellState extends State<CalendarShell> {
           setState(() => _currentIndex = index);
         },
         selectedItemColor: Theme.of(context).colorScheme.primary,
-        unselectedItemColor: Colors.grey,
+        unselectedItemColor: CalendarColors.navUnselected,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.calendar_month),

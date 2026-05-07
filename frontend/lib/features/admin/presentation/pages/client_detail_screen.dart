@@ -59,7 +59,7 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen>
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.redAccent),
+      SnackBar(content: Text(message), backgroundColor: AppColors.error),
     );
   }
 

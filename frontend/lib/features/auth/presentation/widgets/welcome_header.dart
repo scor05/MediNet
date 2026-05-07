@@ -91,7 +91,7 @@ class WelcomeHeader extends StatelessWidget {
                       Text(
                         'MEDINET',
                         style: TextStyle(
-                          color: AppTheme.background,
+                          color: AppColors.background,
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 2,
@@ -101,7 +101,7 @@ class WelcomeHeader extends StatelessWidget {
                       Text(
                         'Bienvenido',
                         style: TextStyle(
-                          color: AppTheme.background,
+                          color: AppColors.background,
                           fontSize: 32,
                           fontWeight: FontWeight.w600,
                         ),

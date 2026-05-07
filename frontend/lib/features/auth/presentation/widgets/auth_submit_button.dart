@@ -23,7 +23,7 @@ class AuthSubmitButton extends StatelessWidget {
               height: 20,
               width: 20,
               child: CircularProgressIndicator(
-                color: Colors.white,
+                color: AppColors.textInverse,
                 strokeWidth: 2.5,
               ),
             )

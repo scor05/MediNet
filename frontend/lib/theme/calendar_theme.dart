@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/theme/app_theme.dart';
 
 class CalendarColors {
   const CalendarColors._();
@@ -10,7 +11,7 @@ class CalendarColors {
   static Color normalHeader(BuildContext context) =>
       Theme.of(context).colorScheme.surfaceContainerHighest;
 
-  static Color todayHeaderText(BuildContext context) => Colors.white;
+  static Color todayHeaderText(BuildContext context) => AppColors.textInverse;
 
   static Color normalDayName(BuildContext context) =>
       Theme.of(context).colorScheme.onSurfaceVariant;
@@ -28,20 +29,24 @@ class CalendarColors {
       Theme.of(context).colorScheme.surface;
 
   // Appointment status colors
-  static final Color appointmentAccepted = Colors.green.shade100;
-  static final Color appointmentRequested = Colors.orange.shade100;
-  static final Color appointmentCancelled = Colors.red.shade100;
-  static final Color appointmentUnknown = Colors.grey.shade100;
+  static const Color appointmentAccepted = Color(0xFFDDF7E6);
+  static const Color appointmentRequested = Color(0xFFFFEDD5);
+  static const Color appointmentCancelled = Color(0xFFFDECEC);
+  static const Color appointmentUnknown = Color(0xFFF1F5F9);
 
   // FAB colors
-  static final Color createAppointmentFab = Colors.green.shade700;
-  static final Color createScheduleFab = Colors.orange.shade700;
+  static const Color createAppointmentFab = AppColors.success;
+  static const Color createScheduleFab = AppColors.warning;
 
   // Overlay
-  static const Color fabOverlay = Colors.black26;
+  static const Color fabOverlay = AppColors.overlay;
+  static const Color dialogHandle = AppColors.subtleBorder;
+  static const Color navUnselected = AppColors.textMuted;
+  static const Color error = AppColors.error;
+  static const Color textInverse = AppColors.textInverse;
 
   // Shadows
-  static const Color lightShadow = Colors.black12;
+  static const Color lightShadow = AppColors.shadow;
 }
 
 class CalendarTextStyles {
@@ -85,12 +90,14 @@ class CalendarTextStyles {
 
   static const TextStyle appointmentSecondary = TextStyle(
     fontSize: CalendarSizes.appointmentSecondaryFontSize,
-    color: Colors.black54,
+    color: AppColors.textSecondary,
   );
 
   static const TextStyle fabMenuLabel = TextStyle(
     fontSize: CalendarSizes.fabMenuLabelFontSize,
   );
+
+  static const TextStyle dialogError = TextStyle(color: CalendarColors.error);
 }
 
 class CalendarSizes {
