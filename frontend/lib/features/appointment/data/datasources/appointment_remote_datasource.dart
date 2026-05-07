@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/config/app_config.dart';
 import 'package:frontend/core/network/api_exception_handler.dart';
 import 'package:frontend/features/appointment/data/models/appointment_model.dart';
+import 'package:frontend/features/appointment/data/models/public_appointment_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -173,11 +174,70 @@ class AppointmentRemoteDatasource {
       throw handleApiError(response);
     }
   }
+
+  // Obtiene las citas de públicas de un doctor o clínica
+  Future<List<PublicAppointmentModel>> getPublicAppointments({
+    int? doctorId,
+    int? clinicId,
+    DateTime? dateFrom,
+    DateTime? dateTo,
+  }) async {
+    final token = Supabase.instance.client.auth.currentSession?.accessToken;
+
+    final queryParameters = <String, String>{};
+
+    if (doctorId != null) {
+      queryParameters['doctor_id'] = doctorId.toString();
+    }
+
+    if (clinicId != null) {
+      queryParameters['clinic_id'] = clinicId.toString();
+    }
+
+    if (dateFrom != null) {
+      queryParameters['date_from'] = dateFrom.toIso8601String().substring(
+        0,
+        10,
+      );
+    }
+
+    if (dateTo != null) {
+      queryParameters['date_to'] = dateTo.toIso8601String().substring(0, 10);
+    }
+
+    final uri = Uri.parse(
+      '${AppConfig.apiUrl}/calendar/public',
+    ).replace(queryParameters: queryParameters);
+
+    final response = await http
+        .get(
+          uri,
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+
+      return data
+          .map(
+            (item) =>
+                PublicAppointmentModel.fromJson(item as Map<String, dynamic>),
+          )
+          .toList();
+    } else {
+      throw handleApiError(response);
+    }
+  }
+
+  /*
+  -------------------------------------- Helpers ----------------------------------------- 
+  */
+
+  String _fmtTime(TimeOfDay t) =>
+      '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
 }
-
-/*
--------------------------------------- Helpers ----------------------------------------- 
-*/
-
-String _fmtTime(TimeOfDay t) =>
-    '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';

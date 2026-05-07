@@ -14,3 +14,17 @@ final appointmentRepositoryProvider = Provider<AppointmentRepository>((ref) {
     ref.read(appointmentRemoteDatasourceProvider),
   );
 });
+
+// Provider para el datasource de citas
+final publicAppointmentRemoteDatasourceProvider = Provider((ref) {
+  return AppointmentRemoteDatasource();
+});
+
+// Provider para la implementacion del repository de citas
+final publicAppointmentRepositoryProvider = Provider<AppointmentRepository>((
+  ref,
+) {
+  return AppointmentRepositoryImpl(
+    ref.read(publicAppointmentRemoteDatasourceProvider),
+  );
+});

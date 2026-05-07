@@ -32,4 +32,12 @@ abstract class AppointmentRepository {
     required String patientName,
     required String status,
   });
+
+  // Obtener citas públicas de un doctor o clínica
+  Future<List<Appointment>> getPublicAppointments({
+    int? doctorId,
+    int? clinicId,
+    DateTime? dateFrom,
+    DateTime? dateTo,
+  });
 }
