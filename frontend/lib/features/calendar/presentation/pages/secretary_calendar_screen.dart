@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontend/features/auth/presentation/utils/calendar_dialog_helpers.dart';
 import 'package:frontend/features/auth/presentation/utils/logout_helper.dart';
 import 'package:frontend/features/calendar/presentation/providers/secretary_calendar_provider.dart';
+import 'package:frontend/features/calendar/presentation/utils/calendar_dialog_helpers.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_app_bar.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_body.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_fab_menu.dart';

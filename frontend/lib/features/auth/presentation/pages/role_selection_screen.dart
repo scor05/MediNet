@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/features/admin/presentation/pages/admin_panel.dart';
 import 'package:frontend/features/auth/domain/entities/user_profile.dart';
-import 'package:frontend/features/calendar/presentation/pages/doctor_shell_screen.dart';
-import 'package:frontend/features/calendar/presentation/pages/patient_calendar_screen.dart';
-import 'package:frontend/features/calendar/presentation/pages/secretary_shell_screen.dart';
+import 'package:frontend/features/auth/presentation/navigation/auth_navigation.dart';
+import 'package:frontend/features/auth/presentation/utils/auth_role_labels.dart';
 import 'package:frontend/theme/app_theme.dart';
 
 class RoleSelectionScreen extends StatelessWidget {
@@ -11,106 +9,52 @@ class RoleSelectionScreen extends StatelessWidget {
 
   const RoleSelectionScreen({super.key, required this.profile});
 
-  void _navigateByRole(BuildContext context, String role) {
-    switch (role) {
-      case 'doctor':
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => DoctorShellScreen(roles: profile.roles)),
-        );
-        break;
-      case 'secretary':
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => SecretaryShellScreen(roles: profile.roles)),
-        );
-        break;
-      case 'admin':
-        if (profile.adminOf.isEmpty) return;
-        final organization = profile.adminOf.first;
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => AdminPanel(
-              clientId: organization.clientId,
-              clientName: organization.clientName,
-            ),
-          ),
-        );
-        break;
-      case 'patient':
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const PatientCalendarScreen()),
-        );
-        break;
-    }
-  }
-
-  String _getRoleLabel(String role) {
-    switch (role) {
-      case 'doctor':
-        return 'Doctor';
-      case 'secretary':
-        return 'Secretaria';
-      case 'admin':
-        return 'Administrador';
-      case 'patient':
-        return 'Paciente';
-      default:
-        return role;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: const Text('Seleccionar modo'),
         backgroundColor: AppTheme.primary,
       ),
-      backgroundColor: AppTheme.background,
-      body: Column(
-        children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Hola, ${profile.name}',
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Selecciona el modo en el que deseas ingresar.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppTheme.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-
-                  ...profile.roles.map(
-                    (role) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: ElevatedButton(
-                        style: AppTheme.btnDark,
-                        onPressed: () => _navigateByRole(context, role),
-                        child: Text(_getRoleLabel(role)),
-                      ),
-                    ),
-                  ),
-                ],
+      body: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Hola, ${profile.name}',
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textPrimary,
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 8),
+            const Text(
+              'Selecciona el modo en el que deseas ingresar.',
+              style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+            ),
+            const SizedBox(height: 28),
+
+            ...profile.roles.map(
+              (role) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: ElevatedButton(
+                  style: AppTheme.btnDark,
+                  onPressed: () {
+                    AuthNavigation.goToRole(
+                      context: context,
+                      role: role,
+                      profile: profile,
+                    );
+                  },
+                  child: Text(AuthRoleLabels.label(role)),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
