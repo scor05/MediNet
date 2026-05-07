@@ -1,21 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/features/calendar/presentation/pages/doctor_calendar_screen.dart';
 import 'package:frontend/features/calendar/presentation/pages/settings_screen.dart';
 
-class DoctorShellScreen extends StatefulWidget {
+class CalendarShell extends StatefulWidget {
+  final Widget calendarScreen;
   final List<String> roles;
 
-  const DoctorShellScreen({super.key, this.roles = const []});
+  const CalendarShell({
+    super.key,
+    required this.calendarScreen,
+    this.roles = const [],
+  });
 
   @override
-  State<DoctorShellScreen> createState() => _DoctorShellScreenState();
+  State<CalendarShell> createState() => _CalendarShellState();
 }
 
-class _DoctorShellScreenState extends State<DoctorShellScreen> {
+class _CalendarShellState extends State<CalendarShell> {
   int _currentIndex = 0;
 
   late final List<Widget> _pages = [
-    const DoctorCalendarScreen(),
+    widget.calendarScreen,
     SettingsScreen(roles: widget.roles),
   ];
 
@@ -25,7 +29,9 @@ class _DoctorShellScreenState extends State<DoctorShellScreen> {
       body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
+        onTap: (index) {
+          setState(() => _currentIndex = index);
+        },
         selectedItemColor: Theme.of(context).colorScheme.primary,
         unselectedItemColor: Colors.grey,
         items: const [
