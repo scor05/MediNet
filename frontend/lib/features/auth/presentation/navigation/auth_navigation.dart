@@ -8,6 +8,7 @@ import 'package:frontend/features/calendar/presentation/pages/doctor_calendar_sc
 import 'package:frontend/features/calendar/presentation/pages/patient_calendar_screen.dart';
 import 'package:frontend/features/calendar/presentation/pages/secretary_calendar_screen.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_shell.dart';
+import 'package:frontend/features/search/presentation/pages/search_screen.dart';
 
 class AuthNavigation {
   const AuthNavigation._();
@@ -79,6 +80,10 @@ class AuthNavigation {
         return CalendarShell(
           calendarScreen: const PatientCalendarScreen(),
           roles: profile.roles,
+          extraPages: const [SearchScreen()],
+          extraItems: const [
+            BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Buscar'),
+          ],
         );
 
       case 'admin':
