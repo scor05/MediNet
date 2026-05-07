@@ -7,6 +7,7 @@ use App\Http\Controllers\AdminController;
 
 // Rutas públicas
 Route::post('/auth/register', [AuthController::class, 'register']);
+require __DIR__ . '/api/public.php';
 
 // Rutas protegidas por autenticación
 Route::middleware('supabase.auth')->group(function () {

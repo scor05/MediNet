@@ -3,8 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/features/auth/presentation/pages/welcome_screen.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
+import 'package:frontend/features/calendar/domain/entities/public_slot.dart';
+import 'package:frontend/features/calendar/presentation/pages/dialogs/public_create_appointment_dialog.dart';
 import 'package:frontend/features/calendar/presentation/providers/patient_calendar_provider.dart';
 import 'package:frontend/features/calendar/presentation/widgets/week_view.dart';
+import 'package:frontend/theme/app_theme.dart';
 
 class PatientCalendarScreen extends ConsumerStatefulWidget {
   const PatientCalendarScreen({super.key});
@@ -15,6 +18,20 @@ class PatientCalendarScreen extends ConsumerStatefulWidget {
 }
 
 class _PatientCalendarScreenState extends ConsumerState<PatientCalendarScreen> {
+  Future<void> _openCreateAppointment() async {
+    final selectedSlot = await showModalBottomSheet<PublicSlot>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => const PublicCreateAppointmentDialog(),
+    );
+
+    if (selectedSlot != null) {
+      ref.read(patientCalendarNotifierProvider.notifier).refresh();
+    }
+  }
 
   Future<void> _logout() async {
     await ref.read(authNotifierProvider.notifier).logout();
@@ -34,10 +51,7 @@ class _PatientCalendarScreenState extends ConsumerState<PatientCalendarScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mis citas'),
-        leading: IconButton(
-          icon: const Icon(Icons.logout),
-          onPressed: _logout,
-        ),
+        leading: IconButton(icon: const Icon(Icons.logout), onPressed: _logout),
         actions: [
           IconButton(
             icon: const Icon(Icons.chevron_left),
@@ -82,6 +96,13 @@ class _PatientCalendarScreenState extends ConsumerState<PatientCalendarScreen> {
                 appointments: appointments,
                 showDoctor: true,
               ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _openCreateAppointment,
+        backgroundColor: AppTheme.secondary,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.event_available),
+        label: const Text('Agendar cita'),
       ),
     );
   }
