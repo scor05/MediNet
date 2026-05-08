@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/features/auth/domain/entities/user_profile.dart';
 import 'package:frontend/features/calendar/presentation/pages/settings_screen.dart';
 import 'package:frontend/theme/calendar_theme.dart';
 
 class CalendarShell extends StatefulWidget {
   final Widget calendarScreen;
-  final List<String> roles;
+  final UserProfile profile;
 
   final List<Widget> extraPages;
   final List<BottomNavigationBarItem> extraItems;
@@ -12,7 +13,7 @@ class CalendarShell extends StatefulWidget {
   const CalendarShell({
     super.key,
     required this.calendarScreen,
-    this.roles = const [],
+    required this.profile,
     this.extraPages = const [],
     this.extraItems = const [],
   }) : assert(
@@ -30,7 +31,7 @@ class _CalendarShellState extends State<CalendarShell> {
   late final List<Widget> _pages = [
     widget.calendarScreen,
     ...widget.extraPages,
-    SettingsScreen(roles: widget.roles),
+    SettingsScreen(profile: widget.profile),
   ];
 
   late final List<BottomNavigationBarItem> _items = [
