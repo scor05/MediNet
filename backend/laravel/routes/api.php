@@ -4,9 +4,11 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\SearchController;
 
 // Rutas públicas
 Route::post('/auth/register', [AuthController::class, 'register']);
+
 
 // Rutas protegidas por autenticación
 Route::middleware('supabase.auth')->group(function () {
@@ -22,4 +24,8 @@ Route::middleware('supabase.auth')->group(function () {
     // Usuario autenticado
     Route::get('/profile', [UserController::class, 'profile']);
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard']);
+
+    // Search 
+    Route::get('/search', [SearchController::class, 'index']);
+    
 });
