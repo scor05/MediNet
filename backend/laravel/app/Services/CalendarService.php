@@ -75,6 +75,23 @@ class CalendarService
         return $this->formatAppointments($appointments);
     }
 
+    // Se obtienen las citas visibles para el calendario público
+    public function getPublicCalendar(
+        ?int $doctorId,
+        ?int $clinicId,
+        ?string $dateFrom,
+        ?string $dateTo,
+    ): array {
+        $appointments = $this->calendarRepository->getPublicAppointments(
+            doctorId: $doctorId,
+            clinicId: $clinicId,
+            dateFrom: $dateFrom,
+            dateTo: $dateTo,
+        );
+
+        return $this->formatPublicAppointments($appointments);
+    }
+
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
@@ -100,6 +117,28 @@ class CalendarService
                     'name' => $appt->clinic_name,
                 ],
                 'schedule_id' => $appt->id_schedule,
+            ];
+        }, $appointments);
+    }
+
+    private function formatPublicAppointments(array $appointments): array
+    {
+        return array_map(function ($appt) {
+            return [
+                'id' => $appt->id,
+                'schedule_id' => $appt->id_schedule,
+                'date' => $appt->date,
+                'start_time' => $appt->start_time,
+                'status' => $appt->status,
+                'created_at' => $appt->created_at,
+                'created_by' => $appt->created_by,
+                'updated_at' => $appt->updated_at,
+                'updated_by' => $appt->updated_by,
+                'doctor_id' => $appt->doctor_id,
+                'doctor_name' => $appt->doctor_name,
+                'clinic_id' => $appt->clinic_id,
+                'clinic_name' => $appt->clinic_name,
+                'duration' => $appt->appointment_duration,
             ];
         }, $appointments);
     }

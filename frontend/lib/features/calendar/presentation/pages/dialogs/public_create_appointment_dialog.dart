@@ -1,10 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/features/calendar/domain/entities/public_slot.dart';
-import 'package:frontend/features/calendar/presentation/providers/public_calendar_provider.dart';
+import 'package:frontend/features/calendar/domain/providers/public_calendar_domain_providers.dart';
+import 'package:frontend/features/clinic/domain/entities/clinic.dart';
+import 'package:frontend/features/user/domain/entities/user.dart';
 
 class PublicCreateAppointmentDialog extends ConsumerStatefulWidget {
-  const PublicCreateAppointmentDialog({super.key});
+  final int? initialDoctorId;
+  final int? initialClinicId;
+
+  const PublicCreateAppointmentDialog({
+    super.key,
+    this.initialDoctorId,
+    this.initialClinicId,
+  });
 
   @override
   ConsumerState<PublicCreateAppointmentDialog> createState() =>
@@ -13,45 +23,162 @@ class PublicCreateAppointmentDialog extends ConsumerStatefulWidget {
 
 class _PublicCreateAppointmentDialogState
     extends ConsumerState<PublicCreateAppointmentDialog> {
+  List<User> _doctors = [];
+  List<Clinic> _clinics = [];
+  List<PublicSlot> _slots = [];
+
+  int? _selectedDoctorId;
+  int? _selectedClinicId;
+  DateTime _selectedDate = DateTime.now();
   PublicSlot? _selectedSlot;
+
+  bool _loadingInitial = true;
+  bool _loadingSlots = false;
+  String? _error;
+  String? _slotsError;
 
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
-      ref.read(publicCalendarNotifierProvider.notifier).getSlots();
-    });
+    _selectedDoctorId = widget.initialDoctorId;
+    _selectedClinicId = widget.initialClinicId;
+    Future.microtask(_loadInitialData);
   }
 
-  Future<void> _pickDate(DateTime initialDate) async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: initialDate,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 90)),
-    );
+  Future<void> _loadInitialData() async {
+    setState(() {
+      _loadingInitial = true;
+      _error = null;
+    });
 
-    if (picked != null) {
-      ref.read(publicCalendarNotifierProvider.notifier).setSelectedDate(picked);
-      setState(() => _selectedSlot = null);
-      await ref.read(publicCalendarNotifierProvider.notifier).getSlots();
+    try {
+      final doctors = await ref
+          .read(getPublicDoctorsUsecaseProvider)
+          .call(clinicId: _selectedClinicId);
+      final clinics = await ref
+          .read(getPublicClinicsUsecaseProvider)
+          .call(doctorId: _selectedDoctorId);
+
+      _doctors = doctors;
+      _clinics = clinics;
+      _selectedDoctorId = _validDoctorId(_selectedDoctorId);
+      _selectedClinicId = _validClinicId(_selectedClinicId);
+
+      if (_selectedDoctorId != null && _selectedClinicId != null) {
+        await _loadSlots();
+      }
+    } catch (e) {
+      _error = e is ApiException ? e.message : 'Error inesperado.';
+    } finally {
+      if (mounted) {
+        setState(() => _loadingInitial = false);
+      }
+    }
+  }
+
+  int? _validDoctorId(int? doctorId) {
+    if (_doctors.any((doctor) => doctor.id == doctorId)) {
+      return doctorId;
+    }
+
+    return _doctors.isNotEmpty ? _doctors.first.id : null;
+  }
+
+  int? _validClinicId(int? clinicId) {
+    if (_clinics.any((clinic) => clinic.id == clinicId)) {
+      return clinicId;
+    }
+
+    return _clinics.isNotEmpty ? _clinics.first.id : null;
+  }
+
+  Future<void> _loadSlots() async {
+    final doctorId = _selectedDoctorId;
+    final clinicId = _selectedClinicId;
+
+    if (doctorId == null || clinicId == null) {
+      setState(() {
+        _slots = [];
+        _slotsError = null;
+        _selectedSlot = null;
+      });
+      return;
+    }
+
+    setState(() {
+      _loadingSlots = true;
+      _slotsError = null;
+      _selectedSlot = null;
+    });
+
+    try {
+      final slots = await ref
+          .read(getPublicSlotsUsecaseProvider)
+          .call(doctorId: doctorId, clinicId: clinicId, date: _selectedDate);
+
+      if (mounted) {
+        setState(() => _slots = slots);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _slots = [];
+          _slotsError = e is ApiException ? e.message : 'Error inesperado.';
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _loadingSlots = false);
+      }
     }
   }
 
   Future<void> _onDoctorChanged(int? doctorId) async {
-    ref
-        .read(publicCalendarNotifierProvider.notifier)
-        .setActiveDoctorId(doctorId);
-    setState(() => _selectedSlot = null);
-    await ref.read(publicCalendarNotifierProvider.notifier).getSlots();
+    setState(() => _selectedDoctorId = doctorId);
+
+    final clinics = await ref
+        .read(getPublicClinicsUsecaseProvider)
+        .call(doctorId: doctorId);
+
+    if (!mounted) return;
+
+    setState(() {
+      _clinics = clinics;
+      _selectedClinicId = _validClinicId(_selectedClinicId);
+    });
+
+    await _loadSlots();
   }
 
   Future<void> _onClinicChanged(int? clinicId) async {
-    ref
-        .read(publicCalendarNotifierProvider.notifier)
-        .setActiveClinicId(clinicId);
-    setState(() => _selectedSlot = null);
-    await ref.read(publicCalendarNotifierProvider.notifier).getSlots();
+    setState(() => _selectedClinicId = clinicId);
+
+    final doctors = await ref
+        .read(getPublicDoctorsUsecaseProvider)
+        .call(clinicId: clinicId);
+
+    if (!mounted) return;
+
+    setState(() {
+      _doctors = doctors;
+      _selectedDoctorId = _validDoctorId(_selectedDoctorId);
+    });
+
+    await _loadSlots();
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 90)),
+    );
+
+    if (picked == null) return;
+
+    setState(() => _selectedDate = picked);
+    await _loadSlots();
   }
 
   String _fmtDate(DateTime date) {
@@ -60,8 +187,6 @@ class _PublicCreateAppointmentDialogState
 
   @override
   Widget build(BuildContext context) {
-    final calendarAsync = ref.watch(publicCalendarNotifierProvider);
-
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -69,46 +194,13 @@ class _PublicCreateAppointmentDialogState
         right: 16,
         top: 16,
       ),
-      child: calendarAsync.when(
-        loading: () => const SizedBox(
-          height: 220,
-          child: Center(child: CircularProgressIndicator()),
-        ),
-        error: (e, _) => SizedBox(
-          height: 220,
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(e.toString(), style: const TextStyle(color: Colors.red)),
-                const SizedBox(height: 12),
-                ElevatedButton(
-                  onPressed: ref
-                      .read(publicCalendarNotifierProvider.notifier)
-                      .refresh,
-                  child: const Text('Reintentar'),
-                ),
-              ],
-            ),
-          ),
-        ),
-        data: (state) => SingleChildScrollView(
-          child: Builder(
-            builder: (context) {
-              final selectedDoctorId =
-                  state.doctors.any(
-                    (doctor) => doctor.id == state.activeDoctorId,
-                  )
-                  ? state.activeDoctorId
-                  : (state.doctors.isNotEmpty ? state.doctors.first.id : null);
-              final selectedClinicId =
-                  state.clinics.any(
-                    (clinic) => clinic.id == state.activeClinicId,
-                  )
-                  ? state.activeClinicId
-                  : (state.clinics.isNotEmpty ? state.clinics.first.id : null);
-
-              return Column(
+      child: _loadingInitial
+          ? const SizedBox(
+              height: 220,
+              child: Center(child: CircularProgressIndicator()),
+            )
+          : SingleChildScrollView(
+              child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -129,16 +221,19 @@ class _PublicCreateAppointmentDialogState
                   ),
                   const SizedBox(height: 16),
 
-                  if (state.doctors.isEmpty || state.clinics.isEmpty)
+                  if (_error != null)
+                    Text(_error!, style: const TextStyle(color: Colors.red))
+                  else if (_doctors.isEmpty || _clinics.isEmpty)
                     const Text(
                       'No hay horarios disponibles para agendar.',
                       style: TextStyle(color: Colors.red),
                     )
                   else ...[
                     DropdownButtonFormField<int>(
-                      initialValue: selectedDoctorId,
+                      key: ValueKey('doctor-${_selectedDoctorId ?? 0}'),
+                      initialValue: _selectedDoctorId,
                       decoration: const InputDecoration(labelText: 'Doctor'),
-                      items: state.doctors
+                      items: _doctors
                           .map(
                             (doctor) => DropdownMenuItem(
                               value: doctor.id,
@@ -149,11 +244,11 @@ class _PublicCreateAppointmentDialogState
                       onChanged: _onDoctorChanged,
                     ),
                     const SizedBox(height: 10),
-
                     DropdownButtonFormField<int>(
-                      initialValue: selectedClinicId,
+                      key: ValueKey('clinic-${_selectedClinicId ?? 0}'),
+                      initialValue: _selectedClinicId,
                       decoration: const InputDecoration(labelText: 'Clínica'),
-                      items: state.clinics
+                      items: _clinics
                           .map(
                             (clinic) => DropdownMenuItem(
                               value: clinic.id,
@@ -164,35 +259,31 @@ class _PublicCreateAppointmentDialogState
                       onChanged: _onClinicChanged,
                     ),
                     const SizedBox(height: 10),
-
                     InkWell(
-                      onTap: () =>
-                          _pickDate(state.selectedDate ?? DateTime.now()),
+                      onTap: _pickDate,
                       borderRadius: BorderRadius.circular(4),
                       child: InputDecorator(
                         decoration: const InputDecoration(labelText: 'Fecha'),
                         child: Text(
-                          _fmtDate(state.selectedDate ?? DateTime.now()),
+                          _fmtDate(_selectedDate),
                           style: const TextStyle(fontSize: 14),
                         ),
                       ),
                     ),
                     const SizedBox(height: 16),
-
                     Text(
                       'Horarios disponibles',
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                     const SizedBox(height: 10),
-
-                    if (state.loadingSlots)
+                    if (_loadingSlots)
                       const Center(child: CircularProgressIndicator())
-                    else if (state.slotsError != null)
+                    else if (_slotsError != null)
                       Text(
-                        state.slotsError!,
+                        _slotsError!,
                         style: const TextStyle(color: Colors.red),
                       )
-                    else if (state.slots.isEmpty)
+                    else if (_slots.isEmpty)
                       const Text(
                         'No hay slots disponibles para esta selección.',
                         style: TextStyle(color: Colors.grey),
@@ -201,7 +292,7 @@ class _PublicCreateAppointmentDialogState
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children: state.slots
+                        children: _slots
                             .map(
                               (slot) => ChoiceChip(
                                 label: Text(
@@ -218,10 +309,9 @@ class _PublicCreateAppointmentDialogState
                   ],
 
                   const SizedBox(height: 20),
-
                   SizedBox(
                     width: double.infinity,
-                    height: 45,
+                    height: 65,
                     child: FilledButton(
                       onPressed: () => Navigator.of(context).pop(_selectedSlot),
                       child: const Text('Cancelar'),
@@ -229,11 +319,8 @@ class _PublicCreateAppointmentDialogState
                   ),
                   const SizedBox(height: 24),
                 ],
-              );
-            },
-          ),
-        ),
-      ),
+              ),
+            ),
     );
   }
 }

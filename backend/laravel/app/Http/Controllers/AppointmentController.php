@@ -19,6 +19,12 @@ class AppointmentController extends Controller
         return response()->json($this->service->getAll());
     }
 
+    // Se obtienen las citas pendientes que maneja una secretaria
+    public function secretaryPending(Request $request)
+    {
+        return response()->json($this->service->getPendingForSecretary($request->user()->id));
+    }
+
     // Se obtiene una cita por su id
     public function show(int $id)
     {

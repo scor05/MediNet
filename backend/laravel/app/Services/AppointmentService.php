@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Repositories\AppointmentRepository;
 use App\Services\UserService;
 use Illuminate\Validation\ValidationException;
+use RuntimeException;
 
 class AppointmentService
 {
@@ -23,6 +24,20 @@ class AppointmentService
     public function getById($id)
     {
         return $this->repository->findById($id);
+    }
+
+    // Se obtienen las citas solicitadas que maneja una secretaria
+    public function getPendingForSecretary(int $secretaryId): array
+    {
+        $clientId = $this->userService->getClientIdForUser($secretaryId);
+
+        if (!$clientId) {
+            throw new RuntimeException("La secretaria {$secretaryId} no tiene un cliente asociado.");
+        }
+
+        return $this->formatAppointments(
+            $this->repository->findPendingForSecretary($clientId)
+        );
     }
 
     // Se crea una nueva cita
@@ -94,5 +109,30 @@ class AppointmentService
                 'start_time' => ['Ya existe una cita en ese horario'],
             ]);
         }
+    }
+
+    private function formatAppointments(array $appointments): array
+    {
+        return array_map(function ($appointment) {
+            return [
+                'id' => $appointment->id,
+                'date' => $appointment->date,
+                'start_time' => $appointment->start_time,
+                'status' => $appointment->status,
+                'doctor' => [
+                    'id' => $appointment->doctor_id,
+                    'name' => $appointment->doctor_name,
+                ],
+                'patient' => [
+                    'id' => $appointment->id_patient,
+                    'name' => $appointment->patient_name,
+                ],
+                'clinic' => [
+                    'id' => $appointment->clinic_id,
+                    'name' => $appointment->clinic_name,
+                ],
+                'schedule_id' => $appointment->id_schedule,
+            ];
+        }, $appointments);
     }
 }
