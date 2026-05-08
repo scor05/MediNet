@@ -77,4 +77,24 @@ class CalendarController extends Controller
         );
         return response()->json($appointments);
     }
+
+    // Se obtienen las citas visibles para el calendario público
+    public function public(Request $request)
+    {
+        $request->validate([
+            'doctor_id' => 'nullable|integer|exists:users,id',
+            'clinic_id' => 'nullable|integer|exists:clinics,id',
+            'date_from' => 'nullable|date',
+            'date_to' => 'nullable|date|after_or_equal:date_from',
+        ]);
+
+        $appointments = $this->calendarService->getPublicCalendar(
+            doctorId: $request->integer('doctor_id') ?: null,
+            clinicId: $request->integer('clinic_id') ?: null,
+            dateFrom: $request->input('date_from'),
+            dateTo: $request->input('date_to'),
+        );
+
+        return response()->json($appointments);
+    }
 }

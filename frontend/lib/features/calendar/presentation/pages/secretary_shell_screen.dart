@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/features/calendar/presentation/pages/secretary_calendar_screen.dart';
+import 'package:frontend/features/calendar/presentation/pages/secretary_pending_appointments_screen.dart';
 import 'package:frontend/features/calendar/presentation/pages/settings_screen.dart';
 
-/// Shell screen that wraps [SecretaryCalendarScreen] and [SettingsScreen]
-/// inside a [BottomNavigationBar] with tabs "Calendario" and "Ajustes".
+/// Shell screen that wraps the secretary tabs inside a [BottomNavigationBar].
 class SecretaryShellScreen extends StatefulWidget {
   final List<String> roles;
 
@@ -18,16 +18,14 @@ class _SecretaryShellScreenState extends State<SecretaryShellScreen> {
 
   late final List<Widget> _pages = [
     const SecretaryCalendarScreen(),
+    const SecretaryPendingAppointmentsScreen(),
     SettingsScreen(roles: widget.roles),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
@@ -39,9 +37,10 @@ class _SecretaryShellScreenState extends State<SecretaryShellScreen> {
             label: 'Calendario',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Ajustes',
+            icon: Icon(Icons.pending_actions),
+            label: 'Pendientes',
           ),
+          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Ajustes'),
         ],
       ),
     );

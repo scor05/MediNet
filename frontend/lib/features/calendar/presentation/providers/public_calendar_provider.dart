@@ -1,182 +1,104 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontend/features/calendar/domain/entities/public_slot.dart';
-import 'package:frontend/features/calendar/domain/providers/public_calendar_domain_providers.dart';
-import 'package:frontend/features/clinic/domain/entities/clinic.dart';
-import 'package:frontend/features/user/domain/entities/user.dart';
+import 'package:frontend/features/appointment/domain/entities/appointment.dart';
+import 'package:frontend/features/appointment/domain/providers/appointment_domain_providers.dart';
 
-class PublicCalendarState {
-  final List<User> doctors;
-  final List<Clinic> clinics;
-  final List<PublicSlot> slots;
-  final int? activeDoctorId;
-  final int? activeClinicId;
-  final DateTime? selectedDate;
-  final bool loadingSlots;
-  final String? slotsError;
+class PublicCalendarFilters {
+  final int? doctorId;
+  final int? clinicId;
 
-  const PublicCalendarState({
-    this.doctors = const [],
-    this.clinics = const [],
-    this.slots = const [],
-    this.activeDoctorId,
-    this.activeClinicId,
-    this.selectedDate,
-    this.loadingSlots = false,
-    this.slotsError,
-  });
+  const PublicCalendarFilters({this.doctorId, this.clinicId});
 
-  PublicCalendarState copyWith({
-    List<User>? doctors,
-    List<Clinic>? clinics,
-    List<PublicSlot>? slots,
-    int? activeDoctorId,
-    int? activeClinicId,
-    DateTime? selectedDate,
-    bool? loadingSlots,
-    String? slotsError,
-    bool clearSlotsError = false,
-    bool clearSelectedDate = false,
+  PublicCalendarFilters copyWith({
+    int? doctorId,
+    int? clinicId,
+    bool clearDoctor = false,
+    bool clearClinic = false,
   }) {
-    return PublicCalendarState(
-      doctors: doctors ?? this.doctors,
-      clinics: clinics ?? this.clinics,
-      slots: slots ?? this.slots,
-      activeDoctorId: activeDoctorId ?? this.activeDoctorId,
-      activeClinicId: activeClinicId ?? this.activeClinicId,
-      selectedDate: clearSelectedDate
-          ? null
-          : selectedDate ?? this.selectedDate,
-      loadingSlots: loadingSlots ?? this.loadingSlots,
-      slotsError: clearSlotsError ? null : slotsError ?? this.slotsError,
+    return PublicCalendarFilters(
+      doctorId: clearDoctor ? null : doctorId ?? this.doctorId,
+      clinicId: clearClinic ? null : clinicId ?? this.clinicId,
     );
   }
 }
 
-class PublicCalendarNotifier extends AsyncNotifier<PublicCalendarState> {
+class PublicCalendarNotifier
+    extends AutoDisposeAsyncNotifier<List<Appointment>> {
   @override
-  Future<PublicCalendarState> build() async {
-    final doctors = await ref.read(getPublicDoctorsUsecaseProvider).call();
-    final clinics = await ref.read(getPublicClinicsUsecaseProvider).call();
+  Future<List<Appointment>> build() {
+    final weekStart = ref.watch(publicWeekStartProvider);
 
-    return PublicCalendarState(
-      doctors: doctors,
-      clinics: clinics,
-      activeDoctorId: doctors.isNotEmpty ? doctors.first.id : null,
-      activeClinicId: clinics.isNotEmpty ? clinics.first.id : null,
-      selectedDate: DateTime.now(),
-    );
+    return _fetch(weekStart);
   }
 
-  // Se establece el doctor activo para filtros y modal
-  void setActiveDoctorId(int? doctorId) {
-    final current = state.value;
-    if (current == null) return;
-
-    state = AsyncData(
-      current.copyWith(
-        activeDoctorId: doctorId,
-        slots: [],
-        clearSlotsError: true,
-      ),
-    );
-  }
-
-  // Se establece la clínica activa para filtros y modal
-  void setActiveClinicId(int? clinicId) {
-    final current = state.value;
-    if (current == null) return;
-
-    state = AsyncData(
-      current.copyWith(
-        activeClinicId: clinicId,
-        slots: [],
-        clearSlotsError: true,
-      ),
-    );
-  }
-
-  // Se establece la fecha activa para consultar slots
-  void setSelectedDate(DateTime date) {
-    final current = state.value;
-    if (current == null) return;
-
-    state = AsyncData(
-      current.copyWith(selectedDate: date, slots: [], clearSlotsError: true),
-    );
-  }
-
-  // Se actualizan los valores activos desde el contexto de navegación
-  void setActiveContext({int? doctorId, int? clinicId}) {
-    final current = state.value;
-    if (current == null) return;
-
-    final hasDoctor = current.doctors.any((doctor) => doctor.id == doctorId);
-    final hasClinic = current.clinics.any((clinic) => clinic.id == clinicId);
-
-    state = AsyncData(
-      current.copyWith(
-        activeDoctorId: hasDoctor ? doctorId : current.activeDoctorId,
-        activeClinicId: hasClinic ? clinicId : current.activeClinicId,
-        clearSlotsError: true,
-      ),
-    );
-  }
-
-  // Se obtienen los slots disponibles con el doctor, clínica y fecha activos
-  Future<void> getSlots() async {
-    final current = state.value;
-    if (current == null) return;
-
-    final doctorId = current.activeDoctorId;
-    final clinicId = current.activeClinicId;
-    final date = current.selectedDate;
-
-    if (doctorId == null || clinicId == null || date == null) {
-      state = AsyncData(
-        current.copyWith(
-          slots: [],
-          slotsError: 'Selecciona doctor, clínica y fecha.',
-        ),
-      );
-      return;
-    }
-
-    state = AsyncData(
-      current.copyWith(loadingSlots: true, clearSlotsError: true),
-    );
-
-    try {
-      final slots = await ref
-          .read(getPublicSlotsUsecaseProvider)
-          .call(doctorId: doctorId, clinicId: clinicId, date: date);
-
-      final latest = state.value ?? current;
-      state = AsyncData(
-        latest.copyWith(
-          slots: slots,
-          loadingSlots: false,
-          clearSlotsError: true,
-        ),
-      );
-    } catch (e) {
-      final latest = state.value ?? current;
-      state = AsyncData(
-        latest.copyWith(
-          slots: [],
-          loadingSlots: false,
-          slotsError: e.toString(),
-        ),
-      );
-    }
+  Future<List<Appointment>> _fetch(DateTime weekStart) {
+    return ref
+        .read(getPublicAppointmentsUsecaseProvider)
+        .call(
+          dateFrom: weekStart,
+          dateTo: weekStart.add(const Duration(days: 6)),
+        );
   }
 
   Future<void> refresh() async {
+    final weekStart = ref.read(publicWeekStartProvider);
+
     state = const AsyncLoading();
-    state = await AsyncValue.guard(build);
+    state = await AsyncValue.guard(() => _fetch(weekStart));
   }
 }
 
+class PublicCalendarFilterNotifier
+    extends AutoDisposeNotifier<PublicCalendarFilters> {
+  @override
+  PublicCalendarFilters build() {
+    return const PublicCalendarFilters();
+  }
+
+  void setInitialFilters({int? doctorId, int? clinicId}) {
+    state = PublicCalendarFilters(doctorId: doctorId, clinicId: clinicId);
+  }
+
+  void selectDoctor(int? doctorId) {
+    state = state.copyWith(doctorId: doctorId, clearDoctor: doctorId == null);
+  }
+
+  void selectClinic(int? clinicId) {
+    state = state.copyWith(clinicId: clinicId, clearClinic: clinicId == null);
+  }
+}
+
+final publicWeekStartProvider = StateProvider.autoDispose<DateTime>((ref) {
+  final now = DateTime.now();
+  return now.subtract(Duration(days: now.weekday - 1));
+});
+
 final publicCalendarNotifierProvider =
-    AsyncNotifierProvider<PublicCalendarNotifier, PublicCalendarState>(
+    AutoDisposeAsyncNotifierProvider<PublicCalendarNotifier, List<Appointment>>(
       PublicCalendarNotifier.new,
     );
+
+final publicCalendarFilterProvider =
+    AutoDisposeNotifierProvider<
+      PublicCalendarFilterNotifier,
+      PublicCalendarFilters
+    >(PublicCalendarFilterNotifier.new);
+
+final filteredPublicAppointmentsProvider =
+    Provider.autoDispose<AsyncValue<List<Appointment>>>((ref) {
+      final appointmentsAsync = ref.watch(publicCalendarNotifierProvider);
+      final filters = ref.watch(publicCalendarFilterProvider);
+
+      return appointmentsAsync.whenData((appointments) {
+        return appointments.where((appointment) {
+          final matchesDoctor =
+              filters.doctorId == null ||
+              appointment.doctorId == filters.doctorId;
+
+          final matchesClinic =
+              filters.clinicId == null ||
+              appointment.clinicId == filters.clinicId;
+
+          return matchesDoctor && matchesClinic;
+        }).toList();
+      });
+    });

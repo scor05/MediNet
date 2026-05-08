@@ -5,6 +5,7 @@ import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/calendar/presentation/pages/dialogs/create_appointment_dialog.dart';
 import 'package:frontend/features/calendar/presentation/pages/dialogs/create_schedule_dialog.dart';
 import 'package:frontend/features/calendar/presentation/providers/secretary_calendar_provider.dart';
+import 'package:frontend/features/calendar/presentation/providers/secretary_pending_appointments_provider.dart';
 import 'package:frontend/features/calendar/presentation/widgets/week_view.dart';
 
 class SecretaryCalendarScreen extends ConsumerStatefulWidget {
@@ -35,6 +36,7 @@ class _SecretaryCalendarScreenState
     );
     if (created != null) {
       ref.read(secretaryCalendarNotifierProvider.notifier).refresh();
+      ref.read(secretaryPendingAppointmentsNotifierProvider.notifier).refresh();
     }
   }
 

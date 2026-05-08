@@ -113,6 +113,25 @@ class CalendarRepository
         return $query->orderBy('a.date')->orderBy('a.start_time')->get()->toArray();
     }
 
+    // Se obtienen citas ocupadas para el calendario público.
+    public function getPublicAppointments(
+        ?int $doctorId,
+        ?int $clinicId,
+        ?string $dateFrom,
+        ?string $dateTo,
+    ): array {
+        $query = $this->baseQuery()
+            ->whereIn('a.status', ['accepted', 'requested']);
+
+        if ($doctorId !== null) {
+            $query->where('s.id_doctor', $doctorId);
+        }
+
+        $this->applyCommonFilters($query, $clinicId, $dateFrom, $dateTo);
+
+        return $query->orderBy('a.date')->orderBy('a.start_time')->get()->toArray();
+    }
+
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
