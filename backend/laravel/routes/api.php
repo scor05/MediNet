@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\PublicCalendarController;
+use App\Http\Controllers\PublicSlotController;
 
 // Rutas públicas
 Route::post('/auth/register', [AuthController::class, 'register']);
@@ -31,5 +32,7 @@ Route::middleware('supabase.auth')->group(function () {
 
     // Calendar
     Route::get('/calendar/public', [PublicCalendarController::class, 'index']);
-    
+
+    // Slots
+    Route::get('/public/slots', [PublicSlotController::class, 'index']);
 });
