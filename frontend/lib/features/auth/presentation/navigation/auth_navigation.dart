@@ -66,20 +66,20 @@ class AuthNavigation {
     switch (role) {
       case 'doctor':
         return CalendarShell(
-          calendarScreen: const DoctorCalendarScreen(),
-          roles: profile.roles,
+          calendarScreen: DoctorCalendarScreen(profile: profile),
+          profile: profile,
         );
 
       case 'secretary':
         return CalendarShell(
-          calendarScreen: const SecretaryCalendarScreen(),
-          roles: profile.roles,
+          calendarScreen: SecretaryCalendarScreen(profile: profile),
+          profile: profile,
         );
 
       case 'patient':
         return CalendarShell(
-          calendarScreen: const PatientCalendarScreen(),
-          roles: profile.roles,
+          calendarScreen: PatientCalendarScreen(profile: profile),
+          profile: profile,
           extraPages: const [SearchScreen()],
           extraItems: const [
             BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Buscar'),
