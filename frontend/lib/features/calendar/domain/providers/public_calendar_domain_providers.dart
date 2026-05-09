@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/features/calendar/data/providers/public_calendar_data_providers.dart';
+import 'package:frontend/features/calendar/domain/usecases/create_public_appointment_request_usecase.dart';
 import 'package:frontend/features/calendar/domain/usecases/get_public_clinics_usecase.dart';
 import 'package:frontend/features/calendar/domain/usecases/get_public_doctors_usecase.dart';
 import 'package:frontend/features/calendar/domain/usecases/get_public_slots_usecase.dart';
@@ -17,4 +18,11 @@ final getPublicClinicsUsecaseProvider = Provider((ref) {
 // Provider para el usecase getPublicSlots
 final getPublicSlotsUsecaseProvider = Provider((ref) {
   return GetPublicSlotsUsecase(ref.read(publicCalendarRepositoryProvider));
+});
+
+// Provider para el usecase createPublicAppointmentRequest
+final createPublicAppointmentRequestUsecaseProvider = Provider((ref) {
+  return CreatePublicAppointmentRequestUsecase(
+    ref.read(publicCalendarRepositoryProvider),
+  );
 });

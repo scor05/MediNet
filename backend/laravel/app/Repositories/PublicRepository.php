@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Models\Appointment;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -132,6 +133,26 @@ class PublicRepository
         }
 
         return $slots;
+    }
+
+    // Se verifica si un horario ya fue tomado por una cita activa o solicitada
+    public function appointmentExists(
+        int $idSchedule,
+        string $date,
+        string $startTime,
+    ): bool {
+        return DB::table('appointments')
+            ->where('id_schedule', $idSchedule)
+            ->where('date', $date)
+            ->where('start_time', $startTime)
+            ->whereNotIn('status', ['rejected', 'cancelled'])
+            ->exists();
+    }
+
+    // Se crea una solicitud pública de cita
+    public function createAppointment(array $data): Appointment
+    {
+        return Appointment::create($data);
     }
 
     private function timeToMinutes(string $time): int

@@ -93,4 +93,34 @@ class PublicCalendarRemoteDatasource {
       throw handleApiError(response);
     }
   }
+
+  // Crea una solicitud pública de cita
+  Future<void> createAppointmentRequest({
+    required int scheduleId,
+    required int patientId,
+    required String patientName,
+    required DateTime date,
+    required String startTime,
+  }) async {
+    final response = await http
+        .post(
+          Uri.parse('${AppConfig.apiUrl}/public/appointments'),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'id_schedule': scheduleId,
+            'id_patient': patientId,
+            'name_patient': patientName,
+            'date': date.toIso8601String().substring(0, 10),
+            'start_time': startTime,
+          }),
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode != 201) {
+      throw handleApiError(response);
+    }
+  }
 }
