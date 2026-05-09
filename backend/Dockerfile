@@ -7,8 +7,10 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     libpq-dev \
-    && docker-php-ext-install pdo pdo_pgsql \
+    && docker-php-ext-install pdo pdo_pgsql opcache \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+COPY opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 
 # Instalar Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
