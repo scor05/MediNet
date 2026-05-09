@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/features/auth/presentation/utils/logout_helper.dart';
+import 'package:frontend/features/auth/domain/entities/user_profile.dart';
 import 'package:frontend/features/calendar/presentation/providers/secretary_calendar_provider.dart';
 import 'package:frontend/features/calendar/presentation/utils/calendar_dialog_helpers.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_app_bar.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_body.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_fab_menu.dart';
+import 'package:frontend/features/calendar/presentation/pages/settings_screen.dart';
 
 class SecretaryCalendarScreen extends ConsumerStatefulWidget {
-  const SecretaryCalendarScreen({super.key});
+  final UserProfile profile;
+
+  const SecretaryCalendarScreen({super.key, required this.profile});
 
   @override
   ConsumerState<SecretaryCalendarScreen> createState() =>
@@ -59,6 +63,17 @@ class _SecretaryCalendarScreenState
         leading: IconButton(
           icon: const Icon(Icons.logout),
           onPressed: () => logoutAndGoToWelcome(context: context, ref: ref),
+        ),
+        settingsButton: IconButton(
+          icon: const Icon(Icons.settings),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => SettingsScreen(profile: widget.profile),
+              ),
+            );
+          },
         ),
         onPreviousWeek: () => ref
             .read(secretaryWeekStartProvider.notifier)
