@@ -35,13 +35,11 @@ class SecretaryPendingAppointmentsNotifier
 
     state = AsyncData(
       currentAppointments
-          .map(
-            (appointment) => appointment.id == appointmentId
-                ? appointment.copyWith(status: status)
-                : appointment,
-          )
+          .where((appointment) => appointment.id != appointmentId)
           .toList(),
     );
+
+    await refresh();
   }
 }
 
