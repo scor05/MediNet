@@ -5,6 +5,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\PublicCalendarController;
 
 // Rutas públicas
 Route::post('/auth/register', [AuthController::class, 'register']);
@@ -27,5 +28,8 @@ Route::middleware('supabase.auth')->group(function () {
 
     // Search 
     Route::get('/search', [SearchController::class, 'index']);
+
+    // Calendar
+    Route::get('/calendar/public', [PublicCalendarController::class, 'index']);
     
 });
