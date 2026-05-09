@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
+import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
 import 'package:frontend/features/calendar/domain/entities/public_slot.dart';
 import 'package:frontend/features/calendar/domain/providers/public_calendar_domain_providers.dart';
 import 'package:frontend/features/clinic/domain/entities/clinic.dart';
@@ -34,6 +35,7 @@ class _PublicCreateAppointmentDialogState
 
   bool _loadingInitial = true;
   bool _loadingSlots = false;
+  bool _saving = false;
   String? _error;
   String? _slotsError;
 
@@ -185,6 +187,56 @@ class _PublicCreateAppointmentDialogState
     return '${date.day}/${date.month}/${date.year}';
   }
 
+  Future<void> _confirmAppointment() async {
+    final selectedSlot = _selectedSlot;
+
+    if (selectedSlot == null) {
+      setState(() => _error = 'Selecciona un horario disponible.');
+      return;
+    }
+
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+
+    try {
+      final profile = await ref.read(getProfileUsecaseProvider).call();
+
+      await ref
+          .read(createPublicAppointmentRequestUsecaseProvider)
+          .call(
+            scheduleId: selectedSlot.scheduleId,
+            patientId: profile.id,
+            patientName: profile.name,
+            date: _selectedDate,
+            startTime: selectedSlot.startTime,
+          );
+
+      if (!mounted) return;
+
+      final messenger = ScaffoldMessenger.of(context);
+      Navigator.of(context).pop(selectedSlot);
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Solicitud enviada, pendiente de aprobación'),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _error = e is ApiException
+            ? e.message
+            : 'No se pudo enviar la solicitud.';
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _saving = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -221,7 +273,7 @@ class _PublicCreateAppointmentDialogState
                   ),
                   const SizedBox(height: 16),
 
-                  if (_error != null)
+                  if (_error != null && (_doctors.isEmpty || _clinics.isEmpty))
                     Text(_error!, style: const TextStyle(color: Colors.red))
                   else if (_doctors.isEmpty || _clinics.isEmpty)
                     const Text(
@@ -308,12 +360,41 @@ class _PublicCreateAppointmentDialogState
                       ),
                   ],
 
+                  if (_error != null &&
+                      _doctors.isNotEmpty &&
+                      _clinics.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Text(_error!, style: const TextStyle(color: Colors.red)),
+                  ],
+
                   const SizedBox(height: 20),
                   SizedBox(
                     width: double.infinity,
-                    height: 65,
+                    height: 34,
                     child: FilledButton(
-                      onPressed: () => Navigator.of(context).pop(_selectedSlot),
+                      onPressed: (_saving || _selectedSlot == null)
+                          ? null
+                          : _confirmAppointment,
+                      child: _saving
+                          ? const SizedBox(
+                              height: 16,
+                              width: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text('Confirmar Cita'),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 34,
+                    child: FilledButton(
+                      onPressed: _saving
+                          ? null
+                          : () => Navigator.of(context).pop(),
                       child: const Text('Cancelar'),
                     ),
                   ),

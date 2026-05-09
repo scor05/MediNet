@@ -65,4 +65,31 @@ class PublicCalendarRepositoryImpl implements PublicCalendarRepository {
       throw ApiException('Error inesperado. Intenta de nuevo.');
     }
   }
+
+  @override
+  Future<void> createAppointmentRequest({
+    required int scheduleId,
+    required int patientId,
+    required String patientName,
+    required DateTime date,
+    required String startTime,
+  }) async {
+    try {
+      await datasource.createAppointmentRequest(
+        scheduleId: scheduleId,
+        patientId: patientId,
+        patientName: patientName,
+        date: date,
+        startTime: startTime,
+      );
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw ApiException('Sin conexión. Verifica tu internet.');
+    } on TimeoutException {
+      throw ApiException('La solicitud tardó demasiado. Intenta de nuevo.');
+    } catch (e) {
+      throw ApiException('Error inesperado. Intenta de nuevo.');
+    }
+  }
 }
