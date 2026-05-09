@@ -129,6 +129,28 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
     }
   }
 
+  // Actualiza el estado de una cita
+  @override
+  Future<void> updateAppointmentStatus({
+    required int appointmentId,
+    required String status,
+  }) async {
+    try {
+      await datasource.updateAppointmentStatus(
+        appointmentId: appointmentId,
+        status: status,
+      );
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw ApiException('Sin conexión. Verifica tu internet.');
+    } on TimeoutException {
+      throw ApiException('La solicitud tardó demasiado. Intenta de nuevo.');
+    } catch (e) {
+      throw ApiException('Error inesperado. Intenta de nuevo.');
+    }
+  }
+
   // Obtiene las citas públicas de un doctor o clínica
   @override
   Future<List<Appointment>> getPublicAppointments({
