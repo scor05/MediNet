@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
+import 'package:frontend/features/calendar/presentation/providers/secretary_calendar_provider.dart';
 import 'package:frontend/features/calendar/presentation/providers/secretary_pending_appointments_provider.dart';
 import 'package:frontend/theme/app_theme.dart';
 
@@ -10,6 +11,36 @@ class SecretaryPendingAppointmentsScreen extends ConsumerWidget {
 
   String _fmtDate(DateTime date) {
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+  }
+
+  Future<void> _updateStatus({
+    required BuildContext context,
+    required WidgetRef ref,
+    required Appointment appointment,
+    required String status,
+  }) async {
+    try {
+      await ref
+          .read(secretaryPendingAppointmentsNotifierProvider.notifier)
+          .updateStatus(appointmentId: appointment.id, status: status);
+      ref.read(secretaryCalendarNotifierProvider.notifier).refresh();
+
+      if (!context.mounted) return;
+
+      final message = status == 'accepted'
+          ? 'Cita aceptada correctamente.'
+          : 'Cita rechazada correctamente.';
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+    } catch (e) {
+      if (!context.mounted) return;
+
+      final message = e is ApiException ? e.message : 'Error inesperado.';
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+    }
   }
 
   @override
@@ -63,6 +94,18 @@ class SecretaryPendingAppointmentsScreen extends ConsumerWidget {
                   itemBuilder: (context, index) => _PendingAppointmentCard(
                     appointment: appointments[index],
                     dateLabel: _fmtDate(appointments[index].date),
+                    onAccept: () => _updateStatus(
+                      context: context,
+                      ref: ref,
+                      appointment: appointments[index],
+                      status: 'accepted',
+                    ),
+                    onReject: () => _updateStatus(
+                      context: context,
+                      ref: ref,
+                      appointment: appointments[index],
+                      status: 'rejected',
+                    ),
                   ),
                 ),
         ),
@@ -74,11 +117,46 @@ class SecretaryPendingAppointmentsScreen extends ConsumerWidget {
 class _PendingAppointmentCard extends StatelessWidget {
   final Appointment appointment;
   final String dateLabel;
+  final Future<void> Function() onAccept;
+  final Future<void> Function() onReject;
 
   const _PendingAppointmentCard({
     required this.appointment,
     required this.dateLabel,
+    required this.onAccept,
+    required this.onReject,
   });
+
+  String get _statusLabel {
+    return switch (appointment.status) {
+      'accepted' => 'Aceptada',
+      'rejected' => 'Rechazada',
+      'cancelled' => 'Cancelada',
+      'rescheduled' => 'Reprogramada',
+      'requested' => 'Solicitada',
+      _ => appointment.status,
+    };
+  }
+
+  Color get _statusBackground {
+    return switch (appointment.status) {
+      'accepted' => Colors.green.shade100,
+      'rejected' => Colors.red.shade100,
+      'cancelled' => Colors.red.shade100,
+      'rescheduled' => Colors.blue.shade100,
+      _ => Colors.orange.shade100,
+    };
+  }
+
+  Color get _statusTextColor {
+    return switch (appointment.status) {
+      'accepted' => Colors.green.shade900,
+      'rejected' => Colors.red.shade900,
+      'cancelled' => Colors.red.shade900,
+      'rescheduled' => Colors.blue.shade900,
+      _ => Colors.orange.shade900,
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -113,13 +191,13 @@ class _PendingAppointmentCard extends StatelessWidget {
                     vertical: 5,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.orange.shade100,
+                    color: _statusBackground,
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Text(
-                    'Solicitada',
+                    _statusLabel,
                     style: TextStyle(
-                      color: Colors.orange.shade900,
+                      color: _statusTextColor,
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                     ),
@@ -142,9 +220,66 @@ class _PendingAppointmentCard extends StatelessWidget {
               icon: Icons.local_hospital_outlined,
               label: appointment.clinicName,
             ),
+            const SizedBox(height: 14),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _AppointmentActionButton(label: 'Aceptar', onPressed: onAccept),
+                const SizedBox(width: 14),
+                _AppointmentActionButton(
+                  label: 'Rechazar',
+                  onPressed: onReject,
+                  hoverColor: AppTheme.error,
+                ),
+              ],
+            ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _AppointmentActionButton extends StatelessWidget {
+  final String label;
+  final Future<void> Function() onPressed;
+  final Color? hoverColor;
+
+  const _AppointmentActionButton({
+    required this.label,
+    required this.onPressed,
+    this.hoverColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      style: ButtonStyle(
+        backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+          if (states.contains(WidgetState.hovered) && hoverColor != null) {
+            return hoverColor!;
+          }
+
+          if (states.contains(WidgetState.hovered)) {
+            return AppTheme.primary;
+          }
+
+          return AppTheme.secondary;
+        }),
+        foregroundColor: WidgetStateProperty.all(Colors.white),
+        minimumSize: WidgetStateProperty.all(const Size(0, 36)),
+        padding: WidgetStateProperty.all(
+          const EdgeInsets.symmetric(horizontal: 16),
+        ),
+        shape: WidgetStateProperty.all(
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        ),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+      onPressed: () async {
+        await onPressed();
+      },
+      child: Text(label, style: const TextStyle(fontWeight: FontWeight.w400)),
     );
   }
 }

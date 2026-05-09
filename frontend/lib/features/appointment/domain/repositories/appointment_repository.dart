@@ -36,6 +36,12 @@ abstract class AppointmentRepository {
     required String status,
   });
 
+  // Actualizar el estado de una cita
+  Future<void> updateAppointmentStatus({
+    required int appointmentId,
+    required String status,
+  });
+
   // Obtener citas públicas de un doctor o clínica
   Future<List<Appointment>> getPublicAppointments({
     int? doctorId,

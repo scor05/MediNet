@@ -67,7 +67,8 @@ class AppointmentService
 
         if (
             array_key_exists('date', $data) ||
-            array_key_exists('start_time', $data)
+            array_key_exists('start_time', $data) ||
+            (($data['status'] ?? null) === 'accepted')
         ) {
             $this->validateConflict(
                 $idSchedule,
