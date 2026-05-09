@@ -91,7 +91,7 @@ class SecretaryPendingAppointmentsScreen extends ConsumerWidget {
                   padding: const EdgeInsets.all(16),
                   itemCount: appointments.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 10),
-                  itemBuilder: (context, index) => _PendingAppointmentCard(
+                  itemBuilder: (_, index) => _PendingAppointmentCard(
                     appointment: appointments[index],
                     dateLabel: _fmtDate(appointments[index].date),
                     onAccept: () => _updateStatus(
