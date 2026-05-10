@@ -12,12 +12,14 @@ class GetSecretaryAppointmentsUsecase {
     DateTime? dateTo,
     int? doctorId,
     int? clinicId,
+    String? status,
   }) async {
     return await repository.getSecretaryAppointments(
       dateFrom: dateFrom,
       dateTo: dateTo,
       doctorId: doctorId,
       clinicId: clinicId,
+      status: status,
     );
   }
 }

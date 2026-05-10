@@ -30,28 +30,38 @@ class PublicCalendarNotifier
   @override
   FutureOr<List<Appointment>> build() {
     final weekStart = ref.watch(publicWeekStartProvider);
-    final key = weekStart.toIso8601String();
+    final filters = ref.watch(publicCalendarFilterProvider);
+
+    final key =
+        '${weekStart.toIso8601String()}_${filters.doctorId}_${filters.clinicId}';
 
     if (_cache.containsKey(key)) return _cache[key]!;
 
-    return _fetch(weekStart).then((data) {
+    return _fetch(weekStart, filters).then((data) {
       _cache[key] = data;
       return data;
     });
   }
 
-  Future<List<Appointment>> _fetch(DateTime weekStart) {
+  Future<List<Appointment>> _fetch(
+    DateTime weekStart,
+    PublicCalendarFilters filters,
+  ) {
     return ref
         .read(getPublicAppointmentsUsecaseProvider)
         .call(
           dateFrom: weekStart,
           dateTo: weekStart.add(const Duration(days: 6)),
+          doctorId: filters.doctorId, // 👈
+          clinicId: filters.clinicId, // 👈
         );
   }
 
   Future<void> refresh() async {
     final weekStart = ref.read(publicWeekStartProvider);
-    final key = weekStart.toIso8601String();
+    final filters = ref.read(publicCalendarFilterProvider);
+    final key =
+        '${weekStart.toIso8601String()}_${filters.doctorId}_${filters.clinicId}';
     final previous = state.valueOrNull;
 
     _cache.remove(key);
@@ -62,7 +72,7 @@ class PublicCalendarNotifier
     }
 
     try {
-      final data = await _fetch(weekStart);
+      final data = await _fetch(weekStart, filters);
       _cache[key] = data;
       state = AsyncData(data);
     } catch (error, stackTrace) {
@@ -110,23 +120,3 @@ final publicCalendarFilterProvider =
       PublicCalendarFilterNotifier,
       PublicCalendarFilters
     >(PublicCalendarFilterNotifier.new);
-
-final filteredPublicAppointmentsProvider =
-    Provider.autoDispose<AsyncValue<List<Appointment>>>((ref) {
-      final appointmentsAsync = ref.watch(publicCalendarNotifierProvider);
-      final filters = ref.watch(publicCalendarFilterProvider);
-
-      return appointmentsAsync.whenData((appointments) {
-        return appointments.where((appointment) {
-          final matchesDoctor =
-              filters.doctorId == null ||
-              appointment.doctorId == filters.doctorId;
-
-          final matchesClinic =
-              filters.clinicId == null ||
-              appointment.clinicId == filters.clinicId;
-
-          return matchesDoctor && matchesClinic;
-        }).toList();
-      });
-    });

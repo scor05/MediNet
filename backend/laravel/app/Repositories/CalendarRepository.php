@@ -69,25 +69,31 @@ class CalendarRepository
         ?int $clinicId,
         ?string $dateFrom,
         ?string $dateTo,
+        ?string $status = null,
     ): array {
         $query = $this->baseQuery()
-            // Doctores (role = 1) del mismo cliente que la secretaria
+            // Doctores (role = 1) del cliente
             ->join('client_users AS cu', function ($join) {
                 $join->on('cu.id_user', '=', 's.id_doctor')
-                    ->where('cu.role', '=', 1);
+                    ->where('cu.role', '=', 1)
+                    ->where('cu.is_active', '=', true);
             })
+            // Secretaria (role = 2) del mismo cliente
             ->join('client_users AS cu_sec', function ($join) use ($secretaryId) {
                 $join->on('cu_sec.id_client', '=', 'cu.id_client')
                     ->where('cu_sec.id_user', '=', $secretaryId)
+                    ->where('cu_sec.role', '=', 2)
                     ->where('cu_sec.is_active', '=', true);
             });
 
-        // Filtro por doctor
         if ($doctorId !== null) {
             $query->where('s.id_doctor', $doctorId);
         }
 
-        // Filtros por clínica y rango de fechas
+        if ($status !== null) {
+            $query->where('a.status', $status);
+        }
+
         $this->applyCommonFilters($query, $clinicId, $dateFrom, $dateTo);
 
         return $query->orderBy('a.date')->orderBy('a.start_time')->get()->toArray();

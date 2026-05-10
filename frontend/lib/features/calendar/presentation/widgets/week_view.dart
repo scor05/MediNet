@@ -9,6 +9,7 @@ class WeekView extends StatelessWidget {
   final List<Appointment> appointments;
   final bool showDoctor;
   final bool showPatient;
+  final bool compact;
 
   const WeekView({
     super.key,
@@ -16,15 +17,16 @@ class WeekView extends StatelessWidget {
     required this.appointments,
     this.showDoctor = false,
     this.showPatient = false,
+    this.compact = false,
   });
 
-  static const int startHour = 0;
-  static const int endHour = 24;
-  static const double hourHeight = 80;
-  static const double timeColumnWidth = 100;
+  static const int startHour = 6;
+  static const int endHour = 18;
 
   @override
   Widget build(BuildContext context) {
+    final double hourHeight = compact ? 52 : 80;
+    final double timeColumnWidth = compact ? 48 : 100;
     final days = List.generate(7, (i) => weekStart.add(Duration(days: i)));
 
     return Column(

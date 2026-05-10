@@ -4,7 +4,7 @@ import 'package:frontend/features/auth/domain/entities/user_profile.dart';
 import 'package:frontend/features/auth/presentation/utils/logout_helper.dart';
 import 'package:frontend/features/calendar/presentation/pages/settings_screen.dart';
 import 'package:frontend/features/calendar/presentation/providers/secretary_calendar_provider.dart';
-import 'package:frontend/features/calendar/presentation/providers/secretary_pending_appointments_provider.dart';
+import 'package:frontend/features/calendar/presentation/providers/secretary_requested_appointments_provider.dart';
 import 'package:frontend/features/calendar/presentation/utils/calendar_dialog_helpers.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_app_bar.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_body.dart';
@@ -44,7 +44,7 @@ class _SecretaryCalendarScreenState
 
     if (created != null) {
       ref.read(secretaryCalendarNotifierProvider.notifier).refresh();
-      ref.read(secretaryPendingAppointmentsNotifierProvider.notifier).refresh();
+      ref.read(secretaryRequestedAppointmentsNotifierProvider.notifier).refresh();
     }
   }
 

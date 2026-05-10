@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Repositories\AppointmentRepository;
 use App\Services\UserService;
 use Illuminate\Validation\ValidationException;
-use RuntimeException;
 
 class AppointmentService
 {
@@ -24,20 +23,6 @@ class AppointmentService
     public function getById($id)
     {
         return $this->repository->findById($id);
-    }
-
-    // Se obtienen las citas solicitadas que maneja una secretaria
-    public function getPendingForSecretary(int $secretaryId): array
-    {
-        $clientId = $this->userService->getClientIdForUser($secretaryId);
-
-        if (!$clientId) {
-            throw new RuntimeException("La secretaria {$secretaryId} no tiene un cliente asociado.");
-        }
-
-        return $this->formatAppointments(
-            $this->repository->findPendingForSecretary($clientId)
-        );
     }
 
     // Se crea una nueva cita

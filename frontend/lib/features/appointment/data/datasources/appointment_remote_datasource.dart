@@ -64,6 +64,7 @@ class AppointmentRemoteDatasource {
     DateTime? dateTo,
     int? doctorId,
     int? clinicId,
+    String? status,
   }) async {
     final token = Supabase.instance.client.auth.currentSession?.accessToken;
 
@@ -80,6 +81,9 @@ class AppointmentRemoteDatasource {
     if (clinicId != null) {
       queryParams['clinic_id'] = clinicId.toString();
     }
+    if (status != null) {
+      queryParams['status'] = status;
+    }
 
     final uri = Uri.parse(
       '${AppConfig.apiUrl}/calendar/secretary',
@@ -88,29 +92,6 @@ class AppointmentRemoteDatasource {
     final response = await http
         .get(
           uri,
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-        )
-        .timeout(_defaultTimeout);
-
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.map((e) => AppointmentModel.fromJson(e)).toList();
-    } else {
-      throw handleApiError(response);
-    }
-  }
-
-  // Obtiene las citas solicitadas para una secretaria
-  Future<List<AppointmentModel>> getSecretaryPendingAppointments() async {
-    final token = Supabase.instance.client.auth.currentSession?.accessToken;
-
-    final response = await http
-        .get(
-          Uri.parse('${AppConfig.apiUrl}/appointments/secretary/pending'),
           headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',

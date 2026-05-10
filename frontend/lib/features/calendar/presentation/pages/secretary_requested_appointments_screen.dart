@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/calendar/presentation/providers/secretary_calendar_provider.dart';
-import 'package:frontend/features/calendar/presentation/providers/secretary_pending_appointments_provider.dart';
+import 'package:frontend/features/calendar/presentation/providers/secretary_requested_appointments_provider.dart';
 import 'package:frontend/theme/app_theme.dart';
 
-class SecretaryPendingAppointmentsScreen extends ConsumerWidget {
-  const SecretaryPendingAppointmentsScreen({super.key});
+class SecretaryRequestedAppointmentsScreen extends ConsumerWidget {
+  const SecretaryRequestedAppointmentsScreen({super.key});
 
   String _fmtDate(DateTime date) {
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
@@ -21,7 +21,7 @@ class SecretaryPendingAppointmentsScreen extends ConsumerWidget {
   }) async {
     try {
       await ref
-          .read(secretaryPendingAppointmentsNotifierProvider.notifier)
+          .read(secretaryRequestedAppointmentsNotifierProvider.notifier)
           .updateStatus(appointmentId: appointment.id, status: status);
       ref.read(secretaryCalendarNotifierProvider.notifier).refresh();
 
@@ -45,16 +45,16 @@ class SecretaryPendingAppointmentsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final pendingAsync = ref.watch(
-      secretaryPendingAppointmentsNotifierProvider,
+    final requestedAsync = ref.watch(
+      secretaryRequestedAppointmentsNotifierProvider,
     );
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Citas pendientes'),
+        title: const Text('Citas solicitadas'),
         automaticallyImplyLeading: false,
       ),
-      body: pendingAsync.when(
+      body: requestedAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
           child: Column(
@@ -64,7 +64,7 @@ class SecretaryPendingAppointmentsScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               ElevatedButton(
                 onPressed: ref
-                    .read(secretaryPendingAppointmentsNotifierProvider.notifier)
+                    .read(secretaryRequestedAppointmentsNotifierProvider.notifier)
                     .refresh,
                 child: const Text('Reintentar'),
               ),
@@ -73,7 +73,7 @@ class SecretaryPendingAppointmentsScreen extends ConsumerWidget {
         ),
         data: (appointments) => RefreshIndicator(
           onRefresh: ref
-              .read(secretaryPendingAppointmentsNotifierProvider.notifier)
+              .read(secretaryRequestedAppointmentsNotifierProvider.notifier)
               .refresh,
           child: appointments.isEmpty
               ? ListView(
@@ -81,7 +81,7 @@ class SecretaryPendingAppointmentsScreen extends ConsumerWidget {
                     SizedBox(height: 220),
                     Center(
                       child: Text(
-                        'No hay citas pendientes.',
+                        'No hay citas solicitadas.',
                         style: TextStyle(color: Colors.grey),
                       ),
                     ),
@@ -91,7 +91,7 @@ class SecretaryPendingAppointmentsScreen extends ConsumerWidget {
                   padding: const EdgeInsets.all(16),
                   itemCount: appointments.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 10),
-                  itemBuilder: (_, index) => _PendingAppointmentCard(
+                  itemBuilder: (_, index) => _RequestedAppointmentCard(
                     appointment: appointments[index],
                     dateLabel: _fmtDate(appointments[index].date),
                     onAccept: () => _updateStatus(
@@ -114,13 +114,13 @@ class SecretaryPendingAppointmentsScreen extends ConsumerWidget {
   }
 }
 
-class _PendingAppointmentCard extends StatelessWidget {
+class _RequestedAppointmentCard extends StatelessWidget {
   final Appointment appointment;
   final String dateLabel;
   final Future<void> Function() onAccept;
   final Future<void> Function() onReject;
 
-  const _PendingAppointmentCard({
+  const _RequestedAppointmentCard({
     required this.appointment,
     required this.dateLabel,
     required this.onAccept,
