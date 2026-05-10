@@ -31,7 +31,9 @@ migrate_working_dir/
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
-/build/
+/build/*
+!/build/web
+!/build/web/**
 /coverage/
 
 # Symbolication related
@@ -45,4 +47,3 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-!build/web
