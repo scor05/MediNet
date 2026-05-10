@@ -34,6 +34,7 @@ class CalendarService
         ?int $clinicId,
         ?string $dateFrom,
         ?string $dateTo,
+        ?string $status = null,
     ): array {
         $appointments = $this->calendarRepository->getAppointmentsForSecretary(
             secretaryId: $secretaryId,
@@ -41,6 +42,7 @@ class CalendarService
             clinicId: $clinicId,
             dateFrom: $dateFrom,
             dateTo: $dateTo,
+            status: $status,
         );
 
         return $this->formatAppointments($appointments);

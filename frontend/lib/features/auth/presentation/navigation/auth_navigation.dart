@@ -7,7 +7,7 @@ import 'package:frontend/features/auth/presentation/pages/role_selection_screen.
 import 'package:frontend/features/calendar/presentation/pages/doctor_calendar_screen.dart';
 import 'package:frontend/features/calendar/presentation/pages/patient_calendar_screen.dart';
 import 'package:frontend/features/calendar/presentation/pages/secretary_calendar_screen.dart';
-import 'package:frontend/features/calendar/presentation/pages/secretary_pending_appointments_screen.dart';
+import 'package:frontend/features/calendar/presentation/pages/secretary_requested_appointments_screen.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_shell.dart';
 import 'package:frontend/features/search/presentation/pages/search_screen.dart';
 
@@ -75,11 +75,11 @@ class AuthNavigation {
         return CalendarShell(
           calendarScreen: SecretaryCalendarScreen(profile: profile),
           profile: profile,
-          extraPages: const [SecretaryPendingAppointmentsScreen()],
+          extraPages: const [SecretaryRequestedAppointmentsScreen()],
           extraItems: const [
             BottomNavigationBarItem(
-              icon: Icon(Icons.pending_actions),
-              label: 'Pendientes',
+              icon: Icon(Icons.assignment_outlined),
+              label: 'Solicitadas',
             ),
           ],
         );

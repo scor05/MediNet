@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\CalendarService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class CalendarController extends Controller
 {
@@ -42,6 +43,16 @@ class CalendarController extends Controller
             'clinic_id' => 'nullable|integer|exists:clinics,id',
             'date_from' => 'nullable|date',
             'date_to' => 'nullable|date|after_or_equal:date_from',
+            'status' => [
+                'nullable',
+                Rule::in([
+                    'requested',
+                    'accepted',
+                    'rejected',
+                    'cancelled',
+                    'rescheduled',
+                ]),
+            ],
         ]);
 
         $secretaryID = $request->user()->id;
@@ -52,6 +63,7 @@ class CalendarController extends Controller
             clinicId: $request->integer('clinic_id') ?: null,
             dateFrom: $request->input('date_from'),
             dateTo: $request->input('date_to'),
+            status: $request->input('status'),
         );
 
         return response()->json($appointments);

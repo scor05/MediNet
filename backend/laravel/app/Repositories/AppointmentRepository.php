@@ -3,7 +3,6 @@
 namespace App\Repositories;
 
 use App\Models\Appointment;
-use Illuminate\Support\Facades\DB;
 
 class AppointmentRepository
 {
@@ -17,45 +16,6 @@ class AppointmentRepository
     public function findById($id)
     {
         return Appointment::findOrFail($id);
-    }
-
-    // Se obtienen las citas solicitadas de doctores asociados al cliente de una secretaria
-    public function findPendingForSecretary(int $clientId): array
-    {
-        return DB::table('appointments AS a')
-            ->join('schedules AS s', 's.id', '=', 'a.id_schedule')
-            ->join('clinics AS cl', 'cl.id', '=', 's.id_clinic')
-            ->join('users AS doctor', 'doctor.id', '=', 's.id_doctor')
-            ->leftJoin('users AS patient', 'patient.id', '=', 'a.id_patient')
-            ->join('client_users AS cu', function ($join) use ($clientId) {
-                $join->on('cu.id_user', '=', 's.id_doctor')
-                    ->where('cu.id_client', '=', $clientId)
-                    ->where('cu.role', '=', 1)
-                    ->where('cu.is_active', '=', true);
-            })
-            ->where('a.status', 'requested')
-            ->select([
-                'a.id',
-                'a.id_schedule',
-                'a.id_patient',
-                'a.date',
-                'a.start_time',
-                'a.status',
-                'a.created_at',
-                'a.created_by',
-                'a.updated_at',
-                'a.updated_by',
-                'doctor.id    AS doctor_id',
-                'doctor.name  AS doctor_name',
-                'cl.id        AS clinic_id',
-                'cl.name      AS clinic_name',
-                's.duration   AS appointment_duration',
-                DB::raw('COALESCE(patient.name, a.name_patient) AS patient_name'),
-            ])
-            ->orderBy('a.date')
-            ->orderBy('a.start_time')
-            ->get()
-            ->toArray();
     }
 
     // Se crea una nueva cita

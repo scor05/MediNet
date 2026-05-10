@@ -4,6 +4,7 @@ class SearchInputField<T> extends StatelessWidget {
   final TextEditingController controller;
   final String label;
   final String hintText;
+  final bool compact;
 
   final bool loading;
   final T? selectedItem;
@@ -29,6 +30,7 @@ class SearchInputField<T> extends StatelessWidget {
     required this.onChanged,
     required this.onSelected,
     required this.onClear,
+    this.compact = false,
   });
 
   @override
@@ -41,9 +43,14 @@ class SearchInputField<T> extends StatelessWidget {
         TextField(
           controller: controller,
           onChanged: onChanged,
+          style: compact ? const TextStyle(fontSize: 13) : null,
           decoration: InputDecoration(
             labelText: label,
             hintText: hintText,
+            isDense: compact,
+            contentPadding: compact
+                ? const EdgeInsets.symmetric(horizontal: 10, vertical: 10)
+                : null,
             suffixIcon: loading
                 ? const Padding(
                     padding: EdgeInsets.all(12),
@@ -54,14 +61,18 @@ class SearchInputField<T> extends StatelessWidget {
                     ),
                   )
                 : selectedItem != null
-                ? IconButton(icon: const Icon(Icons.close), onPressed: onClear)
+                ? IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: onClear,
+                    iconSize: compact ? 18 : 24,
+                  )
                 : null,
           ),
         ),
         if (showResults)
           Container(
-            margin: const EdgeInsets.only(top: 6),
-            constraints: const BoxConstraints(maxHeight: 220),
+            margin: const EdgeInsets.only(top: 4),
+            constraints: BoxConstraints(maxHeight: compact ? 160 : 220),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(12),
@@ -77,18 +88,19 @@ class SearchInputField<T> extends StatelessWidget {
                     Divider(height: 1, color: Theme.of(context).dividerColor),
                 itemBuilder: (context, index) {
                   final item = results[index];
-
                   return ListTile(
                     dense: true,
                     title: Text(
                       titleBuilder(item),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
+                      style: compact ? const TextStyle(fontSize: 13) : null,
                     ),
                     subtitle: Text(
                       subtitleBuilder(item),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
+                      style: compact ? const TextStyle(fontSize: 12) : null,
                     ),
                     onTap: () => onSelected(item),
                   );

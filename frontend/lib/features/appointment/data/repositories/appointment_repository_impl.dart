@@ -44,6 +44,7 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
     DateTime? dateTo,
     int? doctorId,
     int? clinicId,
+    String? status,
   }) async {
     try {
       return await datasource.getSecretaryAppointments(
@@ -51,6 +52,7 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
         dateTo: dateTo,
         doctorId: doctorId,
         clinicId: clinicId,
+        status: status,
       );
     } on ApiException {
       rethrow;
@@ -63,21 +65,6 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
     }
   }
 
-  // Obtiene las citas solicitadas para una secretaria
-  @override
-  Future<List<Appointment>> getSecretaryPendingAppointments() async {
-    try {
-      return await datasource.getSecretaryPendingAppointments();
-    } on ApiException {
-      rethrow;
-    } on SocketException {
-      throw ApiException('Sin conexión. Verifica tu internet.');
-    } on TimeoutException {
-      throw ApiException('La solicitud tardó demasiado. Intenta de nuevo.');
-    } catch (e) {
-      throw ApiException('Error inesperado. Intenta de nuevo.');
-    }
-  }
 
   // Obtiene las citas de una secretaria
   @override

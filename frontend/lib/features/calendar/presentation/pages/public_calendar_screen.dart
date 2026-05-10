@@ -6,7 +6,6 @@ import 'package:frontend/features/calendar/domain/entities/public_slot.dart';
 import 'package:frontend/features/calendar/presentation/dialogs/public_create_appointment_dialog.dart';
 import 'package:frontend/features/calendar/presentation/providers/public_calendar_provider.dart';
 import 'package:frontend/features/calendar/presentation/widgets/public_calendar/public_calendar_filter_bar.dart';
-import 'package:frontend/features/calendar/presentation/widgets/public_calendar/public_week_navigator.dart';
 import 'package:frontend/features/calendar/presentation/widgets/week_view.dart';
 
 class PublicCalendarScreen extends ConsumerStatefulWidget {
@@ -84,9 +83,6 @@ class _PublicCalendarScreenState extends ConsumerState<PublicCalendarScreen> {
   @override
   Widget build(BuildContext context) {
     final allAppointmentsAsync = ref.watch(publicCalendarNotifierProvider);
-    final filteredAppointmentsAsync = ref.watch(
-      filteredPublicAppointmentsProvider,
-    );
 
     final filters = ref.watch(publicCalendarFilterProvider);
     final weekStart = ref.watch(publicWeekStartProvider);
@@ -98,6 +94,8 @@ class _PublicCalendarScreenState extends ConsumerState<PublicCalendarScreen> {
           error: (_, _) => const SizedBox.shrink(),
           data: (appointments) {
             return PublicCalendarFilterBar(
+              lockedDoctorId: widget.doctorId,
+              lockedClinicId: widget.clinicId,
               appointments: appointments,
               filters: filters,
               onDoctorChanged: (doctorId) {
@@ -115,25 +113,41 @@ class _PublicCalendarScreenState extends ConsumerState<PublicCalendarScreen> {
         ),
 
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-          child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: _openCreateAppointment,
-              icon: const Icon(Icons.event_available),
-              label: const Text('Agendar cita'),
-            ),
+          padding: const EdgeInsets.fromLTRB(12, 6, 12, 4),
+          child: Row(
+            children: [
+              FilledButton.icon(
+                onPressed: _openCreateAppointment,
+                icon: const Icon(Icons.event_available, size: 16),
+                label: const Text('Agendar cita'),
+                style: FilledButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  textStyle: const TextStyle(fontSize: 13),
+                ),
+              ),
+              const Spacer(),
+              IconButton(
+                onPressed: _previousWeek,
+                icon: const Icon(Icons.chevron_left),
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+              ),
+              IconButton(
+                onPressed: _nextWeek,
+                icon: const Icon(Icons.chevron_right),
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+              ),
+            ],
           ),
         ),
 
-        PublicWeekNavigator(
-          weekStart: weekStart,
-          onPreviousWeek: _previousWeek,
-          onNextWeek: _nextWeek,
-        ),
-
         Expanded(
-          child: filteredAppointmentsAsync.when(
+          child: allAppointmentsAsync.when(
             skipError: true,
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, _) {
@@ -149,7 +163,11 @@ class _PublicCalendarScreenState extends ConsumerState<PublicCalendarScreen> {
               );
             },
             data: (appointments) {
-              return WeekView(weekStart: weekStart, appointments: appointments);
+              return WeekView(
+                weekStart: weekStart,
+                appointments: appointments,
+                compact: true,
+              );
             },
           ),
         ),
