@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
@@ -10,15 +11,19 @@ import 'package:frontend/features/schedule/domain/providers/schedule_domain_prov
 */
 
 class DoctorCalendarNotifier extends AsyncNotifier<List<Appointment>> {
-  // Estado inicial
+  final _cache = <String, List<Appointment>>{};
+
   @override
-  Future<List<Appointment>> build() {
-    return _fetch(
-      ref.watch(doctorWeekStartProvider), // Se re-ejecuta si cambia la semana
-    );
+  FutureOr<List<Appointment>> build() {
+    final weekStart = ref.watch(doctorWeekStartProvider);
+    final key = weekStart.toIso8601String();
+    if (_cache.containsKey(key)) return _cache[key]!;
+    return _fetch(weekStart).then((data) {
+      _cache[key] = data;
+      return data;
+    });
   }
 
-  // Método privado para obtener las citas del doctor
   Future<List<Appointment>> _fetch(DateTime weekStart) {
     return ref
         .read(getDoctorAppointmentsUsecaseProvider)
@@ -28,21 +33,22 @@ class DoctorCalendarNotifier extends AsyncNotifier<List<Appointment>> {
         );
   }
 
-  // Método para recargar la lista de citas
   Future<void> refresh() async {
+    final weekStart = ref.read(doctorWeekStartProvider);
+    _cache.remove(weekStart.toIso8601String());
     state = const AsyncLoading();
-    state = await AsyncValue.guard(
-      () => _fetch(ref.read(doctorWeekStartProvider)),
-    );
+    state = await AsyncValue.guard(() => _fetch(weekStart));
+    state.whenData((data) => _cache[weekStart.toIso8601String()] = data);
   }
 
-  // Método para agregar una cita de forma optimista (Se actualiza la UI antes de obtener la respuesta del backend)
+  // Crea una cita y la agrega al estado local sin refetch
   Future<Appointment> createAppointment({
     required int scheduleId,
     required DateTime date,
     required TimeOfDay startTime,
     required String patientName,
     required String status,
+    required int duration,
   }) async {
     final newAppointment = await ref
         .read(createAppointmentUsecaseProvider)
@@ -53,16 +59,28 @@ class DoctorCalendarNotifier extends AsyncNotifier<List<Appointment>> {
           patientName: patientName,
           status: status,
         );
-    await refresh();
-    return newAppointment;
+    final withDuration = newAppointment.copyWith(appointmentDuration: duration);
+    addAppointment(withDuration);
+    return withDuration;
   }
 
-  // Método para obtener los horarios del doctor
+  // Agrega una cita al estado local sin refetch
+  void addAppointment(Appointment appointment) {
+    final current = state.asData?.value;
+    if (current == null) return;
+    final updated = [...current, appointment]
+      ..sort((a, b) {
+        final d = a.date.compareTo(b.date);
+        return d != 0 ? d : a.startTime.compareTo(b.startTime);
+      });
+    _cache[ref.read(doctorWeekStartProvider).toIso8601String()] = updated;
+    state = AsyncData(updated);
+  }
+
   Future<List<Schedule>> getDoctorSchedules() async {
     return ref.read(getDoctorSchedulesUsecaseProvider).call();
   }
 
-  // Método para crear un horario de forma optimista (Se actualiza la UI antes de obtener la respuesta del backend)
   Future<Schedule> createSchedule({
     required int clinicId,
     required int dayOfWeek,
