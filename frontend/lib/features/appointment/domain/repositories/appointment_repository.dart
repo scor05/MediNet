@@ -18,6 +18,9 @@ abstract class AppointmentRepository {
     int? clinicId,
   });
 
+  // Obtener citas solicitadas para una secretaria
+  Future<List<Appointment>> getSecretaryPendingAppointments();
+
   // Obtener citas de un paciente
   Future<List<Appointment>> getPatientAppointments({
     DateTime? dateFrom,
@@ -30,6 +33,12 @@ abstract class AppointmentRepository {
     required DateTime date,
     required TimeOfDay startTime,
     required String patientName,
+    required String status,
+  });
+
+  // Actualizar el estado de una cita
+  Future<void> updateAppointmentStatus({
+    required int appointmentId,
     required String status,
   });
 

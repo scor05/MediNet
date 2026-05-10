@@ -63,6 +63,22 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
     }
   }
 
+  // Obtiene las citas solicitadas para una secretaria
+  @override
+  Future<List<Appointment>> getSecretaryPendingAppointments() async {
+    try {
+      return await datasource.getSecretaryPendingAppointments();
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw ApiException('Sin conexión. Verifica tu internet.');
+    } on TimeoutException {
+      throw ApiException('La solicitud tardó demasiado. Intenta de nuevo.');
+    } catch (e) {
+      throw ApiException('Error inesperado. Intenta de nuevo.');
+    }
+  }
+
   // Obtiene las citas de una secretaria
   @override
   Future<List<Appointment>> getPatientAppointments({
@@ -100,6 +116,28 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
         date: date,
         startTime: startTime,
         patientName: patientName,
+        status: status,
+      );
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw ApiException('Sin conexión. Verifica tu internet.');
+    } on TimeoutException {
+      throw ApiException('La solicitud tardó demasiado. Intenta de nuevo.');
+    } catch (e) {
+      throw ApiException('Error inesperado. Intenta de nuevo.');
+    }
+  }
+
+  // Actualiza el estado de una cita
+  @override
+  Future<void> updateAppointmentStatus({
+    required int appointmentId,
+    required String status,
+  }) async {
+    try {
+      await datasource.updateAppointmentStatus(
+        appointmentId: appointmentId,
         status: status,
       );
     } on ApiException {

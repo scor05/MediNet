@@ -23,6 +23,12 @@ class UserService
         return $this->repository->findById($id);
     }
 
+    // Retorna el client_id al que pertenece un usuario.
+    public function getClientIdForUser(int $userId): ?int
+    {
+        return $this->repository->getClientIdForUser($userId);
+    }
+
     // Se crea un nuevo usuario
     public function create($data)
     {

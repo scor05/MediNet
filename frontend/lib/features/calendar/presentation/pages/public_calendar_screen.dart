@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/core/widgets/error_view.dart';
+<<<<<<< HEAD
+=======
+import 'package:frontend/features/calendar/domain/entities/public_slot.dart';
+import 'package:frontend/features/calendar/presentation/pages/dialogs/public_create_appointment_dialog.dart';
+>>>>>>> origin/scrum115to118
 import 'package:frontend/features/calendar/presentation/providers/public_calendar_provider.dart';
 import 'package:frontend/features/calendar/presentation/widgets/public_calendar/public_calendar_empty_view.dart';
 import 'package:frontend/features/calendar/presentation/widgets/public_calendar/public_calendar_filter_bar.dart';
@@ -60,6 +65,29 @@ class _PublicCalendarScreenState extends ConsumerState<PublicCalendarScreen> {
         .update((weekStart) => weekStart.add(const Duration(days: 7)));
   }
 
+<<<<<<< HEAD
+=======
+  Future<void> _openCreateAppointment() async {
+    final filters = ref.read(publicCalendarFilterProvider);
+
+    final selectedSlot = await showModalBottomSheet<PublicSlot>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => PublicCreateAppointmentDialog(
+        initialDoctorId: filters.doctorId,
+        initialClinicId: filters.clinicId,
+      ),
+    );
+
+    if (selectedSlot != null) {
+      ref.read(publicCalendarNotifierProvider.notifier).refresh();
+    }
+  }
+
+>>>>>>> origin/scrum115to118
   @override
   Widget build(BuildContext context) {
     final allAppointmentsAsync = ref.watch(publicCalendarNotifierProvider);
@@ -91,6 +119,18 @@ class _PublicCalendarScreenState extends ConsumerState<PublicCalendarScreen> {
               },
             );
           },
+        ),
+
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _openCreateAppointment,
+              icon: const Icon(Icons.event_available),
+              label: const Text('Agendar cita'),
+            ),
+          ),
         ),
 
         PublicWeekNavigator(
