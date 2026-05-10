@@ -240,10 +240,12 @@ class ClientRemoteDatasource {
 
 int _mapRole(String role) {
   switch (role.toLowerCase()) {
+    case 'admin':
     case 'administrador':
       return 0;
     case 'doctor':
       return 1;
+    case 'secretary':
     case 'secretaria':
       return 2;
     default:

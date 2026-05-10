@@ -11,6 +11,7 @@ class SearchRepository
         $search = '%' . $query . '%';
 
         return DB::table('users')
+            ->join('client_users AS cu', 'cu.id_user', '=', 'users.id')
             ->leftJoin(
                 'doctor_specialties',
                 'users.id',
@@ -24,6 +25,8 @@ class SearchRepository
                 'specialties.id'
             )
             ->where('users.name', 'ILIKE', $search)
+            ->where('cu.role', 1)
+            ->where('cu.is_active', true)
             ->select(
                 'users.id',
                 'users.name',
