@@ -10,6 +10,12 @@ use App\Http\Controllers\SearchController;
 Route::post('/auth/register', [AuthController::class, 'register']);
 require __DIR__ . '/api/public.php';
 
+Route::post('/ping', function () {
+    return response()->json([
+        'message' => 'pong',
+    ]);
+});
+
 // Rutas protegidas por autenticación
 Route::middleware('supabase.auth')->group(function () {
 
