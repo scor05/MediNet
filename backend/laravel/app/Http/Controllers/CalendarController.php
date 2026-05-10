@@ -53,6 +53,7 @@ class CalendarController extends Controller
             dateFrom: $request->input('date_from'),
             dateTo: $request->input('date_to'),
         );
+
         return response()->json($appointments);
     }
 

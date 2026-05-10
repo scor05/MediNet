@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use App\Exceptions\RegistrationException;
 
@@ -38,30 +39,34 @@ class AuthService
     // Obtener usuario desde token
     public function getUser(string $token): ?array
     {
-        try {
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $token,
-                'apikey' => $this->anonKey,
-            ])->get($this->url . '/auth/v1/user');
-        } catch (\Throwable $e) {
+        $cacheKey = 'supabase_token_' . hash('sha256', $token);
+
+        return Cache::store('file')->remember($cacheKey, 60, function () use ($token) {
+            try {
+                $response = Http::withHeaders([
+                    'Authorization' => 'Bearer ' . $token,
+                    'apikey' => $this->anonKey,
+                ])->get($this->url . '/auth/v1/user');
+            } catch (\Throwable $e) {
+                throw new RegistrationException(
+                    'No se pudo comunicar con el servidor para validar el token.',
+                    500
+                );
+            }
+
+            if ($response->successful()) {
+                return $response->json();
+            }
+
+            if ($response->status() === 401 || $response->status() === 403) {
+                return null;
+            }
+
             throw new RegistrationException(
-                'No se pudo comunicar con el servidor para validar el token.',
+                'Error al validar el token.',
                 500
             );
-        }
-
-        if ($response->successful()) {
-            return $response->json();
-        }
-
-        if ($response->status() === 401 || $response->status() === 403) {
-            return null;
-        }
-
-        throw new RegistrationException(
-            'Error al validar el token.',
-            500
-        );
+        });
     }
 
     // Crear un nuevo usuario en Supabase Auth
