@@ -172,6 +172,7 @@ class CreateAppointmentFormNotifier
             startTime: startTime,
             patientName: patientName.trim(),
             status: 'accepted',
+            duration: selectedSchedule.duration,
           );
 
       state = state.copyWith(saving: false);

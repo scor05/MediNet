@@ -42,7 +42,7 @@ class _SecretaryCalendarScreenState
     );
 
     if (created != null) {
-      ref.read(secretaryCalendarNotifierProvider.notifier).refresh();
+      ref.read(secretaryCalendarNotifierProvider.notifier).addAppointment(created);
     }
   }
 
