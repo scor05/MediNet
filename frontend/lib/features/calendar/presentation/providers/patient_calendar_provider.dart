@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/appointment/domain/providers/appointment_domain_providers.dart';
@@ -7,15 +8,19 @@ import 'package:frontend/features/appointment/domain/providers/appointment_domai
 */
 
 class PatientCalendarNotifier extends AsyncNotifier<List<Appointment>> {
-  // Estado inicial
+  final _cache = <String, List<Appointment>>{};
+
   @override
-  Future<List<Appointment>> build() {
-    return _fetch(
-      ref.watch(patientWeekStartProvider), // Se re-ejecuta si cambia la semana
-    );
+  FutureOr<List<Appointment>> build() {
+    final weekStart = ref.watch(patientWeekStartProvider);
+    final key = weekStart.toIso8601String();
+    if (_cache.containsKey(key)) return _cache[key]!;
+    return _fetch(weekStart).then((data) {
+      _cache[key] = data;
+      return data;
+    });
   }
 
-  // Método privado para obtener las citas del paciente
   Future<List<Appointment>> _fetch(DateTime weekStart) {
     return ref
         .read(getPatientAppointmentsUsecaseProvider)
@@ -25,12 +30,12 @@ class PatientCalendarNotifier extends AsyncNotifier<List<Appointment>> {
         );
   }
 
-  // Método para recargar la lista de citas
   Future<void> refresh() async {
+    final weekStart = ref.read(patientWeekStartProvider);
+    _cache.remove(weekStart.toIso8601String());
     state = const AsyncLoading();
-    state = await AsyncValue.guard(
-      () => _fetch(ref.read(patientWeekStartProvider)),
-    );
+    state = await AsyncValue.guard(() => _fetch(weekStart));
+    state.whenData((data) => _cache[weekStart.toIso8601String()] = data);
   }
 }
 

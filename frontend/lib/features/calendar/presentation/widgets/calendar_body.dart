@@ -24,16 +24,23 @@ class CalendarBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return calendarAsync.when(
+      skipLoadingOnReload: true,
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => ErrorView(
         message: e is ApiException ? e.message : 'Error inesperado.',
         onRetry: onRetry,
       ),
-      data: (appointments) => WeekView(
-        weekStart: weekStart,
-        appointments: appointments,
-        showDoctor: showDoctor,
-        showPatient: showPatient,
+      data: (appointments) => Stack(
+        children: [
+          WeekView(
+            weekStart: weekStart,
+            appointments: appointments,
+            showDoctor: showDoctor,
+            showPatient: showPatient,
+          ),
+          if (calendarAsync.isLoading)
+            const LinearProgressIndicator(minHeight: 3),
+        ],
       ),
     );
   }
