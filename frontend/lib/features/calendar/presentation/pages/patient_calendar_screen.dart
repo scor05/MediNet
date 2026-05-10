@@ -2,11 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/features/auth/presentation/pages/welcome_screen.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
-import 'package:frontend/features/calendar/domain/entities/public_slot.dart';
-import 'package:frontend/features/calendar/presentation/dialogs/public_create_appointment_dialog.dart';
 import 'package:frontend/features/calendar/presentation/providers/patient_calendar_provider.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_body.dart';
-import 'package:frontend/theme/app_theme.dart';
 
 class PatientCalendarScreen extends ConsumerStatefulWidget {
   const PatientCalendarScreen({super.key});
@@ -17,21 +14,6 @@ class PatientCalendarScreen extends ConsumerStatefulWidget {
 }
 
 class _PatientCalendarScreenState extends ConsumerState<PatientCalendarScreen> {
-  Future<void> _openCreateAppointment() async {
-    final selectedSlot = await showModalBottomSheet<PublicSlot>(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (_) => const PublicCreateAppointmentDialog(),
-    );
-
-    if (selectedSlot != null) {
-      ref.read(patientCalendarNotifierProvider.notifier).refresh();
-    }
-  }
-
   Future<void> _logout() async {
     await ref.read(authNotifierProvider.notifier).logout();
     if (!mounted) return;
@@ -71,13 +53,6 @@ class _PatientCalendarScreenState extends ConsumerState<PatientCalendarScreen> {
         weekStart: weekStart,
         onRetry: ref.read(patientCalendarNotifierProvider.notifier).refresh,
         showDoctor: true,
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openCreateAppointment,
-        backgroundColor: AppTheme.secondary,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.event_available),
-        label: const Text('Agendar cita'),
       ),
     );
   }

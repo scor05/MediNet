@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/appointment/domain/providers/appointment_domain_providers.dart';
@@ -23,11 +25,19 @@ class PublicCalendarFilters {
 
 class PublicCalendarNotifier
     extends AutoDisposeAsyncNotifier<List<Appointment>> {
-  @override
-  Future<List<Appointment>> build() {
-    final weekStart = ref.watch(publicWeekStartProvider);
+  final _cache = <String, List<Appointment>>{};
 
-    return _fetch(weekStart);
+  @override
+  FutureOr<List<Appointment>> build() {
+    final weekStart = ref.watch(publicWeekStartProvider);
+    final key = weekStart.toIso8601String();
+
+    if (_cache.containsKey(key)) return _cache[key]!;
+
+    return _fetch(weekStart).then((data) {
+      _cache[key] = data;
+      return data;
+    });
   }
 
   Future<List<Appointment>> _fetch(DateTime weekStart) {
@@ -41,9 +51,27 @@ class PublicCalendarNotifier
 
   Future<void> refresh() async {
     final weekStart = ref.read(publicWeekStartProvider);
+    final key = weekStart.toIso8601String();
+    final previous = state.valueOrNull;
 
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(() => _fetch(weekStart));
+    _cache.remove(key);
+    if (previous == null) {
+      state = const AsyncLoading();
+    } else {
+      state = AsyncData(previous);
+    }
+
+    try {
+      final data = await _fetch(weekStart);
+      _cache[key] = data;
+      state = AsyncData(data);
+    } catch (error, stackTrace) {
+      if (previous == null) {
+        state = AsyncError(error, stackTrace);
+      } else {
+        state = AsyncData(previous);
+      }
+    }
   }
 }
 

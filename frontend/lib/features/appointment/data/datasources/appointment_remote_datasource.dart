@@ -9,6 +9,9 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AppointmentRemoteDatasource {
+  static const _defaultTimeout = Duration(seconds: 10);
+  static const _publicCalendarTimeout = Duration(seconds: 30);
+
   // Obtiene las citas de un doctor
   Future<List<AppointmentModel>> getDoctorAppointments({
     DateTime? dateFrom,
@@ -45,7 +48,7 @@ class AppointmentRemoteDatasource {
             'Authorization': 'Bearer $token',
           },
         )
-        .timeout(const Duration(seconds: 10));
+        .timeout(_defaultTimeout);
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
@@ -91,7 +94,7 @@ class AppointmentRemoteDatasource {
             'Authorization': 'Bearer $token',
           },
         )
-        .timeout(const Duration(seconds: 10));
+        .timeout(_defaultTimeout);
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
@@ -114,7 +117,7 @@ class AppointmentRemoteDatasource {
             'Authorization': 'Bearer $token',
           },
         )
-        .timeout(const Duration(seconds: 10));
+        .timeout(_defaultTimeout);
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
@@ -152,7 +155,7 @@ class AppointmentRemoteDatasource {
             'Authorization': 'Bearer $token',
           },
         )
-        .timeout(const Duration(seconds: 10));
+        .timeout(_defaultTimeout);
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
@@ -188,7 +191,7 @@ class AppointmentRemoteDatasource {
             'status': status,
           }),
         )
-        .timeout(const Duration(seconds: 10));
+        .timeout(_defaultTimeout);
 
     if (response.statusCode == 201) {
       final Map<String, dynamic> data = jsonDecode(response.body);
@@ -215,7 +218,7 @@ class AppointmentRemoteDatasource {
           },
           body: jsonEncode({'status': status}),
         )
-        .timeout(const Duration(seconds: 10));
+        .timeout(_defaultTimeout);
 
     if (response.statusCode != 200) {
       throw handleApiError(response);
@@ -265,7 +268,7 @@ class AppointmentRemoteDatasource {
             'Authorization': 'Bearer $token',
           },
         )
-        .timeout(const Duration(seconds: 10));
+        .timeout(_publicCalendarTimeout);
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
