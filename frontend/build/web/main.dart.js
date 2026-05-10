@@ -98338,7 +98338,7 @@ if(c!=null)o.p(0,"date_from",B.c.X(c.e5(),0,10))
 if(d!=null)o.p(0,"date_to",B.c.X(d.e5(),0,10))
 if(a!=null)o.p(0,"client_id",B.e.j(a))
 if(b!=null)o.p(0,"clinic_id",B.e.j(b))
-n=A.bH("http://localhost:8880/api/calendar/doctor",0,null)
+n=A.bH("http://34.51.81.158:8880/api/calendar/doctor",0,null)
 s=3
 return A.m(A.hp(n.kD(o.a!==0?o:null),A.a1(["Accept","application/json","Content-Type","application/json","Authorization","Bearer "+A.k(p)],l,l)).dJ(B.ak),$async$mz)
 case 3:m=f
@@ -98363,7 +98363,7 @@ if(c!=null)o.p(0,"date_to",B.c.X(c.e5(),0,10))
 if(d!=null)o.p(0,"doctor_id",B.e.j(d))
 if(a!=null)o.p(0,"clinic_id",B.e.j(a))
 if(e!=null)o.p(0,"status",e)
-n=A.bH("http://localhost:8880/api/calendar/secretary",0,null)
+n=A.bH("http://34.51.81.158:8880/api/calendar/secretary",0,null)
 s=3
 return A.m(A.hp(n.kD(o.a!==0?o:null),A.a1(["Accept","application/json","Content-Type","application/json","Authorization","Bearer "+A.k(p)],l,l)).dJ(B.ak),$async$lz)
 case 3:m=g
@@ -98385,7 +98385,7 @@ l=t.N
 o=A.w(l,l)
 if(a!=null)o.p(0,"date_from",B.c.X(a.e5(),0,10))
 if(b!=null)o.p(0,"date_to",B.c.X(b.e5(),0,10))
-n=A.bH("http://localhost:8880/api/calendar/patient",0,null)
+n=A.bH("http://34.51.81.158:8880/api/calendar/patient",0,null)
 s=3
 return A.m(A.hp(n.kD(o.a!==0?o:null),A.a1(["Accept","application/json","Content-Type","application/json","Authorization","Bearer "+A.k(p)],l,l)).dJ(B.ak),$async$mB)
 case 3:m=d
@@ -98403,7 +98403,7 @@ for(;;)switch(s){case 0:h=$.dp().b
 h===$&&A.a()
 h=h.gd4().c
 p=h==null?null:h.c
-h=A.bH("http://localhost:8880/api/appointments",0,null)
+h=A.bH("http://34.51.81.158:8880/api/appointments",0,null)
 o=t.N
 n=A.a1(["Accept","application/json","Content-Type","application/json","Authorization","Bearer "+A.k(p)],o,o)
 s=3
@@ -98428,7 +98428,7 @@ for(;;)switch(s){case 0:m=$.dp().b
 m===$&&A.a()
 m=m.gd4().c
 q=m==null?null:m.c
-m=A.bH("http://localhost:8880/api/appointments/"+a,0,null)
+m=A.bH("http://34.51.81.158:8880/api/appointments/"+a,0,null)
 p=t.N
 o=A.a1(["Accept","application/json","Content-Type","application/json","Authorization","Bearer "+A.k(q)],p,p)
 s=2
@@ -98451,7 +98451,7 @@ if(a!=null)o.p(0,"clinic_id",B.e.j(a))
 if(b!=null)o.p(0,"date_from",B.c.X(b.e5(),0,10))
 if(c!=null)o.p(0,"date_to",B.c.X(c.e5(),0,10))
 s=3
-return A.m(A.hp(A.bH("http://localhost:8880/api/calendar/public",0,null).kD(o),A.a1(["Accept","application/json","Content-Type","application/json","Authorization","Bearer "+A.k(p)],m,m)).dJ(B.Kp),$async$mD)
+return A.m(A.hp(A.bH("http://34.51.81.158:8880/api/calendar/public",0,null).kD(o),A.a1(["Accept","application/json","Content-Type","application/json","Authorization","Bearer "+A.k(p)],m,m)).dJ(B.Kp),$async$mD)
 case 3:n=f
 if(n.b===200){m=J.cZ(B.J.dU(A.dH(A.dG(n.e)).bN(n.w),null),new A.a8I(),t._Z)
 m=A.Z(m,m.$ti.h("aj.E"))
@@ -98742,7 +98742,7 @@ return A.p($async$i9,r)},
 hQ(a,b,c,d){return this.aFb(a,b,c,d)},
 aFb(a,b,c,d){var s=0,r=A.q(t.H),q=this,p,o,n,m,l
 var $async$hQ=A.r(function(e,f){if(e===1)return A.n(f,r)
-for(;;)switch(s){case 0:o=A.bH("http://localhost:8880/api/auth/register",0,null)
+for(;;)switch(s){case 0:o=A.bH("http://34.51.81.158:8880/api/auth/register",0,null)
 n=t.N
 m=A.a1(["Accept","application/json","Content-Type","application/json"],n,n)
 s=2
@@ -98770,7 +98770,7 @@ for(;;)switch(s){case 0:n=p.a.gd4().c
 m=n==null?null:n.c
 n=t.N
 s=3
-return A.m(A.hp(A.bH("http://localhost:8880/api/profile",0,null),A.a1(["Accept","application/json","Content-Type","application/json","Authorization","Bearer "+A.k(m)],n,n)).dJ(B.ak),$async$mC)
+return A.m(A.hp(A.bH("http://34.51.81.158:8880/api/profile",0,null),A.a1(["Accept","application/json","Content-Type","application/json","Authorization","Bearer "+A.k(m)],n,n)).dJ(B.ak),$async$mC)
 case 3:o=b
 if(o.b===200){q=A.bac(B.J.dU(A.dH(A.dG(o.e)).bN(o.w),null))
 s=1
@@ -99193,7 +99193,7 @@ var $async$kJ=A.r(function(b,c){if(b===1)return A.n(c,r)
 for(;;)switch(s){case 0:n=t.N
 m=A.w(n,n)
 if(a!=null)m.p(0,"clinic_id",B.e.j(a))
-p=A.bH("http://localhost:8880/api/public/doctors",0,null)
+p=A.bH("http://34.51.81.158:8880/api/public/doctors",0,null)
 s=3
 return A.m(A.hp(p.kD(m.a!==0?m:null),A.a1(["Accept","application/json","Content-Type","application/json"],n,n)).dJ(B.ak),$async$kJ)
 case 3:o=c
@@ -99210,7 +99210,7 @@ var $async$kI=A.r(function(b,c){if(b===1)return A.n(c,r)
 for(;;)switch(s){case 0:n=t.N
 m=A.w(n,n)
 if(a!=null)m.p(0,"doctor_id",B.e.j(a))
-p=A.bH("http://localhost:8880/api/public/clinics",0,null)
+p=A.bH("http://34.51.81.158:8880/api/public/clinics",0,null)
 s=3
 return A.m(A.hp(p.kD(m.a!==0?m:null),A.a1(["Accept","application/json","Content-Type","application/json"],n,n)).dJ(B.ak),$async$kI)
 case 3:o=c
@@ -99226,7 +99226,7 @@ a6K(a,b,c){var s=0,r=A.q(t.Be),q,p,o
 var $async$mE=A.r(function(d,e){if(d===1)return A.n(e,r)
 for(;;)switch(s){case 0:p=t.N
 s=3
-return A.m(A.hp(A.bH("http://localhost:8880/api/public/slots",0,null).kD(A.a1(["doctor_id",B.e.j(c),"clinic_id",B.e.j(a),"date",B.c.X(b.e5(),0,10)],p,t.z)),A.a1(["Accept","application/json","Content-Type","application/json"],p,p)).dJ(B.ak),$async$mE)
+return A.m(A.hp(A.bH("http://34.51.81.158:8880/api/public/slots",0,null).kD(A.a1(["doctor_id",B.e.j(c),"clinic_id",B.e.j(a),"date",B.c.X(b.e5(),0,10)],p,t.z)),A.a1(["Accept","application/json","Content-Type","application/json"],p,p)).dJ(B.ak),$async$mE)
 case 3:o=e
 if(o.b===200){p=J.cZ(B.J.dU(A.dH(A.dG(o.e)).bN(o.w),null),new A.ann(),t.jI)
 p=A.Z(p,p.$ti.h("aj.E"))
@@ -99238,7 +99238,7 @@ return A.p($async$mE,r)},
 na(a,b,c,d,e){return this.ayM(a,b,c,d,e)},
 ayM(a,b,c,d,e){var s=0,r=A.q(t.H),q,p,o,n
 var $async$na=A.r(function(f,g){if(f===1)return A.n(g,r)
-for(;;)switch(s){case 0:q=A.bH("http://localhost:8880/api/public/appointments",0,null)
+for(;;)switch(s){case 0:q=A.bH("http://34.51.81.158:8880/api/public/appointments",0,null)
 p=t.N
 o=A.a1(["Accept","application/json","Content-Type","application/json"],p,p)
 s=2
@@ -101020,7 +101020,7 @@ n=n.gd4().c
 p=n==null?null:n.c
 n=t.N
 s=3
-return A.m(A.hp(A.bH("http://localhost:8880/api/clients",0,null),A.a1(["Accept","application/json","Content-Type","application/json","Authorization","Bearer "+A.k(p)],n,n)).dJ(B.ak),$async$ly)
+return A.m(A.hp(A.bH("http://34.51.81.158:8880/api/clients",0,null),A.a1(["Accept","application/json","Content-Type","application/json","Authorization","Bearer "+A.k(p)],n,n)).dJ(B.ak),$async$ly)
 case 3:o=b
 if(o.b===200){n=J.cZ(B.J.dU(A.dH(A.dG(o.e)).bN(o.w),null),new A.aaM(),t.zh)
 n=A.Z(n,n.$ti.h("aj.E"))
@@ -101036,7 +101036,7 @@ for(;;)switch(s){case 0:l=$.dp().b
 l===$&&A.a()
 l=l.gd4().c
 p=l==null?null:l.c
-l=A.bH("http://localhost:8880/api/clients/"+a,0,null)
+l=A.bH("http://34.51.81.158:8880/api/clients/"+a,0,null)
 o=t.N
 n=A.a1(["Accept","application/json","Content-Type","application/json","Authorization","Bearer "+A.k(p)],o,o)
 s=3
@@ -101054,7 +101054,7 @@ for(;;)switch(s){case 0:l=$.dp().b
 l===$&&A.a()
 l=l.gd4().c
 p=l==null?null:l.c
-l=A.bH("http://localhost:8880/api/clients",0,null)
+l=A.bH("http://34.51.81.158:8880/api/clients",0,null)
 o=t.N
 n=A.a1(["Accept","application/json","Content-Type","application/json","Authorization","Bearer "+A.k(p)],o,o)
 s=3
@@ -101072,7 +101072,7 @@ for(;;)switch(s){case 0:l=$.dp().b
 l===$&&A.a()
 l=l.gd4().c
 p=l==null?null:l.c
-l=A.bH("http://localhost:8880/api/clients/"+a,0,null)
+l=A.bH("http://34.51.81.158:8880/api/clients/"+a,0,null)
 o=t.N
 n=A.a1(["Accept","application/json","Content-Type","application/json","Authorization","Bearer "+A.k(p)],o,o)
 s=3
@@ -101092,7 +101092,7 @@ n=n.gd4().c
 p=n==null?null:n.c
 n=t.N
 s=3
-return A.m(A.hp(A.bH("http://localhost:8880/api/clients/"+a+"/users",0,null),A.a1(["Accept","application/json","Content-Type","application/json","Authorization","Bearer "+A.k(p)],n,n)).dJ(B.ak),$async$lx)
+return A.m(A.hp(A.bH("http://34.51.81.158:8880/api/clients/"+a+"/users",0,null),A.a1(["Accept","application/json","Content-Type","application/json","Authorization","Bearer "+A.k(p)],n,n)).dJ(B.ak),$async$lx)
 case 3:o=c
 if(o.b===200){n=J.cZ(B.J.dU(A.dH(A.dG(o.e)).bN(o.w),null),new A.aaL(),t.pQ)
 n=A.Z(n,n.$ti.h("aj.E"))
@@ -101108,7 +101108,7 @@ for(;;)switch(s){case 0:l=$.dp().b
 l===$&&A.a()
 l=l.gd4().c
 p=l==null?null:l.c
-l=A.bH("http://localhost:8880/api/clients/"+a+"/users",0,null)
+l=A.bH("http://34.51.81.158:8880/api/clients/"+a+"/users",0,null)
 o=t.N
 n=A.a1(["Accept","application/json","Content-Type","application/json","Authorization","Bearer "+A.k(p)],o,o)
 s=3
@@ -101126,7 +101126,7 @@ for(;;)switch(s){case 0:l=$.dp().b
 l===$&&A.a()
 l=l.gd4().c
 p=l==null?null:l.c
-l=A.bH("http://localhost:8880/api/clients/"+a+"/users/"+b,0,null)
+l=A.bH("http://34.51.81.158:8880/api/clients/"+a+"/users/"+b,0,null)
 o=t.N
 n=A.a1(["Accept","application/json","Content-Type","application/json","Authorization","Bearer "+A.k(p)],o,o)
 s=3
@@ -101146,7 +101146,7 @@ n=n.gd4().c
 p=n==null?null:n.c
 n=t.N
 s=3
-return A.m(A.hp(A.bH("http://localhost:8880/api/users/available/"+a+"?search="+A.w6(2,b,B.ab,!1),0,null),A.a1(["Accept","application/json","Content-Type","application/json","Authorization","Bearer "+A.k(p)],n,n)).dJ(B.ak),$async$lw)
+return A.m(A.hp(A.bH("http://34.51.81.158:8880/api/users/available/"+a+"?search="+A.w6(2,b,B.ab,!1),0,null),A.a1(["Accept","application/json","Content-Type","application/json","Authorization","Bearer "+A.k(p)],n,n)).dJ(B.ak),$async$lw)
 case 3:o=d
 if(o.b===200){n=J.cZ(B.J.dU(A.dH(A.dG(o.e)).bN(o.w),null),new A.aaK(),t.pQ)
 n=A.Z(n,n.$ti.h("aj.E"))
@@ -101453,13 +101453,13 @@ s=a==null?3:5
 break
 case 3:l=o
 s=6
-return A.m(A.hp(A.bH("http://localhost:8880/api/clinics",0,null),A.a1(["Accept","application/json","Content-Type","application/json","Authorization",n],m,m)).dJ(B.ak),$async$jL)
+return A.m(A.hp(A.bH("http://34.51.81.158:8880/api/clinics",0,null),A.a1(["Accept","application/json","Content-Type","application/json","Authorization",n],m,m)).dJ(B.ak),$async$jL)
 case 6:l.sdE(c)
 s=4
 break
 case 5:l=o
 s=7
-return A.m(A.hp(A.bH("http://localhost:8880/api/clients/"+A.k(a)+"/clinics",0,null),A.a1(["Accept","application/json","Content-Type","application/json","Authorization",n],m,m)).dJ(B.ak),$async$jL)
+return A.m(A.hp(A.bH("http://34.51.81.158:8880/api/clients/"+A.k(a)+"/clinics",0,null),A.a1(["Accept","application/json","Content-Type","application/json","Authorization",n],m,m)).dJ(B.ak),$async$jL)
 case 7:l.sdE(c)
 case 4:if(o.bj().b===200){m=o.bj()
 m=J.cZ(B.J.dU(A.dH(A.dG(m.e)).bN(m.w),null),new A.aaY(),t.Ew)
@@ -101524,7 +101524,7 @@ n=n.gd4().c
 p=n==null?null:n.c
 n=t.N
 s=3
-return A.m(A.hp(A.bH("http://localhost:8880/api/schedules/doctor/me",0,null),A.a1(["Accept","application/json","Authorization","Bearer "+A.k(p)],n,n)).dJ(B.ak),$async$j0)
+return A.m(A.hp(A.bH("http://34.51.81.158:8880/api/schedules/doctor/me",0,null),A.a1(["Accept","application/json","Authorization","Bearer "+A.k(p)],n,n)).dJ(B.ak),$async$j0)
 case 3:o=b
 if(o.b===200){n=J.cZ(B.J.dU(A.dH(A.dG(o.e)).bN(o.w),null),new A.apN(),t.g4)
 n=A.Z(n,n.$ti.h("aj.E"))
@@ -101540,7 +101540,7 @@ for(;;)switch(s){case 0:l=$.dp().b
 l===$&&A.a()
 l=l.gd4().c
 p=l==null?null:l.c
-l=A.bH("http://localhost:8880/api/schedules",0,null)
+l=A.bH("http://34.51.81.158:8880/api/schedules",0,null)
 o=t.N
 n=A.a1(["Accept","application/json","Content-Type","application/json","Authorization","Bearer "+A.k(p)],o,o)
 s=3
@@ -101652,7 +101652,7 @@ n=n.gd4().c
 p=n==null?null:n.c
 n=t.N
 s=3
-return A.m(A.hp(A.bH("http://localhost:8880/api/search",0,null).kD(A.a1(["q",a],n,t.z)),A.a1(["Accept","application/json","Content-Type","application/json","Authorization","Bearer "+A.k(p)],n,n)).dJ(B.ak),$async$kN)
+return A.m(A.hp(A.bH("http://34.51.81.158:8880/api/search",0,null).kD(A.a1(["q",a],n,t.z)),A.a1(["Accept","application/json","Content-Type","application/json","Authorization","Bearer "+A.k(p)],n,n)).dJ(B.ak),$async$kN)
 case 3:o=c
 if(o.b===200){q=A.b8C(t.a.a(B.J.dU(A.dH(A.dG(o.e)).bN(o.w),null)))
 s=1
@@ -101985,7 +101985,7 @@ n=n.gd4().c
 p=n==null?null:n.c
 n=t.N
 s=3
-return A.m(A.hp(A.bH("http://localhost:8880/api/users/available?search="+A.w6(2,a,B.ab,!1),0,null),A.a1(["Accept","application/json","Content-Type","application/json","Authorization","Bearer "+A.k(p)],n,n)).dJ(B.ak),$async$my)
+return A.m(A.hp(A.bH("http://34.51.81.158:8880/api/users/available?search="+A.w6(2,a,B.ab,!1),0,null),A.a1(["Accept","application/json","Content-Type","application/json","Authorization","Bearer "+A.k(p)],n,n)).dJ(B.ak),$async$my)
 case 3:o=c
 if(o.b===200){n=J.cZ(B.J.dU(A.dH(A.dG(o.e)).bN(o.w),null),new A.av4(),t.Ct)
 n=A.Z(n,n.$ti.h("aj.E"))
