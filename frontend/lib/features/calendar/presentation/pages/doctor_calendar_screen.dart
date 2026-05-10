@@ -40,9 +40,7 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
       weekStart: weekStart,
     );
 
-    if (created != null) {
-      ref.read(doctorCalendarNotifierProvider.notifier).refresh();
-    }
+    // El notifier ya actualizó el estado en createAppointment()
   }
 
   Future<void> _openCreateSchedule() async {

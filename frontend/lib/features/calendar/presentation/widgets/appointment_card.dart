@@ -40,7 +40,7 @@ class AppointmentCard extends StatelessWidget {
 
     final hour = int.parse(parts[0]);
     final minute = int.parse(parts[1]);
-    final second = int.parse(parts[2]);
+    final second = parts.length > 2 ? int.parse(parts[2]) : 0;
 
     final startDateTime = DateTime(2026, 1, 1, hour, minute, second);
 
