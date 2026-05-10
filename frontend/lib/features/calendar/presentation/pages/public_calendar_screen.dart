@@ -5,7 +5,6 @@ import 'package:frontend/core/widgets/error_view.dart';
 import 'package:frontend/features/calendar/domain/entities/public_slot.dart';
 import 'package:frontend/features/calendar/presentation/dialogs/public_create_appointment_dialog.dart';
 import 'package:frontend/features/calendar/presentation/providers/public_calendar_provider.dart';
-import 'package:frontend/features/calendar/presentation/widgets/public_calendar/public_calendar_empty_view.dart';
 import 'package:frontend/features/calendar/presentation/widgets/public_calendar/public_calendar_filter_bar.dart';
 import 'package:frontend/features/calendar/presentation/widgets/public_calendar/public_week_navigator.dart';
 import 'package:frontend/features/calendar/presentation/widgets/week_view.dart';
@@ -135,6 +134,7 @@ class _PublicCalendarScreenState extends ConsumerState<PublicCalendarScreen> {
 
         Expanded(
           child: filteredAppointmentsAsync.when(
+            skipError: true,
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, _) {
               final message = error is ApiException
@@ -149,15 +149,7 @@ class _PublicCalendarScreenState extends ConsumerState<PublicCalendarScreen> {
               );
             },
             data: (appointments) {
-              if (appointments.isEmpty) {
-                return const PublicCalendarEmptyView();
-              }
-
-              return WeekView(
-                weekStart: weekStart,
-                appointments: appointments,
-                showDoctor: true,
-              );
+              return WeekView(weekStart: weekStart, appointments: appointments);
             },
           ),
         ),
