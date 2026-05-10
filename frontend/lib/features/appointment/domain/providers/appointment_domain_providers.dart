@@ -5,6 +5,8 @@ import 'package:frontend/features/appointment/domain/usecases/get_doctor_appoint
 import 'package:frontend/features/appointment/domain/usecases/get_patient_appointments_usecase.dart';
 import 'package:frontend/features/appointment/domain/usecases/get_public_appointments_usecase.dart';
 import 'package:frontend/features/appointment/domain/usecases/get_secretary_appointments_usecase.dart';
+import 'package:frontend/features/appointment/domain/usecases/get_secretary_pending_appointments_usecase.dart';
+import 'package:frontend/features/appointment/domain/usecases/update_appointment_status_usecase.dart';
 
 // Provider para el usecase getDoctorAppointments
 final getDoctorAppointmentsUsecaseProvider = Provider((ref) {
@@ -14,6 +16,13 @@ final getDoctorAppointmentsUsecaseProvider = Provider((ref) {
 // Provider para el usecase getSecretaryAppointments
 final getSecretaryAppointmentsUsecaseProvider = Provider((ref) {
   return GetSecretaryAppointmentsUsecase(
+    ref.read(appointmentRepositoryProvider),
+  );
+});
+
+// Provider para el usecase getSecretaryPendingAppointments
+final getSecretaryPendingAppointmentsUsecaseProvider = Provider((ref) {
+  return GetSecretaryPendingAppointmentsUsecase(
     ref.read(appointmentRepositoryProvider),
   );
 });
@@ -28,9 +37,14 @@ final createAppointmentUsecaseProvider = Provider((ref) {
   return CreateAppointmentUsecase(ref.read(appointmentRepositoryProvider));
 });
 
+// Provider para el usecase updateAppointmentStatus
+final updateAppointmentStatusUsecaseProvider = Provider((ref) {
+  return UpdateAppointmentStatusUsecase(
+    ref.read(appointmentRepositoryProvider),
+  );
+});
+
 // Provider para el usecase getPublicAppointments
 final getPublicAppointmentsUsecaseProvider = Provider((ref) {
-  return GetPublicAppointmentsUsecase(
-    ref.read(publicAppointmentRepositoryProvider),
-  );
+  return GetPublicAppointmentsUsecase(ref.read(appointmentRepositoryProvider));
 });

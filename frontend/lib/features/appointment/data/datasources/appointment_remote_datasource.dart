@@ -101,6 +101,29 @@ class AppointmentRemoteDatasource {
     }
   }
 
+  // Obtiene las citas solicitadas para una secretaria
+  Future<List<AppointmentModel>> getSecretaryPendingAppointments() async {
+    final token = Supabase.instance.client.auth.currentSession?.accessToken;
+
+    final response = await http
+        .get(
+          Uri.parse('${AppConfig.apiUrl}/appointments/secretary/pending'),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((e) => AppointmentModel.fromJson(e)).toList();
+    } else {
+      throw handleApiError(response);
+    }
+  }
+
   // Obtiene las citas de un paciente
   Future<List<AppointmentModel>> getPatientAppointments({
     DateTime? dateFrom,
@@ -175,6 +198,30 @@ class AppointmentRemoteDatasource {
     }
   }
 
+  // Actualiza el estado de una cita
+  Future<void> updateAppointmentStatus({
+    required int appointmentId,
+    required String status,
+  }) async {
+    final token = Supabase.instance.client.auth.currentSession?.accessToken;
+
+    final response = await http
+        .patch(
+          Uri.parse('${AppConfig.apiUrl}/appointments/$appointmentId'),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode({'status': status}),
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode != 200) {
+      throw handleApiError(response);
+    }
+  }
+
   // Obtiene las citas de públicas de un doctor o clínica
   Future<List<PublicAppointmentModel>> getPublicAppointments({
     int? doctorId,
@@ -235,7 +282,7 @@ class AppointmentRemoteDatasource {
   }
 
   /*
-  -------------------------------------- Helpers ----------------------------------------- 
+  -------------------------------------- Helpers -----------------------------------------
   */
 
   String _fmtTime(TimeOfDay t) =>
