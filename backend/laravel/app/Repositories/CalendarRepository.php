@@ -64,18 +64,22 @@ class CalendarRepository
 
     // Se obtienen todas las citas de una secretaria, pudiendose filtrar por doctor, clínica y rango de fechas.
     public function getAppointmentsForSecretary(
-        int $clientId,
+        int $secretaryId,
         ?int $doctorId,
         ?int $clinicId,
         ?string $dateFrom,
         ?string $dateTo,
     ): array {
         $query = $this->baseQuery()
-            // Solo doctores (role = 1) que pertenezcan al mismo cliente
-            ->join('client_users AS cu', function ($join) use ($clientId) {
+            // Doctores (role = 1) del mismo cliente que la secretaria
+            ->join('client_users AS cu', function ($join) {
                 $join->on('cu.id_user', '=', 's.id_doctor')
-                    ->where('cu.id_client', '=', $clientId)
                     ->where('cu.role', '=', 1);
+            })
+            ->join('client_users AS cu_sec', function ($join) use ($secretaryId) {
+                $join->on('cu_sec.id_client', '=', 'cu.id_client')
+                    ->where('cu_sec.id_user', '=', $secretaryId)
+                    ->where('cu_sec.is_active', '=', true);
             });
 
         // Filtro por doctor
