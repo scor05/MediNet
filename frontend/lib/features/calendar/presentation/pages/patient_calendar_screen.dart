@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/features/auth/presentation/pages/welcome_screen.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
 import 'package:frontend/features/calendar/domain/entities/public_slot.dart';
-import 'package:frontend/features/calendar/presentation/pages/dialogs/public_create_appointment_dialog.dart';
+import 'package:frontend/features/calendar/presentation/dialogs/public_create_appointment_dialog.dart';
 import 'package:frontend/features/calendar/presentation/providers/patient_calendar_provider.dart';
-import 'package:frontend/features/calendar/presentation/widgets/week_view.dart';
+import 'package:frontend/features/calendar/presentation/widgets/calendar_body.dart';
 import 'package:frontend/theme/app_theme.dart';
 
 class PatientCalendarScreen extends ConsumerStatefulWidget {
