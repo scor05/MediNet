@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/core/widgets/error_view.dart';
 import 'package:frontend/features/calendar/domain/entities/public_slot.dart';
-import 'package:frontend/features/calendar/presentation/pages/dialogs/public_create_appointment_dialog.dart';
+import 'package:frontend/features/calendar/presentation/dialogs/public_create_appointment_dialog.dart';
 import 'package:frontend/features/calendar/presentation/providers/public_calendar_provider.dart';
 import 'package:frontend/features/calendar/presentation/widgets/public_calendar/public_calendar_empty_view.dart';
 import 'package:frontend/features/calendar/presentation/widgets/public_calendar/public_calendar_filter_bar.dart';

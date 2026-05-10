@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/features/auth/domain/entities/user_profile.dart';
 import 'package:frontend/features/auth/presentation/utils/logout_helper.dart';
+import 'package:frontend/features/calendar/presentation/pages/settings_screen.dart';
 import 'package:frontend/features/calendar/presentation/providers/secretary_calendar_provider.dart';
 import 'package:frontend/features/calendar/presentation/providers/secretary_pending_appointments_provider.dart';
+import 'package:frontend/features/calendar/presentation/utils/calendar_dialog_helpers.dart';
+import 'package:frontend/features/calendar/presentation/widgets/calendar_app_bar.dart';
+import 'package:frontend/features/calendar/presentation/widgets/calendar_body.dart';
+import 'package:frontend/features/calendar/presentation/widgets/calendar_fab_menu.dart';
 
 class SecretaryCalendarScreen extends ConsumerStatefulWidget {
   final UserProfile profile;
@@ -101,45 +106,6 @@ class _SecretaryCalendarScreenState
           ),
         ],
       ),
-    );
-  }
-}
-
-class _FabMenuItem extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _FabMenuItem({
-    required this.label,
-    required this.icon,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
-          ),
-          child: Text(label, style: const TextStyle(fontSize: 13)),
-        ),
-        const SizedBox(width: 8),
-        FloatingActionButton.small(
-          heroTag: label,
-          backgroundColor: color,
-          onPressed: onTap,
-          child: Icon(icon, size: 18, color: Colors.white),
-        ),
-      ],
     );
   }
 }

@@ -41,10 +41,15 @@ class AppointmentRepository
                 'a.date',
                 'a.start_time',
                 'a.status',
+                'a.created_at',
+                'a.created_by',
+                'a.updated_at',
+                'a.updated_by',
                 'doctor.id    AS doctor_id',
                 'doctor.name  AS doctor_name',
                 'cl.id        AS clinic_id',
                 'cl.name      AS clinic_name',
+                's.duration   AS appointment_duration',
                 DB::raw('COALESCE(patient.name, a.name_patient) AS patient_name'),
             ])
             ->orderBy('a.date')

@@ -120,6 +120,11 @@ class AppointmentService
                 'date' => $appointment->date,
                 'start_time' => $appointment->start_time,
                 'status' => $appointment->status,
+                'duration' => $appointment->appointment_duration,
+                'created_at' => $appointment->created_at,
+                'created_by' => $appointment->created_by,
+                'updated_at' => $appointment->updated_at,
+                'updated_by' => $appointment->updated_by,
                 'doctor' => [
                     'id' => $appointment->doctor_id,
                     'name' => $appointment->doctor_name,
