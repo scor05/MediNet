@@ -3,21 +3,14 @@
 namespace App\Repositories;
 
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class SearchRepository
 {
     public function searchDoctors(string $query)
     {
-        $totalStart = microtime(true);
         $search = '%' . $query . '%';
 
-        Log::debug('search.repository.doctors.start', [
-            'query_length' => strlen($query),
-        ]);
-
-        $queryBuildStart = microtime(true);
-        $builder = DB::table('users')
+        return DB::table('users')
             ->join('client_users AS cu', 'cu.id_user', '=', 'users.id')
             ->leftJoin(
                 'doctor_specialties',
@@ -39,64 +32,21 @@ class SearchRepository
                 'users.name',
                 DB::raw("COALESCE(specialties.specialty, 'Sin especialidad') as specialty")
             )
-            ->distinct();
-
-        Log::debug('search.repository.doctors.query_built', [
-            'elapsed_ms' => $this->elapsedMs($queryBuildStart),
-        ]);
-
-        $dbStart = microtime(true);
-        $results = $builder->get();
-
-        Log::debug('search.repository.doctors.db_completed', [
-            'elapsed_ms' => $this->elapsedMs($dbStart),
-            'count' => count($results),
-        ]);
-        Log::debug('search.repository.doctors.finished', [
-            'elapsed_ms' => $this->elapsedMs($totalStart),
-        ]);
-
-        return $results;
+            ->distinct()
+            ->get();
     }
 
     public function searchClinics(string $query)
     {
-        $totalStart = microtime(true);
         $search = '%' . $query . '%';
 
-        Log::debug('search.repository.clinics.start', [
-            'query_length' => strlen($query),
-        ]);
-
-        $queryBuildStart = microtime(true);
-        $builder = DB::table('clinics')
+        return DB::table('clinics')
             ->where('name', 'ILIKE', $search)
             ->select(
                 'id',
                 'name',
                 'address'
-            );
-
-        Log::debug('search.repository.clinics.query_built', [
-            'elapsed_ms' => $this->elapsedMs($queryBuildStart),
-        ]);
-
-        $dbStart = microtime(true);
-        $results = $builder->get();
-
-        Log::debug('search.repository.clinics.db_completed', [
-            'elapsed_ms' => $this->elapsedMs($dbStart),
-            'count' => count($results),
-        ]);
-        Log::debug('search.repository.clinics.finished', [
-            'elapsed_ms' => $this->elapsedMs($totalStart),
-        ]);
-
-        return $results;
-    }
-
-    private function elapsedMs(float $start): float
-    {
-        return round((microtime(true) - $start) * 1000, 2);
+            )
+            ->get();
     }
 }
