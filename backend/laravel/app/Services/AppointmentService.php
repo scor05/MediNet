@@ -96,34 +96,4 @@ class AppointmentService
             ]);
         }
     }
-
-    private function formatAppointments(array $appointments): array
-    {
-        return array_map(function ($appointment) {
-            return [
-                'id' => $appointment->id,
-                'date' => $appointment->date,
-                'start_time' => $appointment->start_time,
-                'status' => $appointment->status,
-                'duration' => $appointment->appointment_duration,
-                'created_at' => $appointment->created_at,
-                'created_by' => $appointment->created_by,
-                'updated_at' => $appointment->updated_at,
-                'updated_by' => $appointment->updated_by,
-                'doctor' => [
-                    'id' => $appointment->doctor_id,
-                    'name' => $appointment->doctor_name,
-                ],
-                'patient' => [
-                    'id' => $appointment->id_patient,
-                    'name' => $appointment->patient_name,
-                ],
-                'clinic' => [
-                    'id' => $appointment->clinic_id,
-                    'name' => $appointment->clinic_name,
-                ],
-                'schedule_id' => $appointment->id_schedule,
-            ];
-        }, $appointments);
-    }
 }
