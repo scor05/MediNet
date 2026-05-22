@@ -16,9 +16,16 @@ services:
   frontend:
     build: ./frontend
     container_name: medinet_frontend
-    ports:
-      - "80:80"
+    expose:
+      - "80"
+    networks:
+      - default
+      - proxy
     restart: unless-stopped
 
 volumes:
   vendor_data:
+
+networks:
+  proxy:
+    external: true
