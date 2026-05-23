@@ -7,6 +7,7 @@ import 'package:frontend/features/auth/domain/repositories/auth_repository.dart'
 import 'package:frontend/features/auth/domain/usecases/get_profile_usecase.dart';
 import 'package:frontend/features/auth/domain/usecases/login_usecase.dart';
 import 'package:frontend/features/auth/domain/usecases/register_usecase.dart';
+import 'package:frontend/features/user/domain/providers/user_domain_providers.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepositoryImpl(AuthRemoteDatasource());
@@ -59,6 +60,7 @@ class AuthNotifier extends Notifier<AuthState> {
       return;
     }
 
+    await _saveFcmToken();
     await _loadProfile();
   }
 
@@ -82,7 +84,16 @@ class AuthNotifier extends Notifier<AuthState> {
       return;
     }
 
+    await _saveFcmToken();
     await _loadProfile();
+  }
+
+  Future<void> _saveFcmToken() async {
+    try {
+      await ref.read(saveFcmTokenUsecaseProvider)();
+    } catch (_) {
+      // Si falla el token, igual se deja iniciar sesión.
+    }
   }
 
   Future<void> _loadProfile() async {

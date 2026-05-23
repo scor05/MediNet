@@ -43,6 +43,21 @@ class UserController extends Controller
         return response()->json($this->service->update($id, $validated));
     }
 
+    // Se guarda el token FCM del usuario
+    public function saveFcmToken(Request $request)
+    {
+        $validated = $request->validate([
+            'fcm_token' => 'required|string',
+        ]);
+
+        return response()->json(
+            $this->service->updateFcmToken(
+                $request->user()->id,
+                $validated['fcm_token']
+            )
+        );
+    }
+
     // Se elimina un usuario
     public function destroy($id)
     {

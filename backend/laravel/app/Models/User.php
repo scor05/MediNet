@@ -13,6 +13,7 @@ class User extends Model
         'name',
         'email',
         'phone',
+        'fcm_token',
         'is_active',
     ];
 
