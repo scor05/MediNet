@@ -1,6 +1,8 @@
 import 'dart:convert';
 
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:frontend/config/app_config.dart';
+import 'package:frontend/core/services/firebase_support_service.dart';
 import 'package:frontend/core/network/api_exception_handler.dart';
 import 'package:frontend/features/user/data/models/user_model.dart';
 import 'package:http/http.dart' as http;
@@ -28,6 +30,32 @@ class UserRemoteDatasource {
       final List<dynamic> data = jsonDecode(response.body);
       return data.map((e) => UserModel.fromSearch(e)).toList();
     } else {
+      throw handleApiError(response);
+    }
+  }
+
+  // Guarda el token FCM del usuario
+  Future<void> saveFcmToken() async {
+    if (!FirebaseSupportService.supportsMessaging) return;
+
+    final fcmToken = await FirebaseMessaging.instance.getToken();
+    if (fcmToken == null) return;
+
+    final token = Supabase.instance.client.auth.currentSession?.accessToken;
+
+    final response = await http
+        .post(
+          Uri.parse('${AppConfig.apiUrl}/users/fcm-token'),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode({'fcm_token': fcmToken}),
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode != 200) {
       throw handleApiError(response);
     }
   }

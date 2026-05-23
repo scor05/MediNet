@@ -41,6 +41,12 @@ class UserService
         return $this->repository->update($id, $data);
     }
 
+    // Se guarda el token FCM del usuario
+    public function updateFcmToken(int $id, string $fcmToken)
+    {
+        return $this->repository->updateFcmToken($id, $fcmToken);
+    }
+
     // Se elimina un usuario
     public function delete($id)
     {
