@@ -193,4 +193,81 @@ class CalendarRepository
 
         return $query->orderBy('sb.date')->orderBy('sb.start_time')->get()->toArray();
     }
+
+    // Se obtienen todos los bloqueos de un doctor en un rango de fechas
+    public function getBlockadesForDoctor(
+        int $doctorId,
+        ?string $dateFrom,
+        ?string $dateTo,
+    ): array {
+        $query = DB::table('schedule_blockades AS sb')
+            ->join('schedules AS s', 's.id', '=', 'sb.id_schedule')
+            ->join('users AS doctor', 'doctor.id', '=', 's.id_doctor')
+            ->join('clinics AS cl', 'cl.id', '=', 's.id_clinic')
+            ->select([
+                'sb.id',
+                'sb.id_schedule',
+                'sb.date',
+                'sb.start_time',
+                'sb.end_time',
+                'doctor.id   AS doctor_id',
+                'doctor.name AS doctor_name',
+                'cl.id       AS clinic_id',
+                'cl.name     AS clinic_name',
+            ])
+            ->where('s.id_doctor', $doctorId);
+
+        if ($dateFrom !== null) {
+            $query->where('sb.date', '>=', $dateFrom);
+        }
+        if ($dateTo !== null) {
+            $query->where('sb.date', '<=', $dateTo);
+        }
+
+        return $query->orderBy('sb.date')->orderBy('sb.start_time')->get()->toArray();
+    }
+
+    // Se obtienen todos los bloqueos visibles para una secretaria en un rango de fechas
+    public function getBlockadesForSecretary(
+        int $secretaryId,
+        ?string $dateFrom,
+        ?string $dateTo,
+    ): array {
+        $query = DB::table('schedule_blockades AS sb')
+            ->join('schedules AS s', 's.id', '=', 'sb.id_schedule')
+            ->join('users AS doctor', 'doctor.id', '=', 's.id_doctor')
+            ->join('clinics AS cl', 'cl.id', '=', 's.id_clinic')
+            // Solo bloqueos de doctores del mismo cliente que la secretaria
+            ->join('client_users AS cu_doc', function ($join) {
+                $join->on('cu_doc.id_user', '=', 's.id_doctor')
+                    ->where('cu_doc.role', '=', 1)
+                    ->where('cu_doc.is_active', '=', true);
+            })
+            ->join('client_users AS cu_sec', function ($join) use ($secretaryId) {
+                $join->on('cu_sec.id_client', '=', 'cu_doc.id_client')
+                    ->where('cu_sec.id_user', '=', $secretaryId)
+                    ->where('cu_sec.role', '=', 2)
+                    ->where('cu_sec.is_active', '=', true);
+            })
+            ->select([
+                'sb.id',
+                'sb.id_schedule',
+                'sb.date',
+                'sb.start_time',
+                'sb.end_time',
+                'doctor.id   AS doctor_id',
+                'doctor.name AS doctor_name',
+                'cl.id       AS clinic_id',
+                'cl.name     AS clinic_name',
+            ]);
+
+        if ($dateFrom !== null) {
+            $query->where('sb.date', '>=', $dateFrom);
+        }
+        if ($dateTo !== null) {
+            $query->where('sb.date', '<=', $dateTo);
+        }
+
+        return $query->orderBy('sb.date')->orderBy('sb.start_time')->get()->toArray();
+    }
 }
