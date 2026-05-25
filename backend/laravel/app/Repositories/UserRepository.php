@@ -34,6 +34,14 @@ class UserRepository
         return $user;
     }
 
+    // Se guarda el token FCM del usuario
+    public function updateFcmToken(int $id, string $fcmToken)
+    {
+        $user = User::findOrFail($id);
+        $user->update(['fcm_token' => $fcmToken]);
+        return $user;
+    }
+
     // Se elimina un usuario
     public function delete($id)
     {

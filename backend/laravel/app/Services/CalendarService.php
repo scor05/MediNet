@@ -24,7 +24,17 @@ class CalendarService
             dateFrom: $dateFrom,
             dateTo: $dateTo
         );
-        return $this->formatAppointments($appointments);
+
+        $blockades = $this->calendarRepository->getBlockadesForDoctor(
+            doctorId: $doctorId,
+            dateFrom: $dateFrom,
+            dateTo: $dateTo
+        );
+
+        return array_merge(
+            $this->formatAppointments($appointments),
+            $this->formatBlockades($blockades)
+        );
     }
 
     // Se obtienen todas las citas que maneja una secretaria, con posibilidad de filtrarlas
@@ -45,7 +55,16 @@ class CalendarService
             status: $status,
         );
 
-        return $this->formatAppointments($appointments);
+        $blockades = $this->calendarRepository->getBlockadesForSecretary(
+            secretaryId: $secretaryId,
+            dateFrom: $dateFrom,
+            dateTo: $dateTo
+        );
+
+        return array_merge(
+            $this->formatAppointments($appointments),
+            $this->formatBlockades($blockades)
+        );
     }
 
     // Se obtienen todas las citas de un paciente, con posibilidad de filtrarlas
@@ -116,6 +135,29 @@ class CalendarService
                 'schedule_id' => $appt->id_schedule,
             ];
         }, $appointments);
+    }
+
+    // Se formatean los bloqueos para incluirlos en la respuesta del calendario
+    private function formatBlockades(array $blockades): array
+    {
+        return array_map(function ($blockade) {
+            return [
+                'id'          => $blockade->id,
+                'type'        => 'blockade',
+                'date'        => $blockade->date,
+                'start_time'  => $blockade->start_time,
+                'end_time'    => $blockade->end_time,
+                'schedule_id' => $blockade->id_schedule,
+                'doctor'      => [
+                    'id'   => $blockade->doctor_id,
+                    'name' => $blockade->doctor_name,
+                ],
+                'clinic'      => [
+                    'id'   => $blockade->clinic_id,
+                    'name' => $blockade->clinic_name,
+                ],
+            ];
+        }, $blockades);
     }
 
     private function formatPublicAppointments(array $appointments): array

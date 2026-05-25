@@ -14,6 +14,7 @@ class DayColumn extends StatelessWidget {
   final int startHour;
   final int endHour;
   final double hourHeight;
+  final void Function(Appointment)? onBlockadeTap;
 
   const DayColumn({
     super.key,
@@ -25,6 +26,7 @@ class DayColumn extends StatelessWidget {
     required this.startHour,
     required this.endHour,
     required this.hourHeight,
+    this.onBlockadeTap,
   });
 
   double _topFromTime(String time) {
@@ -130,6 +132,9 @@ class DayColumn extends StatelessWidget {
                 appointment: appointment,
                 showDoctor: showDoctor,
                 showPatient: showPatient,
+                onTap: appointment.isBlockade
+                    ? () => onBlockadeTap?.call(appointment)
+                    : null,
               ),
             );
           }),

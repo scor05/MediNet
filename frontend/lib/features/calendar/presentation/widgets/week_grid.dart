@@ -12,6 +12,7 @@ class WeekGrid extends StatelessWidget {
   final int startHour;
   final int endHour;
   final double hourHeight;
+  final void Function(Appointment)? onBlockadeTap;
 
   const WeekGrid({
     super.key,
@@ -23,6 +24,7 @@ class WeekGrid extends StatelessWidget {
     required this.startHour,
     required this.endHour,
     required this.hourHeight,
+    this.onBlockadeTap,
   });
 
   @override
@@ -57,6 +59,7 @@ class WeekGrid extends StatelessWidget {
               startHour: startHour,
               endHour: endHour,
               hourHeight: hourHeight,
+              onBlockadeTap: onBlockadeTap,
             ),
           );
         }),
