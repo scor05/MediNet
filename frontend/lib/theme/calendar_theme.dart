@@ -37,6 +37,7 @@ class CalendarColors {
   // FAB colors
   static const Color createAppointmentFab = AppColors.success;
   static const Color createScheduleFab = AppColors.warning;
+  static const Color blockScheduleFab = AppColors.error;
 
   // Overlay
   static const Color fabOverlay = AppColors.overlay;

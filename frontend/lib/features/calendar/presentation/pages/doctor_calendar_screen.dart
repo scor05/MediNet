@@ -49,6 +49,12 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
     await showCreateScheduleSheet(context: context);
   }
 
+  Future<void> _openBlockSchedule() async {
+    _closeFab();
+
+    await showBlockScheduleSheet(context: context);
+  }
+
   @override
   Widget build(BuildContext context) {
     final calendarAsync = ref.watch(doctorCalendarNotifierProvider);
@@ -97,6 +103,7 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
             onToggle: _toggleFab,
             onCreateAppointment: _openCreateAppointment,
             onCreateSchedule: _openCreateSchedule,
+            onBlockSchedule: _openBlockSchedule,
           ),
         ],
       ),

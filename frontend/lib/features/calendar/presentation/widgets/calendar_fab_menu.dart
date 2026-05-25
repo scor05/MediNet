@@ -7,6 +7,7 @@ class CalendarFabMenu extends StatelessWidget {
   final VoidCallback onToggle;
   final VoidCallback onCreateAppointment;
   final VoidCallback onCreateSchedule;
+  final VoidCallback? onBlockSchedule;
 
   const CalendarFabMenu({
     super.key,
@@ -14,6 +15,7 @@ class CalendarFabMenu extends StatelessWidget {
     required this.onToggle,
     required this.onCreateAppointment,
     required this.onCreateSchedule,
+    this.onBlockSchedule,
   });
 
   @override
@@ -39,6 +41,15 @@ class CalendarFabMenu extends StatelessWidget {
               color: CalendarColors.createScheduleFab,
               onTap: onCreateSchedule,
             ),
+            if (onBlockSchedule != null) ...[
+              const SizedBox(height: 8),
+              FabMenuItem(
+                label: 'Bloquear horario',
+                icon: Icons.block,
+                color: CalendarColors.blockScheduleFab,
+                onTap: onBlockSchedule!,
+              ),
+            ],
           ],
           const SizedBox(height: 16),
           FloatingActionButton(
