@@ -3,13 +3,19 @@
 namespace App\Services;
 
 use App\Repositories\AppointmentRepository;
+use App\Repositories\ScheduleBlockadeRepository;
 use App\Services\UserService;
+use App\Services\NotificationService;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\DB;
 
 class AppointmentService
 {
     // Se inyecta el repositorio
-    public function __construct(private AppointmentRepository $repository, private UserService $userService)
+    public function __construct(private AppointmentRepository $repository,
+        private UserService $userService,
+        private ScheduleBlockadeRepository $blockadeRepository,
+        private NotificationService $notificationService)
     {
     }
 
@@ -45,6 +51,7 @@ class AppointmentService
     public function update(int $id, array $data)
     {
         $appointment = $this->repository->findById($id);
+        $oldAppointment = clone $appointment;
 
         $idSchedule = $appointment->id_schedule;
         $date = $data['date'] ?? $appointment->date;
@@ -67,7 +74,131 @@ class AppointmentService
             $data['name_patient'] = $this->userService->getById($data['id_patient'])?->name;
         }
 
-        return $this->repository->update($id, $data);
+        $appointment = DB::transaction(function () use ($id, $data, $oldAppointment) {
+            $appointment = $this->repository->update($id, $data);
+            $this->notifyUpdatedAppointment($oldAppointment, $appointment);
+
+            return $appointment;
+        });
+
+        return $appointment;
+    }
+
+    private function notifyUpdatedAppointment($oldAppointment, $newAppointment)
+    {
+        $changes = $this->getAppointmentChanges($oldAppointment, $newAppointment);
+
+        if (empty($changes)) {
+            return;
+        }
+
+        $ctx = $this->repository->findNotificationContext($newAppointment->id);
+        $type = $this->getNotificationType($oldAppointment, $newAppointment);
+        $changesText = implode("\n", $changes);
+
+        // Enviar notificación al paciente
+        $patient_msg = "Su cita con el Dr.{$ctx->doctor_name} el {$this->formatDate($ctx->date)} ha cambiado:\n{$changesText}";
+
+        if ($newAppointment->id_patient !== null) {
+            $this->notificationService->create([
+                'id_user' => $newAppointment->id_patient,
+                'type' => $type,
+                'message' => $patient_msg,
+                'channel' => 'push',
+            ]);
+        }
+
+        // Enviar notificación a secretarias
+        $secretary_msg = "La cita con el paciente {$ctx->patient_name} con el Dr.{$ctx->doctor_name} el {$this->formatDate($ctx->date)} ha cambiado:\n{$changesText}";
+        $secretaries = $this->repository->findSecretariesByClient($ctx->client_id);
+
+        foreach ($secretaries as $s) {
+            $this->notificationService->create([
+                'id_user' => $s->id,
+                'type' => $type,
+                'message' => $secretary_msg,
+                'channel' => 'push',
+            ]);
+        }
+    }
+
+    private function getAppointmentChanges($oldAppointment, $newAppointment): array
+    {
+        $changes = [];
+
+        if ($oldAppointment->status !== $newAppointment->status) {
+            $changes[] = 'Estado: '
+                . $this->formatStatus($oldAppointment->status)
+                . ' -> '
+                . $this->formatStatus($newAppointment->status);
+        }
+
+        if ($oldAppointment->date !== $newAppointment->date) {
+            $changes[] = 'Fecha: '
+                . $this->formatDate($oldAppointment->date)
+                . ' -> '
+                . $this->formatDate($newAppointment->date);
+        }
+
+        if ($this->formatTime($oldAppointment->start_time) !== $this->formatTime($newAppointment->start_time)) {
+            $changes[] = 'Hora de inicio: '
+                . $this->formatTime($oldAppointment->start_time)
+                . ' -> '
+                . $this->formatTime($newAppointment->start_time);
+        }
+
+        if ($oldAppointment->name_patient !== $newAppointment->name_patient) {
+            $changes[] = 'Paciente: '
+                . $oldAppointment->name_patient
+                . ' -> '
+                . $newAppointment->name_patient;
+        }
+
+        return $changes;
+    }
+
+    private function getNotificationType($oldAppointment, $newAppointment): string
+    {
+        if ($oldAppointment->status !== $newAppointment->status) {
+            return match ($newAppointment->status) {
+                'accepted' => 'acceptance',
+                'rejected' => 'rejection',
+                'cancelled' => 'cancellation',
+                'rescheduled' => 'reschedule',
+                default => 'reminder',
+            };
+        }
+
+        if (
+            $oldAppointment->date !== $newAppointment->date ||
+            $this->formatTime($oldAppointment->start_time) !== $this->formatTime($newAppointment->start_time)
+        ) {
+            return 'reschedule';
+        }
+
+        return 'reminder';
+    }
+
+    private function formatDate($date): string
+    {
+        return date('d/m/Y', strtotime((string) $date));
+    }
+
+    private function formatTime($time): string
+    {
+        return substr((string) $time, 0, 5);
+    }
+
+    private function formatStatus(string $status): string
+    {
+        return match ($status) {
+            'requested' => 'Solicitada',
+            'accepted' => 'Aceptada',
+            'rejected' => 'Rechazada',
+            'cancelled' => 'Cancelada',
+            'rescheduled' => 'Recalendarizada',
+            default => $status,
+        };
     }
 
     // Se elimina una cita
@@ -93,6 +224,18 @@ class AppointmentService
         if ($conflict) {
             throw ValidationException::withMessages([
                 'start_time' => ['Ya existe una cita en ese horario'],
+            ]);
+        }
+
+        $blockade = $this->blockadeRepository->findBlockadeAtTime(
+            $idSchedule,
+            $date,
+            $startTime
+        );
+
+        if ($blockade) {
+            throw ValidationException::withMessages([
+                'start_time' => ['Ese horario está bloqueado y no permite nuevas citas.'],
             ]);
         }
     }

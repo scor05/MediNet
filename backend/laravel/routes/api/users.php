@@ -6,6 +6,8 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ScheduleController;
 
 Route::prefix('users')->group(function () {
+    Route::post('/fcm-token', [UserController::class, 'saveFcmToken']);
+
     Route::get('/available/{clientId}', [UserController::class, 'availableForClient']);
     Route::get('/available', [UserController::class, 'available']);
 

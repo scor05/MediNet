@@ -49,6 +49,51 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
     await showCreateScheduleSheet(context: context);
   }
 
+  Future<void> _openBlockSchedule() async {
+    _closeFab();
+    await showBlockScheduleSheet(context: context);
+  }
+
+  Future<void> _onBlockadeTap(appointment) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Eliminar bloqueo'),
+        content: const Text(
+          '¿Deseas eliminar este bloqueo de horario?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    try {
+      await ref
+          .read(doctorCalendarNotifierProvider.notifier)
+          .deleteBlockade(appointment.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Bloqueo eliminado')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final calendarAsync = ref.watch(doctorCalendarNotifierProvider);
@@ -86,6 +131,7 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
             weekStart: weekStart,
             onRetry: ref.read(doctorCalendarNotifierProvider.notifier).refresh,
             showPatient: true,
+            onBlockadeTap: _onBlockadeTap,
           ),
           if (_fabOpen)
             GestureDetector(
@@ -97,6 +143,7 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
             onToggle: _toggleFab,
             onCreateAppointment: _openCreateAppointment,
             onCreateSchedule: _openCreateSchedule,
+            onBlockSchedule: _openBlockSchedule,
           ),
         ],
       ),

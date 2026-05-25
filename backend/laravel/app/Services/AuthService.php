@@ -41,9 +41,9 @@ class AuthService
     {
         $cacheKey = 'supabase_token_' . hash('sha256', $token);
 
-        return Cache::store('file')->remember($cacheKey, 60, function () use ($token) {
+        return Cache::store('file')->remember($cacheKey, 300, function () use ($token) {
             try {
-                $response = Http::withHeaders([
+                $response = Http::timeout(8)->withHeaders([
                     'Authorization' => 'Bearer ' . $token,
                     'apikey' => $this->anonKey,
                 ])->get($this->url . '/auth/v1/user');

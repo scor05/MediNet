@@ -47,3 +47,9 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Auto-generated plugin registrants
+**/GeneratedPluginRegistrant.java
+**/GeneratedPluginRegistrant.swift
+**/GeneratedPluginRegistrant.h
+**/GeneratedPluginRegistrant.m
+

@@ -12,6 +12,7 @@ class CalendarBody extends ConsumerStatefulWidget {
   final VoidCallback onRetry;
   final bool showDoctor;
   final bool showPatient;
+  final void Function(Appointment)? onBlockadeTap;
 
   const CalendarBody({
     super.key,
@@ -20,6 +21,7 @@ class CalendarBody extends ConsumerStatefulWidget {
     required this.onRetry,
     this.showDoctor = false,
     this.showPatient = false,
+    this.onBlockadeTap,
   });
 
   @override
