@@ -19,7 +19,7 @@ class GenericNotificationMail extends Mailable
             ->view('emails.notification')
             ->with([
                 'user' => $this->user,
-                'message' => $this->notificationMessage,
+                'notificationMessage' => $this->notificationMessage,
             ]);
     }
 }

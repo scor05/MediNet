@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\GenericNotificationMail;
+use App\Services\Notifications\WhatsAppNotificationChannel;
 
 class NotificationService
 {
@@ -23,10 +24,12 @@ class NotificationService
         'email',
         'sms',
         'push',
+        'whatsapp',
     ];
 
-    public function __construct(private NotificationRepository $repository)
+    public function __construct(private NotificationRepository $repository, private WhatsAppNotificationChannel $whatsAppChannel)
     {
+        
     }
 
     // Se obtienen todas las notificaciones
@@ -110,6 +113,7 @@ class NotificationService
             'email' => $this->sendEmail($user, $message),
             'sms' => $this->sendSms($user, $message),
             'push' => $this->sendPush($user, $message),
+            'whatsapp' => $this->whatsAppChannel->send($user, $message),
             default => null,
         };
     }
