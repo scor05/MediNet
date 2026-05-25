@@ -5,6 +5,8 @@ import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/appointment/domain/providers/appointment_domain_providers.dart';
 import 'package:frontend/features/schedule/domain/entities/schedule.dart';
 import 'package:frontend/features/schedule/domain/providers/schedule_domain_providers.dart';
+import 'package:frontend/features/schedule_blockade/domain/entities/schedule_blockade.dart';
+import 'package:frontend/features/schedule_blockade/domain/providers/schedule_blockade_domain_providers.dart';
 
 /*
 -------------------------------------- Notifier -----------------------------------------
@@ -56,6 +58,24 @@ class SecretaryCalendarNotifier extends AsyncNotifier<List<Appointment>> {
 
   Future<List<Schedule>> getDoctorSchedules() async {
     return ref.read(getDoctorSchedulesUsecaseProvider).call();
+  }
+
+  Future<List<Schedule>> getSchedulesByDoctorId(int doctorId) {
+    return ref.read(getSchedulesByDoctorIdUsecaseProvider).call(doctorId);
+  }
+
+  Future<ScheduleBlockade> createBlockade({
+    required int scheduleId,
+    required DateTime date,
+    required TimeOfDay startTime,
+    required TimeOfDay endTime,
+  }) {
+    return ref.read(createScheduleBlockadeUsecaseProvider).call(
+          scheduleId: scheduleId,
+          date: date,
+          startTime: startTime,
+          endTime: endTime,
+        );
   }
 
   Future<Schedule> createSchedule({
