@@ -34,6 +34,16 @@ class ScheduleBlockadeRepository
         $blockade->delete();
     }
 
+    // Se busca si una hora cae dentro de algún bloqueo activo
+    public function findBlockadeAtTime(int $scheduleId, string $date, string $startTime)
+    {
+        return ScheduleBlockade::where('id_schedule', $scheduleId)
+            ->where('date', $date)
+            ->where('start_time', '<=', $startTime)
+            ->where('end_time', '>', $startTime)
+            ->first();
+    }
+
     // Se buscan citas aceptadas que se solapan con el rango del bloqueo
     public function findOverlappingAppointments(
         int $scheduleId,
