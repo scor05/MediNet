@@ -38,7 +38,7 @@ class NotificationController extends Controller
             'id_user' => 'required|integer|exists:users,id',
             'type'    => ['required', Rule::in(['reminder', 'cancellation', 'reschedule', 'acceptance', 'rejection'])],
             'message' => 'required|string',
-            'channel' => ['required', Rule::in(['email', 'sms', 'push'])],
+            'channel' => ['required', Rule::in(['email', 'sms', 'push', 'whatsapp'])],
         ]);
 
         return response()->json($this->service->create($validated), 201);

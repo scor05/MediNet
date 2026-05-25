@@ -24,7 +24,7 @@ class NotificationPreferenceController extends Controller
     {
         $validated = $request->validate([
             'channels'   => 'required|array',
-            'channels.*' => ['required', Rule::in(['email', 'sms', 'push'])],
+            'channels.*' => ['required', Rule::in(['email', 'sms', 'push', 'whatsapp'])],
         ]);
 
         return response()->json($this->service->updatePreferences($userId, $validated['channels']));
