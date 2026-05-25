@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Repositories\AppointmentRepository;
 use App\Repositories\PublicRepository;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -11,6 +12,7 @@ class PublicService
     // Se inyecta el repositorio
     public function __construct(
         private PublicRepository $repository,
+        private AppointmentRepository $appointmentRepository,
         private NotificationService $notificationService
     ) {
     }
@@ -65,8 +67,8 @@ class PublicService
     // Se notifica a secretarias del cliente
     private function notifyRequestedAppointment(int $appointment_id)
     {
-        $context = $this->repository->findAppointmentNotificationContext($appointment_id);
-        $secretaries = $this->repository->findSecretariesByClient($context->client_id);
+        $context = $this->appointmentRepository->findNotificationContext($appointment_id);
+        $secretaries = $this->appointmentRepository->findSecretariesByClient($context->client_id);
 
         foreach ($secretaries as $s) {
             $this->notificationService->create([
