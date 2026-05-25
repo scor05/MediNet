@@ -51,6 +51,7 @@ class AppointmentService
     public function update(int $id, array $data)
     {
         $appointment = $this->repository->findById($id);
+        $oldAppointment = clone $appointment;
 
         $idSchedule = $appointment->id_schedule;
         $date = $data['date'] ?? $appointment->date;
@@ -73,12 +74,9 @@ class AppointmentService
             $data['name_patient'] = $this->userService->getById($data['id_patient'])?->name;
         }
 
-        $appointment = DB::transaction(function () use ($id, $data) {
+        $appointment = DB::transaction(function () use ($id, $data, $oldAppointment) {
             $appointment = $this->repository->update($id, $data);
-
-            if (in_array($appointment->status, ['accepted', 'rejected'], true)) {
-                $this->notifyUpdatedAppointment($appointment->id, $appointment->id_patient);
-            }
+            $this->notifyUpdatedAppointment($oldAppointment, $appointment);
 
             return $appointment;
         });
@@ -86,39 +84,121 @@ class AppointmentService
         return $appointment;
     }
 
-    private function notifyUpdatedAppointment(int $appointment_id, int $patient_id)
+    private function notifyUpdatedAppointment($oldAppointment, $newAppointment)
     {
+        $changes = $this->getAppointmentChanges($oldAppointment, $newAppointment);
 
-        $ctx = $this->repository->findNotificationContext($appointment_id);
-        $appointment = $this->repository->findById($appointment_id);
-        $status = ($appointment->status === 'accepted') ? 'acceptance' : 'rejection';
+        if (empty($changes)) {
+            return;
+        }
 
-        // Enviar notificación a paciente
-        $patient_msg = ($status === 'acceptance')
-            ? "Su cita con el Dr.{$ctx->doctor_name} el {$ctx->date} a las {$ctx->start_time} ha sido aceptada."
-            : "Su cita con el Dr.{$ctx->doctor_name} el {$ctx->date} a las {$ctx->start_time} ha sido rechazada.";
+        $ctx = $this->repository->findNotificationContext($newAppointment->id);
+        $type = $this->getNotificationType($oldAppointment, $newAppointment);
+        $changesText = implode("\n", $changes);
 
-        $this->notificationService->create([
-            'id_user' => $patient_id,
-            'type' => $status,
-            'message' => $patient_msg,
-            'channel' => 'push',
-        ]);
+        // Enviar notificación al paciente
+        $patient_msg = "Su cita con el Dr.{$ctx->doctor_name} el {$this->formatDate($ctx->date)} ha cambiado:\n{$changesText}";
+
+        if ($newAppointment->id_patient !== null) {
+            $this->notificationService->create([
+                'id_user' => $newAppointment->id_patient,
+                'type' => $type,
+                'message' => $patient_msg,
+                'channel' => 'push',
+            ]);
+        }
 
         // Enviar notificación a secretarias
+        $secretary_msg = "La cita con el paciente {$ctx->patient_name} con el Dr.{$ctx->doctor_name} el {$this->formatDate($ctx->date)} ha cambiado:\n{$changesText}";
         $secretaries = $this->repository->findSecretariesByClient($ctx->client_id);
-        $secretary_msg = ($status === 'acceptance')
-            ? "Se ha aceptado la cita con el paciente {$ctx->patient_name} con Dr.{$ctx->doctor_name} el {$ctx->date} a las {$ctx->start_time}."
-            : "La cita con el paciente {$ctx->patient_name} con Dr.{$ctx->doctor_name} del {$ctx->date} a las {$ctx->start_time} fue rechazada.";
 
         foreach ($secretaries as $s) {
             $this->notificationService->create([
                 'id_user' => $s->id,
-                'type' => $status,
+                'type' => $type,
                 'message' => $secretary_msg,
                 'channel' => 'push',
             ]);
         }
+    }
+
+    private function getAppointmentChanges($oldAppointment, $newAppointment): array
+    {
+        $changes = [];
+
+        if ($oldAppointment->status !== $newAppointment->status) {
+            $changes[] = 'Estado: '
+                . $this->formatStatus($oldAppointment->status)
+                . ' -> '
+                . $this->formatStatus($newAppointment->status);
+        }
+
+        if ($oldAppointment->date !== $newAppointment->date) {
+            $changes[] = 'Fecha: '
+                . $this->formatDate($oldAppointment->date)
+                . ' -> '
+                . $this->formatDate($newAppointment->date);
+        }
+
+        if ($this->formatTime($oldAppointment->start_time) !== $this->formatTime($newAppointment->start_time)) {
+            $changes[] = 'Hora de inicio: '
+                . $this->formatTime($oldAppointment->start_time)
+                . ' -> '
+                . $this->formatTime($newAppointment->start_time);
+        }
+
+        if ($oldAppointment->name_patient !== $newAppointment->name_patient) {
+            $changes[] = 'Paciente: '
+                . $oldAppointment->name_patient
+                . ' -> '
+                . $newAppointment->name_patient;
+        }
+
+        return $changes;
+    }
+
+    private function getNotificationType($oldAppointment, $newAppointment): string
+    {
+        if ($oldAppointment->status !== $newAppointment->status) {
+            return match ($newAppointment->status) {
+                'accepted' => 'acceptance',
+                'rejected' => 'rejection',
+                'cancelled' => 'cancellation',
+                'rescheduled' => 'reschedule',
+                default => 'reminder',
+            };
+        }
+
+        if (
+            $oldAppointment->date !== $newAppointment->date ||
+            $this->formatTime($oldAppointment->start_time) !== $this->formatTime($newAppointment->start_time)
+        ) {
+            return 'reschedule';
+        }
+
+        return 'reminder';
+    }
+
+    private function formatDate($date): string
+    {
+        return date('d/m/Y', strtotime((string) $date));
+    }
+
+    private function formatTime($time): string
+    {
+        return substr((string) $time, 0, 5);
+    }
+
+    private function formatStatus(string $status): string
+    {
+        return match ($status) {
+            'requested' => 'Solicitada',
+            'accepted' => 'Aceptada',
+            'rejected' => 'Rechazada',
+            'cancelled' => 'Cancelada',
+            'rescheduled' => 'Recalendarizada',
+            default => $status,
+        };
     }
 
     // Se elimina una cita
