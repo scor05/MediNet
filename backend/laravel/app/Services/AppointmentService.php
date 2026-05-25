@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Repositories\AppointmentRepository;
 use App\Repositories\ScheduleBlockadeRepository;
 use App\Services\UserService;
+use App\Services\NotificationService;
 use Illuminate\Validation\ValidationException;
 
 class AppointmentService

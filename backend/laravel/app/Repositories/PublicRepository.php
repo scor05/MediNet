@@ -155,6 +155,42 @@ class PublicRepository
         return Appointment::create($data);
     }
 
+    // Retorna datos para mandar notificación en PublicService
+    public function findAppointmentNotificationContext(int $appointment_id)
+    {
+        return DB::table('appointments')
+        ->join('schedules', 'schedules.id', '=', 'appointments.id_schedule')
+        ->join('clinics', 'clinics.id', '=', 'schedules.id_clinic')
+        ->join('users as doctor', 'doctor.id', '=', 'schedules.id_doctor')
+        ->where('appointments.id', $appointment_id)
+        ->select([
+            'appointments.id',
+            'appointments.name_patient as patient_name',
+            'appointments.date',
+            'appointments.start_time',
+            'doctor.name as doctor_name',
+            'clinics.id_client as client_id',
+        ])
+        ->first();
+    }
+
+    public function findSecretariesByClient(int $client_id)
+    {
+        return DB::table('users')
+        ->join('client_users', 'client_users.id_user', '=', 'users.id')
+        ->where('client_users.id_client', $client_id)
+        ->where('client_users.role', 2)
+        ->where('client_users.is_active', true)
+        ->where('users.is_active', true)
+        ->select([
+            'users.id',
+            'users.name',
+            'users.email',
+            'users.fcm_token'
+        ])
+        ->get();
+    }
+
     private function timeToMinutes(string $time): int
     {
         [$hour, $minute] = array_map('intval', explode(':', substr($time, 0, 5)));
