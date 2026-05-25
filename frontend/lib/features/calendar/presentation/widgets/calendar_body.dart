@@ -4,8 +4,9 @@ import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/core/widgets/error_view.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/calendar/presentation/widgets/week_view.dart';
+import 'package:frontend/features/calendar/presentation/providers/doctor_calendar_provider.dart';
 
-class CalendarBody extends StatelessWidget {
+class CalendarBody extends ConsumerStatefulWidget {
   final AsyncValue<List<Appointment>> calendarAsync;
   final DateTime weekStart;
   final VoidCallback onRetry;
@@ -22,26 +23,57 @@ class CalendarBody extends StatelessWidget {
   });
 
   @override
+  ConsumerState<CalendarBody> createState() => _CalendarBodyState();
+}
+
+class _CalendarBodyState extends ConsumerState<CalendarBody> {
+  @override
   Widget build(BuildContext context) {
-    return calendarAsync.when(
-      skipLoadingOnReload: true,
-      loading: () => const Center(child: CircularProgressIndicator()),
+    final schedulesAsync = ref.watch(doctorSchedulesProvider);
+
+    return schedulesAsync.when(
+      loading: () => const Center(
+        child: CircularProgressIndicator(),
+      ),
+
       error: (e, _) => ErrorView(
-        message: e is ApiException ? e.message : 'Error inesperado.',
-        onRetry: onRetry,
+        message: e is ApiException
+            ? e.message
+            : 'Error cargando horarios.',
+        onRetry: widget.onRetry,
       ),
-      data: (appointments) => Stack(
-        children: [
-          WeekView(
-            weekStart: weekStart,
-            appointments: appointments,
-            showDoctor: showDoctor,
-            showPatient: showPatient,
+
+      data: (schedules) {
+        return widget.calendarAsync.when(
+          skipLoadingOnReload: true,
+
+          loading: () => const Center(
+            child: CircularProgressIndicator(),
           ),
-          if (calendarAsync.isLoading)
-            const LinearProgressIndicator(minHeight: 3),
-        ],
-      ),
+
+          error: (e, _) => ErrorView(
+            message: e is ApiException
+                ? e.message
+                : 'Error inesperado.',
+            onRetry: widget.onRetry,
+          ),
+
+          data: (appointments) => Stack(
+            children: [
+              WeekView(
+                weekStart: widget.weekStart,
+                appointments: appointments,
+                schedules: schedules,
+                showDoctor: widget.showDoctor,
+                showPatient: widget.showPatient,
+              ),
+
+              if (widget.calendarAsync.isLoading)
+                const LinearProgressIndicator(minHeight: 3),
+            ],
+          ),
+        );
+      },
     );
   }
 }

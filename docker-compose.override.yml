@@ -1,0 +1,24 @@
+services:
+  backend:
+    build: ./backend
+    container_name: medinet_backend
+    ports:
+      - "8880:8000"
+    volumes:
+      - ./backend/laravel:/app
+      - vendor_data:/app/vendor
+    env_file:
+      - ./backend/.env
+    tty: true
+    stdin_open: true
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: medinet_frontend
+    ports:
+      - "3055:3000"
+    restart: unless-stopped
+
+volumes:
+  vendor_data:

@@ -3,10 +3,12 @@ import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/calendar/presentation/widgets/time_column.dart';
 import 'package:frontend/features/calendar/presentation/widgets/week_grid.dart';
 import 'package:frontend/features/calendar/presentation/widgets/week_header.dart';
+import 'package:frontend/features/schedule/domain/entities/schedule.dart';
 
 class WeekView extends StatelessWidget {
   final DateTime weekStart;
   final List<Appointment> appointments;
+  final List<Schedule> schedules;
   final bool showDoctor;
   final bool showPatient;
   final bool compact;
@@ -15,6 +17,7 @@ class WeekView extends StatelessWidget {
     super.key,
     required this.weekStart,
     required this.appointments,
+    required this.schedules,
     this.showDoctor = false,
     this.showPatient = false,
     this.compact = false,
@@ -48,6 +51,7 @@ class WeekView extends StatelessWidget {
                   child: WeekGrid(
                     days: days,
                     appointments: appointments,
+                    schedules: schedules,
                     showDoctor: showDoctor,
                     showPatient: showPatient,
                     startHour: startHour,
