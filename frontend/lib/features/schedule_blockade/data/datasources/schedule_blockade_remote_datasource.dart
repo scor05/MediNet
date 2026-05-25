@@ -8,6 +8,24 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ScheduleBlockadeRemoteDatasource {
+  Future<void> deleteBlockade(int id) async {
+    final token = Supabase.instance.client.auth.currentSession?.accessToken;
+
+    final response = await http
+        .delete(
+          Uri.parse('${AppConfig.apiUrl}/schedule-blockades/$id'),
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode != 204) {
+      throw handleApiError(response);
+    }
+  }
+
   Future<ScheduleBlockadeModel> createBlockade({
     required int scheduleId,
     required DateTime date,

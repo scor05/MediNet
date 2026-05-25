@@ -6,12 +6,14 @@ class AppointmentCard extends StatelessWidget {
   final Appointment appointment;
   final bool showDoctor;
   final bool showPatient;
+  final VoidCallback? onTap;
 
   const AppointmentCard({
     super.key,
     required this.appointment,
     this.showDoctor = false,
     this.showPatient = false,
+    this.onTap,
   });
 
   Color _statusColor() {
@@ -45,7 +47,9 @@ class AppointmentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (appointment.isBlockade) return _buildBlockadeCard();
+    if (appointment.isBlockade) {
+      return GestureDetector(onTap: onTap, child: _buildBlockadeCard());
+    }
 
     return Card(
       color: _statusColor(),

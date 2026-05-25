@@ -11,6 +11,7 @@ class CalendarBody extends StatelessWidget {
   final VoidCallback onRetry;
   final bool showDoctor;
   final bool showPatient;
+  final void Function(Appointment)? onBlockadeTap;
 
   const CalendarBody({
     super.key,
@@ -19,6 +20,7 @@ class CalendarBody extends StatelessWidget {
     required this.onRetry,
     this.showDoctor = false,
     this.showPatient = false,
+    this.onBlockadeTap,
   });
 
   @override
@@ -37,6 +39,7 @@ class CalendarBody extends StatelessWidget {
             appointments: appointments,
             showDoctor: showDoctor,
             showPatient: showPatient,
+            onBlockadeTap: onBlockadeTap,
           ),
           if (calendarAsync.isLoading)
             const LinearProgressIndicator(minHeight: 3),

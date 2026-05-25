@@ -8,4 +8,6 @@ abstract class ScheduleBlockadeRepository {
     required TimeOfDay startTime,
     required TimeOfDay endTime,
   });
+
+  Future<void> deleteBlockade(int id);
 }
