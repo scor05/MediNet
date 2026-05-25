@@ -3,13 +3,16 @@
 namespace App\Services;
 
 use App\Repositories\PublicRepository;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class PublicService
 {
     // Se inyecta el repositorio
-    public function __construct(private PublicRepository $repository)
-    {
+    public function __construct(
+        private PublicRepository $repository,
+        private NotificationService $notificationService
+    ) {
     }
 
     // Se obtienen los doctores con horarios activos
@@ -49,6 +52,29 @@ class PublicService
         $data['created_by'] = $data['id_patient'];
         $data['updated_by'] = $data['id_patient'];
 
-        return $this->repository->createAppointment($data);
+        $appointment = DB::transaction(function () use ($data) {
+            $appointment = $this->repository->createAppointment($data);
+            $this->notifyRequestedAppointment($appointment->id);
+
+            return $appointment;
+        });
+
+        return $appointment;
+    }
+
+    // Se notifica a secretarias del cliente
+    private function notifyRequestedAppointment(int $appointment_id)
+    {
+        $context = $this->repository->findAppointmentNotificationContext($appointment_id);
+        $secretaries = $this->repository->findSecretariesByClient($context->client_id);
+
+        foreach ($secretaries as $s) {
+            $this->notificationService->create([
+                'id_user' => $s->id,
+                'type' => 'reminder',
+                'message' => "Se ha solicitado una cita para {$context->patient_name} con Dr.{$context->doctor_name} el {$context->date} a las {$context->start_time}.",
+                'channel' => 'push',
+            ]);
+        }
     }
 }
