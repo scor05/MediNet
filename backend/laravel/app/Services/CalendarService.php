@@ -25,11 +25,8 @@ class CalendarService
             dateTo: $dateTo
         );
 
-        // Se obtienen los IDs de schedules presentes en las citas
-        $scheduleIds = array_unique(array_column($appointments, 'id_schedule'));
-
-        $blockades = $this->calendarRepository->getBlockadesForScheduleIds(
-            scheduleIds: $scheduleIds,
+        $blockades = $this->calendarRepository->getBlockadesForDoctor(
+            doctorId: $doctorId,
             dateFrom: $dateFrom,
             dateTo: $dateTo
         );
@@ -58,11 +55,8 @@ class CalendarService
             status: $status,
         );
 
-        // Se obtienen los IDs de schedules presentes en las citas
-        $scheduleIds = array_unique(array_column($appointments, 'id_schedule'));
-
-        $blockades = $this->calendarRepository->getBlockadesForScheduleIds(
-            scheduleIds: $scheduleIds,
+        $blockades = $this->calendarRepository->getBlockadesForSecretary(
+            secretaryId: $secretaryId,
             dateFrom: $dateFrom,
             dateTo: $dateTo
         );

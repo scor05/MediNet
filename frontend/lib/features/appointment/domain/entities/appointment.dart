@@ -15,6 +15,9 @@ class Appointment {
   final int clinicId;
   final String clinicName;
   final int appointmentDuration;
+  final String? type;
+
+  bool get isBlockade => type == 'blockade';
 
   const Appointment({
     required this.id,
@@ -33,6 +36,7 @@ class Appointment {
     required this.clinicId,
     required this.clinicName,
     required this.appointmentDuration,
+    this.type,
   });
 
   Appointment copyWith({
@@ -52,6 +56,7 @@ class Appointment {
     int? clinicId,
     String? clinicName,
     int? appointmentDuration,
+    String? type,
   }) {
     return Appointment(
       id: id ?? this.id,
@@ -70,6 +75,7 @@ class Appointment {
       clinicId: clinicId ?? this.clinicId,
       clinicName: clinicName ?? this.clinicName,
       appointmentDuration: appointmentDuration ?? this.appointmentDuration,
+      type: type ?? this.type,
     );
   }
 }
