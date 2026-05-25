@@ -117,3 +117,7 @@ final doctorCalendarNotifierProvider =
     AsyncNotifierProvider<DoctorCalendarNotifier, List<Appointment>>(
       DoctorCalendarNotifier.new,
     );
+
+final doctorSchedulesProvider = FutureProvider<List<Schedule>>((ref) async {
+  return ref.read(getDoctorSchedulesUsecaseProvider).call();
+});

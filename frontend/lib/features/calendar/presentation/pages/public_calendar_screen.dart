@@ -83,7 +83,6 @@ class _PublicCalendarScreenState extends ConsumerState<PublicCalendarScreen> {
   @override
   Widget build(BuildContext context) {
     final allAppointmentsAsync = ref.watch(publicCalendarNotifierProvider);
-
     final filters = ref.watch(publicCalendarFilterProvider);
     final weekStart = ref.watch(publicWeekStartProvider);
 
@@ -166,6 +165,7 @@ class _PublicCalendarScreenState extends ConsumerState<PublicCalendarScreen> {
               return WeekView(
                 weekStart: weekStart,
                 appointments: appointments,
+                schedules: const [],
                 compact: true,
               );
             },
