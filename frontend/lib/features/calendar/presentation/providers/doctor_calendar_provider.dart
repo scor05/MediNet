@@ -108,13 +108,49 @@ class DoctorCalendarNotifier extends AsyncNotifier<List<Appointment>> {
     required DateTime date,
     required TimeOfDay startTime,
     required TimeOfDay endTime,
-  }) {
-    return ref.read(createScheduleBlockadeUsecaseProvider).call(
+  }) async {
+    final blockade = await ref.read(createScheduleBlockadeUsecaseProvider).call(
           scheduleId: scheduleId,
           date: date,
           startTime: startTime,
           endTime: endTime,
         );
+    addAppointment(Appointment(
+      id: blockade.id,
+      scheduleId: blockade.idSchedule,
+      patientName: '',
+      date: DateTime.parse(blockade.date),
+      startTime: blockade.startTime,
+      status: 'blockade',
+      createdAt: DateTime.now(),
+      createdBy: 0,
+      updatedAt: DateTime.now(),
+      updatedBy: 0,
+      doctorId: 0,
+      doctorName: '',
+      clinicId: 0,
+      clinicName: '',
+      appointmentDuration: _calcDuration(blockade.startTime, blockade.endTime),
+      type: 'blockade',
+    ));
+    refresh();
+    return blockade;
+  }
+
+  int _calcDuration(String start, String end) {
+    final s = start.split(':');
+    final e = end.split(':');
+    return (int.parse(e[0]) * 60 + int.parse(e[1])) -
+        (int.parse(s[0]) * 60 + int.parse(s[1]));
+  }
+
+  Future<void> deleteBlockade(int id) async {
+    await ref.read(deleteScheduleBlockadeUsecaseProvider).call(id);
+    final current = state.asData?.value;
+    if (current != null) {
+      state = AsyncData(current.where((a) => a.id != id).toList());
+    }
+    await refresh();
   }
 }
 
