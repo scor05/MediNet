@@ -36,4 +36,19 @@ class ScheduleBlockadeRepositoryImpl implements ScheduleBlockadeRepository {
       throw ApiException('Error inesperado. Intenta de nuevo.');
     }
   }
+
+  @override
+  Future<void> deleteBlockade(int id) async {
+    try {
+      await datasource.deleteBlockade(id);
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw ApiException('Sin conexión. Verifica tu internet.');
+    } on TimeoutException {
+      throw ApiException('La solicitud tardó demasiado. Intenta de nuevo.');
+    } catch (e) {
+      throw ApiException('Error inesperado. Intenta de nuevo.');
+    }
+  }
 }
