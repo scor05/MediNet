@@ -3,14 +3,18 @@
 namespace App\Services;
 
 use App\Repositories\AppointmentRepository;
+use App\Repositories\ScheduleBlockadeRepository;
 use App\Services\UserService;
 use Illuminate\Validation\ValidationException;
 
 class AppointmentService
 {
     // Se inyecta el repositorio
-    public function __construct(private AppointmentRepository $repository, private UserService $userService)
-    {
+    public function __construct(
+        private AppointmentRepository $repository,
+        private UserService $userService,
+        private ScheduleBlockadeRepository $blockadeRepository,
+    ) {
     }
 
     // Se obtienen todas las citas
@@ -93,6 +97,18 @@ class AppointmentService
         if ($conflict) {
             throw ValidationException::withMessages([
                 'start_time' => ['Ya existe una cita en ese horario'],
+            ]);
+        }
+
+        $blockade = $this->blockadeRepository->findBlockadeAtTime(
+            $idSchedule,
+            $date,
+            $startTime
+        );
+
+        if ($blockade) {
+            throw ValidationException::withMessages([
+                'start_time' => ['Ese horario está bloqueado y no permite nuevas citas.'],
             ]);
         }
     }
