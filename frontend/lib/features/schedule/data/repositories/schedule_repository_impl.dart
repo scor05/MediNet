@@ -28,6 +28,22 @@ class ScheduleRepositoryImpl implements ScheduleRepository {
     }
   }
 
+  // Se devuelven los horarios de un doctor por ID
+  @override
+  Future<List<Schedule>> getSchedulesByDoctorId(int doctorId) async {
+    try {
+      return await datasource.getSchedulesByDoctorId(doctorId);
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw ApiException('Sin conexión. Verifica tu internet.');
+    } on TimeoutException {
+      throw ApiException('La solicitud tardó demasiado. Intenta de nuevo.');
+    } catch (e) {
+      throw ApiException('Error inesperado. Intenta de nuevo.');
+    }
+  }
+
   // Se crea un horario
   @override
   Future<Schedule> createSchedule({

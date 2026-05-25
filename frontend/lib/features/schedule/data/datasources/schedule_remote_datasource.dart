@@ -30,6 +30,28 @@ class ScheduleRemoteDatasource {
     }
   }
 
+  // Se devuelven los horarios de un doctor por su ID
+  Future<List<ScheduleModel>> getSchedulesByDoctorId(int doctorId) async {
+    final token = Supabase.instance.client.auth.currentSession?.accessToken;
+
+    final response = await http
+        .get(
+          Uri.parse('${AppConfig.apiUrl}/schedules/doctor/$doctorId'),
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((e) => ScheduleModel.fromJson(e)).toList();
+    } else {
+      throw handleApiError(response);
+    }
+  }
+
   // Se crea un horario
   Future<ScheduleModel> createSchedule({
     required int clinicId,

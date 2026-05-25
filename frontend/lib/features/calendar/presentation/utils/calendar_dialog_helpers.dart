@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/calendar/presentation/dialogs/block_schedule_dialog.dart';
+import 'package:frontend/features/calendar/presentation/dialogs/block_schedule_secretary_dialog.dart';
 import 'package:frontend/features/calendar/presentation/dialogs/create_appointment_dialog.dart';
 import 'package:frontend/features/calendar/presentation/dialogs/create_schedule_dialog.dart';
 
@@ -37,5 +38,16 @@ Future<void> showBlockScheduleSheet({required BuildContext context}) {
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
     builder: (_) => const BlockScheduleDialog(),
+  );
+}
+
+Future<void> showBlockScheduleSecretarySheet({required BuildContext context}) {
+  return showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
+    builder: (_) => const BlockScheduleSecretaryDialog(),
   );
 }
