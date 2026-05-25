@@ -6,6 +6,8 @@ use App\Repositories\NotificationRepository;
 use App\Models\NotificationPreference;
 use App\Models\User;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\GenericNotificationMail;
 
 class NotificationService
 {
@@ -112,10 +114,12 @@ class NotificationService
         };
     }
 
-    // Simulación de envío por email
+    // Se envía la notificación por email
     private function sendEmail(User $user, string $message): void
     {
-        // Aquí luego se puede integrar Laravel Mail
+        Mail::to($user->email)->send(
+            new GenericNotificationMail($user, $message)
+        );
     }
 
     // Simulación de envío por SMS
