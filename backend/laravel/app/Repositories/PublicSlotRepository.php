@@ -39,6 +39,12 @@ class PublicSlotRepository
             })
             ->toArray();
 
+        // Se obtienen los bloqueos activos del schedule para esa fecha
+        $blockades = DB::table('schedule_blockades')
+            ->where('id_schedule', $schedule->id)
+            ->whereDate('date', $date)
+            ->get(['start_time', 'end_time']);
+
         $slots = [];
 
         $current = $start->copy();
@@ -46,7 +52,15 @@ class PublicSlotRepository
         while ($current->copy()->addMinutes($duration)->lte($end)) {
             $slot = $current->format('H:i:s');
 
-            if (!in_array($slot, $occupiedSlots)) {
+            // Se verifica que el slot no esté ocupado por una cita
+            $isOccupied = in_array($slot, $occupiedSlots);
+
+            // Se verifica que el slot no caiga dentro de algún bloqueo
+            $isBlocked = $blockades->contains(function ($blockade) use ($slot) {
+                return $slot >= $blockade->start_time && $slot < $blockade->end_time;
+            });
+
+            if (!$isOccupied && !$isBlocked) {
                 $slots[] = $slot;
             }
 
