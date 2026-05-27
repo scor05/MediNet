@@ -206,10 +206,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             SwitchListTile(
               title: const Text('WhatsApp'),
               subtitle: const Text('Recibir notificaciones por WhatsApp.'),
-              value: _selectedChannels.contains('sms'),
+              value: _selectedChannels.contains('whatsapp'),
               onChanged: _savingNotifications
                   ? null
-                  : (value) => _onNotificationChannelChanged('sms', value),
+                  : (value) =>
+                      _onNotificationChannelChanged('whatsapp', value),
             ),
             SwitchListTile(
               title: const Text('Email'),
