@@ -131,6 +131,7 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
             weekStart: weekStart,
             onRetry: ref.read(doctorCalendarNotifierProvider.notifier).refresh,
             showPatient: true,
+            showSchedules: true,
             onBlockadeTap: _onBlockadeTap,
           ),
           if (_fabOpen)

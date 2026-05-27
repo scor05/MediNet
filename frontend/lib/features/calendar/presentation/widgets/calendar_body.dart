@@ -12,6 +12,7 @@ class CalendarBody extends ConsumerStatefulWidget {
   final VoidCallback onRetry;
   final bool showDoctor;
   final bool showPatient;
+  final bool showSchedules;
   final void Function(Appointment)? onBlockadeTap;
 
   const CalendarBody({
@@ -21,6 +22,7 @@ class CalendarBody extends ConsumerStatefulWidget {
     required this.onRetry,
     this.showDoctor = false,
     this.showPatient = false,
+    this.showSchedules = false,
     this.onBlockadeTap,
   });
 
@@ -31,7 +33,9 @@ class CalendarBody extends ConsumerStatefulWidget {
 class _CalendarBodyState extends ConsumerState<CalendarBody> {
   @override
   Widget build(BuildContext context) {
-    final schedulesAsync = ref.watch(doctorSchedulesProvider);
+    final schedulesAsync = widget.showSchedules
+        ? ref.watch(doctorSchedulesProvider)
+        : const AsyncValue.data([]);
 
     return schedulesAsync.when(
       loading: () => const Center(
@@ -68,6 +72,7 @@ class _CalendarBodyState extends ConsumerState<CalendarBody> {
                 schedules: schedules,
                 showDoctor: widget.showDoctor,
                 showPatient: widget.showPatient,
+                onBlockadeTap: widget.onBlockadeTap,
               ),
 
               if (widget.calendarAsync.isLoading)
