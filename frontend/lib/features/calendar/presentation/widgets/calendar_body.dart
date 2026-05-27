@@ -5,6 +5,7 @@ import 'package:frontend/core/widgets/error_view.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/calendar/presentation/widgets/week_view.dart';
 import 'package:frontend/features/calendar/presentation/providers/doctor_calendar_provider.dart';
+import 'package:frontend/features/schedule/domain/entities/schedule.dart';
 
 class CalendarBody extends ConsumerStatefulWidget {
   final AsyncValue<List<Appointment>> calendarAsync;
@@ -35,7 +36,7 @@ class _CalendarBodyState extends ConsumerState<CalendarBody> {
   Widget build(BuildContext context) {
     final schedulesAsync = widget.showSchedules
         ? ref.watch(doctorSchedulesProvider)
-        : const AsyncValue.data([]);
+        : const AsyncValue<List<Schedule>>.data([]);
 
     return schedulesAsync.when(
       loading: () => const Center(
