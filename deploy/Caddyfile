@@ -1,0 +1,6 @@
+medinet.lat {
+    encode zstd gzip
+
+    reverse_proxy /api/* medinet_backend:8000
+    reverse_proxy medinet_frontend:80
+}

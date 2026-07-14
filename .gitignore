@@ -16,5 +16,6 @@ Thumbs.db
 
 # Docker (opcional)
 docker-data/
+medinet-backend*.tar.gz
 #config de supabase
 lib/config/supabase_config.dart
