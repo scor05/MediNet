@@ -1,3 +1,4 @@
+import 'package:frontend/features/user/domain/entities/patient_profile.dart';
 import 'package:frontend/features/user/domain/entities/user.dart';
 
 abstract class UserRepository {
@@ -6,4 +7,7 @@ abstract class UserRepository {
 
   // Guarda el token FCM del usuario
   Future<void> saveFcmToken();
+
+  // Obtiene el perfil básico del paciente autenticado
+  Future<PatientProfile> getPatientProfile();
 }
