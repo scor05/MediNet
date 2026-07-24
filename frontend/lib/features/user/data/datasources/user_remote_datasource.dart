@@ -7,6 +7,7 @@ import 'package:frontend/core/network/api_exception_handler.dart';
 import 'package:frontend/features/user/data/models/user_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:frontend/features/user/data/models/patient_profile_model.dart';
 
 class UserRemoteDatasource {
   // Se obtienen todos los usuarios que no son superadmins
@@ -56,6 +57,28 @@ class UserRemoteDatasource {
         .timeout(const Duration(seconds: 10));
 
     if (response.statusCode != 200) {
+      throw handleApiError(response);
+    }
+  }
+
+  // Obtiene el perfil básico del paciente autenticado
+  Future<PatientProfileModel> getPatientProfile() async {
+    final token = Supabase.instance.client.auth.currentSession?.accessToken;
+
+    final response = await http
+        .get(
+          Uri.parse('${AppConfig.apiUrl}/patient/profile'),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode == 200) {
+      return PatientProfileModel.fromJson(jsonDecode(response.body));
+    } else {
       throw handleApiError(response);
     }
   }

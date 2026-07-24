@@ -5,7 +5,9 @@ import 'package:frontend/features/auth/presentation/providers/auth_provider.dart
 import 'package:frontend/features/calendar/domain/entities/public_slot.dart';
 import 'package:frontend/features/calendar/domain/providers/public_calendar_domain_providers.dart';
 import 'package:frontend/features/clinic/domain/entities/clinic.dart';
+import 'package:frontend/features/user/domain/entities/patient_profile.dart';
 import 'package:frontend/features/user/domain/entities/user.dart';
+import 'package:frontend/features/user/domain/providers/user_domain_providers.dart';
 
 class PublicCreateAppointmentDialog extends ConsumerStatefulWidget {
   final int? initialDoctorId;
@@ -24,6 +26,10 @@ class PublicCreateAppointmentDialog extends ConsumerStatefulWidget {
 
 class _PublicCreateAppointmentDialogState
     extends ConsumerState<PublicCreateAppointmentDialog> {
+  final _nameCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
+
   List<User> _doctors = [];
   List<Clinic> _clinics = [];
   List<PublicSlot> _slots = [];
@@ -32,6 +38,11 @@ class _PublicCreateAppointmentDialogState
   int? _selectedClinicId;
   DateTime _selectedDate = DateTime.now();
   PublicSlot? _selectedSlot;
+
+  PatientProfile? _patientProfile;
+  bool _loadingProfile = false;
+  bool _isProfileLoaded = false;
+  String? _profileError;
 
   bool _loadingInitial = true;
   bool _loadingSlots = false;
@@ -47,6 +58,14 @@ class _PublicCreateAppointmentDialogState
     Future.microtask(_loadInitialData);
   }
 
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _phoneCtrl.dispose();
+    _emailCtrl.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadInitialData() async {
     setState(() {
       _loadingInitial = true;
@@ -54,6 +73,8 @@ class _PublicCreateAppointmentDialogState
     });
 
     try {
+      _loadPatientProfile();
+
       final doctors = await ref
           .read(getPublicDoctorsUsecaseProvider)
           .call(clinicId: _selectedClinicId);
@@ -74,6 +95,42 @@ class _PublicCreateAppointmentDialogState
     } finally {
       if (mounted) {
         setState(() => _loadingInitial = false);
+      }
+    }
+  }
+
+  Future<void> _loadPatientProfile() async {
+    if (_isProfileLoaded) return;
+
+    setState(() {
+      _loadingProfile = true;
+      _profileError = null;
+    });
+
+    try {
+      final profile = await ref.read(getPatientProfileUsecaseProvider).call();
+      if (!mounted) return;
+
+      setState(() {
+        _patientProfile = profile;
+        if (!_isProfileLoaded) {
+          _nameCtrl.text = profile.name;
+          _phoneCtrl.text = profile.phone;
+          _emailCtrl.text = profile.email;
+          _isProfileLoaded = true;
+        }
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _profileError = e is ApiException
+              ? e.message
+              : 'No se pudo cargar el perfil del paciente.';
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _loadingProfile = false);
       }
     }
   }
@@ -195,20 +252,26 @@ class _PublicCreateAppointmentDialogState
       return;
     }
 
+    if (_nameCtrl.text.trim().isEmpty) {
+      setState(() => _error = 'Ingresa el nombre del paciente.');
+      return;
+    }
+
     setState(() {
       _saving = true;
       _error = null;
     });
 
     try {
-      final profile = await ref.read(getProfileUsecaseProvider).call();
+      final patientId = _patientProfile?.id ??
+          (await ref.read(getProfileUsecaseProvider).call()).id;
 
       await ref
           .read(createPublicAppointmentRequestUsecaseProvider)
           .call(
             scheduleId: selectedSlot.scheduleId,
-            patientId: profile.id,
-            patientName: profile.name,
+            patientId: patientId,
+            patientName: _nameCtrl.text.trim(),
             date: _selectedDate,
             startTime: selectedSlot.startTime,
           );
@@ -281,6 +344,71 @@ class _PublicCreateAppointmentDialogState
                       style: TextStyle(color: Colors.red),
                     )
                   else ...[
+                    // Sección Datos del Paciente
+                    Text(
+                      'Datos del paciente',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 8),
+
+                    if (_loadingProfile)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8),
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                    else if (_profileError != null) ...[
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _profileError!,
+                              style: const TextStyle(color: Colors.red, fontSize: 12),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: _loadPatientProfile,
+                            child: const Text('Reintentar', style: TextStyle(fontSize: 12)),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+
+                    TextFormField(
+                      controller: _nameCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Nombre del paciente *',
+                        prefixIcon: Icon(Icons.person_outline, size: 20),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      controller: _phoneCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Teléfono',
+                        prefixIcon: Icon(Icons.phone_outlined, size: 20),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      controller: _emailCtrl,
+                      readOnly: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Correo electrónico (solo lectura)',
+                        prefixIcon: Icon(Icons.email_outlined, size: 20),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Divider(),
+                    const SizedBox(height: 8),
+
+                    // Sección Detalle de la Cita
+                    Text(
+                      'Detalles de la cita',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 8),
+
                     DropdownButtonFormField<int>(
                       key: ValueKey('doctor-${_selectedDoctorId ?? 0}'),
                       initialValue: _selectedDoctorId,
