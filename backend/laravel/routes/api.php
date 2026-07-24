@@ -29,6 +29,7 @@ Route::middleware('supabase.auth')->group(function () {
     require __DIR__ . '/api/notifications.php';
     require __DIR__ . '/api/notification_preferences.php';
     require __DIR__ . '/api/schedule_blockades.php';
+    require __DIR__ . '/api/patient.php';
 
     // Usuario autenticado
     Route::get('/profile', [UserController::class, 'profile']);
