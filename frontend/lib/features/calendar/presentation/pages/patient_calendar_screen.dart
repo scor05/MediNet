@@ -4,6 +4,7 @@ import 'package:frontend/features/auth/presentation/pages/welcome_screen.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
 import 'package:frontend/features/calendar/presentation/providers/patient_calendar_provider.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_body.dart';
+import 'package:frontend/features/patient_profile/presentation/pages/patient_profile_screen.dart';
 
 class PatientCalendarScreen extends ConsumerStatefulWidget {
   const PatientCalendarScreen({super.key});
@@ -24,6 +25,13 @@ class _PatientCalendarScreenState extends ConsumerState<PatientCalendarScreen> {
     );
   }
 
+  void _goToProfile() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const PatientProfileScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final calendarAsync = ref.watch(patientCalendarNotifierProvider);
@@ -34,6 +42,11 @@ class _PatientCalendarScreenState extends ConsumerState<PatientCalendarScreen> {
         title: const Text('Mis citas'),
         leading: IconButton(icon: const Icon(Icons.logout), onPressed: _logout),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.person_outline),
+            tooltip: 'Mi perfil',
+            onPressed: _goToProfile,
+          ),
           IconButton(
             icon: const Icon(Icons.chevron_left),
             onPressed: () => ref
