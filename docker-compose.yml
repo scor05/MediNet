@@ -1,31 +1,40 @@
 services:
   backend:
     build: ./backend
-    container_name: medinet_backend
-    ports:
-      - "8880:8000"
-    volumes:
-      - ./backend/laravel:/app
-      - vendor_data:/app/vendor
+    image: medinet-backend:latest
+    expose:
+      - "8000"
     env_file:
       - ./backend/.env
-    tty: true
-    stdin_open: true
     restart: unless-stopped
 
   frontend:
     build: ./frontend
-    container_name: medinet_frontend
     expose:
       - "80"
-    networks:
-      - default
-      - proxy
+    restart: unless-stopped
+
+  db:
+    image: postgres:17-bookworm
+    environment:
+        POSTGRES_DB: ${POSTGRES_DB:-medinet}
+        POSTGRES_USER: ${POSTGRES_USER:-postgres}
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    expose:
+      - "5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+        test:
+            [
+                "CMD-SHELL",
+                "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\"",
+            ]
+        interval: 5s
+        timeout: 5s
+        retries: 10
     restart: unless-stopped
 
 volumes:
-  vendor_data:
-
-networks:
-  proxy:
-    external: true
+    postgres_data:
+        name: medinet_postgres_data
