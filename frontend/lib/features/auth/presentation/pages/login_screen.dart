@@ -66,7 +66,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final error = authState is AuthError ? authState.message : null;
 
     return AuthLayout(
-      title: 'Login',
+      title: 'Iniciar Sesión',
       child: Form(
         key: _formKey,
         child: Column(

@@ -142,14 +142,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
-                  'Volver a ',
-                  style: AppTextStyles.caption,
-                ),
+                const Text('Volver a ', style: AppTextStyles.caption),
                 GestureDetector(
                   onTap: isLoading ? null : () => Navigator.pop(context),
                   child: const Text(
-                    'Login',
+                    'Inicio de Sesión',
                     style: AppTextStyles.link,
                   ),
                 ),
