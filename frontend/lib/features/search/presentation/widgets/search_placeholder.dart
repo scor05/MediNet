@@ -10,7 +10,7 @@ class SearchPlaceholder extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.all(24),
         child: Text(
-          'Selecciona un doctor o una clínica para ver disponibilidad.',
+          'Busque un doctor o clínica en la parte superior para poder buscar disponibilidad',
           textAlign: TextAlign.center,
           style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
         ),

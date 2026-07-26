@@ -77,6 +77,18 @@ class SearchFiltersPanel extends StatelessWidget {
                     onClear: onClinicCleared,
                   ),
                 ),
+                const SizedBox(width: 10),
+                SizedBox.square(
+                  dimension: 44,
+                  child: ElevatedButton(
+                    style: AppTheme.btnDark.copyWith(
+                      minimumSize: const WidgetStatePropertyAll(Size.zero),
+                      padding: const WidgetStatePropertyAll(EdgeInsets.zero),
+                    ),
+                    onPressed: state.canSearch ? onSearchPressed : null,
+                    child: const Icon(Icons.search, size: 18),
+                  ),
+                ),
               ],
             ),
             if (state.error != null) ...[
@@ -87,17 +99,6 @@ class SearchFiltersPanel extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             ],
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              height: 35,
-              child: ElevatedButton.icon(
-                style: AppTheme.btnDark,
-                onPressed: state.canSearch ? onSearchPressed : null,
-                icon: const Icon(Icons.search, size: 16),
-                label: const Text('Buscar'),
-              ),
-            ),
           ],
         ),
       ),

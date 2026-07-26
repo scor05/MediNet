@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/widgets/error_banner.dart';
+import 'package:frontend/core/widgets/field_label.dart';
 import 'package:frontend/core/widgets/wave_header.dart';
 import 'package:frontend/features/patient_profile/domain/entities/patient_profile.dart';
 import 'package:frontend/features/patient_profile/domain/providers/patient_domain_providers.dart';
@@ -8,6 +9,8 @@ import 'package:frontend/features/patient_profile/presentation/utils/patient_pro
 import 'package:frontend/features/auth/presentation/widgets/auth_text_field.dart';
 import 'package:frontend/features/auth/presentation/widgets/auth_submit_button.dart';
 import 'package:frontend/theme/app_theme.dart';
+
+const _profileFieldTextAlignment = TextAlignVertical(y: -0.5);
 
 class PatientProfileScreen extends ConsumerStatefulWidget {
   const PatientProfileScreen({super.key});
@@ -51,7 +54,9 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
     });
 
     try {
-      await ref.read(patientProfileNotifierProvider.notifier).updateProfile(
+      await ref
+          .read(patientProfileNotifierProvider.notifier)
+          .updateProfile(
             name: _nameCtrl.text.trim(),
             phone: _phoneCtrl.text.trim(),
           );
@@ -71,8 +76,7 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
           ),
           backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           margin: const EdgeInsets.all(16),
         ),
       );
@@ -107,8 +111,7 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, _) => _ErrorState(
                 message: error.toString().replaceFirst('Exception: ', ''),
-                onRetry: () =>
-                    ref.invalidate(patientProfileNotifierProvider),
+                onRetry: () => ref.invalidate(patientProfileNotifierProvider),
               ),
               data: (profile) {
                 // Pre-carga los controladores la primera vez que llegan los datos
@@ -127,7 +130,10 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // ── Avatar / email header ──────────────────────────
-                        _ProfileAvatar(email: profile.email),
+                        _ProfileAvatar(
+                          name: profile.name,
+                          email: profile.email,
+                        ),
                         const SizedBox(height: 32),
 
                         // ── Mensajes de error al guardar ──────────────────
@@ -147,20 +153,7 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
                               : (_) => null,
                           keyboardType: TextInputType.name,
                           enabled: _isEditing,
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        // ── Correo (siempre read-only) ────────────────────
-                        _ReadOnlyField(
-                          label: 'Correo electrónico',
-                          value: profile.email,
-                          icon: Icons.email_outlined,
-                          trailing: const Icon(
-                            Icons.lock_outline,
-                            size: 16,
-                            color: AppColors.textMuted,
-                          ),
+                          textAlignVertical: _profileFieldTextAlignment,
                         ),
 
                         const SizedBox(height: 20),
@@ -176,6 +169,21 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
                               : (_) => null,
                           keyboardType: TextInputType.phone,
                           enabled: _isEditing,
+                          textAlignVertical: _profileFieldTextAlignment,
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // ── Correo (siempre read-only) ────────────────────
+                        _ReadOnlyField(
+                          label: 'Correo electrónico',
+                          value: profile.email,
+                          icon: Icons.email_outlined,
+                          trailing: const Icon(
+                            Icons.lock_outline,
+                            size: 16,
+                            color: AppColors.textMuted,
+                          ),
                         ),
 
                         const SizedBox(height: 36),
@@ -193,10 +201,10 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
                             height: 50,
                             child: OutlinedButton(
                               style: OutlinedButton.styleFrom(
-                                side: const BorderSide(
-                                    color: AppColors.border),
+                                side: const BorderSide(color: AppColors.border),
                                 shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8)),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                                 foregroundColor: AppColors.textSecondary,
                               ),
                               onPressed: _isSaving
@@ -214,8 +222,7 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
                         ] else
                           ElevatedButton(
                             style: AppTheme.btnLight,
-                            onPressed: () =>
-                                setState(() => _isEditing = true),
+                            onPressed: () => setState(() => _isEditing = true),
                             child: const Text('Editar perfil'),
                           ),
                       ],
@@ -235,8 +242,9 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
 
 class _ProfileAvatar extends StatelessWidget {
   final String email;
+  final String name;
 
-  const _ProfileAvatar({required this.email});
+  const _ProfileAvatar({required this.name, required this.email});
 
   @override
   Widget build(BuildContext context) {
@@ -257,6 +265,14 @@ class _ProfileAvatar extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
+          Text(
+            name.split(' ')[0],
+            style: const TextStyle(
+              color: AppColors.primary,
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           Text(email, style: AppTextStyles.caption),
         ],
       ),
@@ -282,22 +298,17 @@ class _ReadOnlyField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTextStyles.label),
-        const SizedBox(height: 4),
-        Row(
-          children: [
-            Icon(icon, color: AppTheme.textSecondary, size: 18),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(value, style: AppTextStyles.body),
-            ),
-            ?trailing,
-          ],
-        ),
-        const Divider(
-          color: AppColors.subtleBorder,
-          height: 16,
-          thickness: 1.5,
+        FieldLabel(label: label),
+        TextFormField(
+          initialValue: value,
+          enabled: false,
+          readOnly: true,
+          textAlignVertical: _profileFieldTextAlignment,
+          style: AppTextStyles.body,
+          decoration: InputDecoration(
+            prefixIcon: Icon(icon, color: AppTheme.textSecondary, size: 18),
+            suffixIcon: trailing,
+          ),
         ),
       ],
     );

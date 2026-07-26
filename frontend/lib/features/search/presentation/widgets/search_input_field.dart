@@ -43,7 +43,7 @@ class SearchInputField<T> extends StatelessWidget {
         TextField(
           controller: controller,
           onChanged: onChanged,
-          style: compact ? const TextStyle(fontSize: 13) : null,
+          style: compact ? const TextStyle(fontSize: 16) : null,
           decoration: InputDecoration(
             labelText: label,
             hintText: hintText,

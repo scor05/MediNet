@@ -90,7 +90,10 @@ class AuthNavigation {
           profile: profile,
           extraPages: const [SearchScreen()],
           extraItems: const [
-            BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Buscar'),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.search),
+              label: 'Agendar Cita',
+            ),
           ],
         );
 

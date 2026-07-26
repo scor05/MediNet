@@ -117,15 +117,15 @@ class _PublicCalendarScreenState extends ConsumerState<PublicCalendarScreen> {
             children: [
               FilledButton.icon(
                 onPressed: _openCreateAppointment,
-                icon: const Icon(Icons.event_available, size: 16),
+                icon: const Icon(Icons.event_available, size: 18),
                 label: const Text('Agendar cita'),
                 style: FilledButton.styleFrom(
-                  visualDensity: VisualDensity.compact,
+                  minimumSize: const Size(0, 44),
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
+                    horizontal: 24,
+                    vertical: 14,
                   ),
-                  textStyle: const TextStyle(fontSize: 13),
+                  textStyle: const TextStyle(fontSize: 16),
                 ),
               ),
               const Spacer(),

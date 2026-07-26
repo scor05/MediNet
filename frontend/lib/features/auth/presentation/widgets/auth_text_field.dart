@@ -12,6 +12,7 @@ class AuthTextField extends StatelessWidget {
   final bool obscureText;
   final Widget? suffixIcon;
   final bool enabled;
+  final TextAlignVertical? textAlignVertical;
 
   const AuthTextField({
     super.key,
@@ -24,6 +25,7 @@ class AuthTextField extends StatelessWidget {
     this.obscureText = false,
     this.suffixIcon,
     this.enabled = true,
+    this.textAlignVertical = const TextAlignVertical(y: -0.5),
   });
 
   @override
@@ -37,6 +39,7 @@ class AuthTextField extends StatelessWidget {
           keyboardType: keyboardType,
           obscureText: obscureText,
           enabled: enabled,
+          textAlignVertical: textAlignVertical,
           style: AppTextStyles.body,
           decoration: InputDecoration(
             hintText: hintText,
