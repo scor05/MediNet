@@ -55,4 +55,7 @@ abstract class ClientRepository {
     bool isAdmin,
     bool isActive,
   );
+
+  // Elimina la asociación de un usuario con un cliente
+  Future<void> deleteClientUser(int clientId, int userId);
 }

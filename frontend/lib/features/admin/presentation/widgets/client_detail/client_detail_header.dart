@@ -60,10 +60,13 @@ class ClientDetailHeader extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Expanded(
                           child: Text(
                             name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               color: AppTheme.background,
                               fontSize: 22,
@@ -71,9 +74,21 @@ class ClientDetailHeader extends StatelessWidget {
                             ),
                           ),
                         ),
-                        GestureDetector(
-                          onTap: onEdit,
-                          child: const Icon(
+                        StatusToggle(
+                          isActive: isActive,
+                          loading: loadingStatus,
+                          onTap: onToggleStatus,
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          onPressed: onEdit,
+                          tooltip: 'Editar cliente',
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints.tightFor(
+                            width: 32,
+                            height: 32,
+                          ),
+                          icon: const Icon(
                             Icons.edit_outlined,
                             color: AppTheme.background,
                             size: 18,
@@ -91,12 +106,6 @@ class ClientDetailHeader extends StatelessWidget {
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(width: 12),
-              StatusToggle(
-                isActive: isActive,
-                loading: loadingStatus,
-                onTap: onToggleStatus,
               ),
             ],
           ),

@@ -1,15 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/features/admin/presentation/widgets/superadmin_panel/create_client_dialog.dart';
 import 'package:frontend/theme/app_theme.dart';
 
 class SuperadminHeader extends StatelessWidget {
   final VoidCallback onLogout;
 
   const SuperadminHeader({super.key, required this.onLogout});
-
-  void _openCreateClientDialog(BuildContext context) {
-    showDialog(context: context, builder: (_) => const CreateClientDialog());
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,28 +51,6 @@ class SuperadminHeader extends StatelessWidget {
                       ),
                     ),
                   ],
-                ),
-              ),
-              Expanded(
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.background,
-                    foregroundColor: AppTheme.accent,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 10,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  onPressed: () => _openCreateClientDialog(context),
-                  icon: const Icon(Icons.add, size: 18),
-                  label: const Text(
-                    'Nuevo cliente',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                  ),
                 ),
               ),
             ],

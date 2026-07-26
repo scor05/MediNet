@@ -9,6 +9,7 @@ import 'package:frontend/features/admin/presentation/providers/client_users_prov
 import 'package:frontend/features/admin/presentation/providers/clients_provider.dart';
 import 'package:frontend/features/admin/presentation/widgets/client_detail/client_detail_content.dart';
 import 'package:frontend/features/client/domain/entities/client.dart';
+import 'package:frontend/features/client/domain/entities/client_user.dart';
 import 'package:frontend/theme/app_theme.dart';
 
 class ClientDetailScreen extends ConsumerStatefulWidget {
@@ -99,6 +100,39 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen>
     );
   }
 
+  Future<void> _confirmDeleteUser(ClientUser user) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Quitar usuario'),
+        content: Text('¿Quieres quitar a ${user.user.name} de este cliente?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Quitar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    try {
+      await ref
+          .read(clientUsersNotifierProvider(widget.clientId).notifier)
+          .deleteUser(user.user.id);
+    } on ApiException catch (e) {
+      _showError(e.message);
+    } catch (_) {
+      _showError('No se pudo quitar al usuario. Intenta de nuevo.');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final clientsState = ref.watch(clientsNotifierProvider);
@@ -131,6 +165,7 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen>
           onToggleStatus: _toggleStatus,
           onEditClient: () => _showEditDialog(client),
           onAddUser: _showAddUserDialog,
+          onDeleteUser: _confirmDeleteUser,
           onAddClinic: () {},
           onRetryUsers: () => ref
               .read(clientUsersNotifierProvider(widget.clientId).notifier)

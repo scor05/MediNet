@@ -25,9 +25,9 @@ class ClientsListView extends StatelessWidget {
       color: AppTheme.accent,
       onRefresh: onRefresh,
       child: ListView.separated(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 96),
         itemCount: clients.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 10),
+        separatorBuilder: (_, _) => const SizedBox(height: 10),
         itemBuilder: (context, index) {
           final client = clients[index];
 

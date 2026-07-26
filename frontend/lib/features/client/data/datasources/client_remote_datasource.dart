@@ -205,6 +205,25 @@ class ClientRemoteDatasource {
     }
   }
 
+  // Elimina la asociación de un usuario con un cliente
+  Future<void> deleteClientUser(int clientId, int userId) async {
+    final token = Supabase.instance.client.auth.currentSession?.accessToken;
+
+    final response = await http
+        .delete(
+          Uri.parse('${AppConfig.apiUrl}/clients/$clientId/users/$userId'),
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode != 204) {
+      throw handleApiError(response);
+    }
+  }
+
   // Se obtiene los usuarios que no están asociados ya al cliente y que no son superadmins
   Future<List<ClientUserModel>> getAvailableUsersForClient(
     int clientId,

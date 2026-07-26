@@ -81,10 +81,6 @@ class _EditClientDialogState extends State<EditClientDialog> {
         ],
       ),
       actions: [
-        TextButton(
-          onPressed: _saving ? null : () => Navigator.pop(context),
-          child: const Text('Cancelar'),
-        ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: AppTheme.accent,
@@ -101,6 +97,15 @@ class _EditClientDialogState extends State<EditClientDialog> {
                   ),
                 )
               : const Text('Guardar'),
+        ),
+        const SizedBox(height: 8),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Color.fromARGB(255, 185, 185, 185),
+            foregroundColor: AppTheme.primary,
+          ),
+          onPressed: _saving ? null : () => Navigator.pop(context),
+          child: const Text('Cancelar'),
         ),
       ],
     );

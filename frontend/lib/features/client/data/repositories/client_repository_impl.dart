@@ -179,4 +179,20 @@ class ClientRepositoryImpl implements ClientRepository {
       throw ApiException('Error inesperado. Intenta de nuevo.');
     }
   }
+
+  // Elimina la asociación de un usuario con un cliente
+  @override
+  Future<void> deleteClientUser(int clientId, int userId) async {
+    try {
+      await datasource.deleteClientUser(clientId, userId);
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw ApiException('Sin conexión. Verifica tu internet.');
+    } on TimeoutException {
+      throw ApiException('La solicitud tardó demasiado. Intenta de nuevo.');
+    } catch (e) {
+      throw ApiException('Error inesperado. Intenta de nuevo.');
+    }
+  }
 }

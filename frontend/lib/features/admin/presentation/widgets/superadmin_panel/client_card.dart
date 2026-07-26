@@ -10,6 +10,7 @@ class ClientCard extends StatelessWidget {
   final VoidCallback onToggle;
 
   const ClientCard({
+    super.key,
     required this.client,
     required this.toggling,
     required this.onTap,
@@ -21,7 +22,7 @@ class ClientCard extends StatelessWidget {
     return Material(
       color: AdminColors.surface,
       borderRadius: BorderRadius.circular(14),
-      elevation: 0,
+      elevation: 5,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(14),
@@ -57,10 +58,7 @@ class ClientCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      client.name,
-                      style: AdminTextStyles.tileTitle,
-                    ),
+                    Text(client.name, style: AdminTextStyles.tileTitle),
                     const SizedBox(height: 4),
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -103,20 +101,32 @@ class ClientCard extends StatelessWidget {
                             color: AppTheme.accent,
                           ),
                         )
-                      : IconButton(
-                          onPressed: onToggle,
-                          tooltip: client.isActive ? 'Desactivar' : 'Activar',
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          splashRadius: 22,
-                          icon: Icon(
-                            client.isActive
-                                ? Icons.toggle_on_rounded
-                                : Icons.toggle_off_rounded,
-                            size: 36,
-                            color: client.isActive
-                                ? AppTheme.accent
-                                : AdminColors.iconMuted,
+                      : Transform.translate(
+                          offset: const Offset(0, -6),
+                          child: Material(
+                            color: Colors.transparent,
+                            shape: const CircleBorder(),
+                            child: IconButton(
+                              onPressed: onToggle,
+                              tooltip: client.isActive
+                                  ? 'Desactivar'
+                                  : 'Activar',
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints.tightFor(
+                                width: 44,
+                                height: 44,
+                              ),
+                              splashRadius: 22,
+                              icon: Icon(
+                                client.isActive
+                                    ? Icons.toggle_on_rounded
+                                    : Icons.toggle_off_rounded,
+                                size: 36,
+                                color: client.isActive
+                                    ? AppTheme.accent
+                                    : AdminColors.iconMuted,
+                              ),
+                            ),
                           ),
                         ),
                 ),
