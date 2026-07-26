@@ -102,7 +102,7 @@ class ClientCard extends StatelessWidget {
                           ),
                         )
                       : Transform.translate(
-                          offset: const Offset(0, -6),
+                          offset: const Offset(0, 0),
                           child: Material(
                             color: Colors.transparent,
                             shape: const CircleBorder(),
