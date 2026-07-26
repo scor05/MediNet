@@ -19,8 +19,10 @@ class ClientDetailContent extends StatelessWidget {
   final VoidCallback onToggleStatus;
   final VoidCallback onEditClient;
   final VoidCallback onAddUser;
+  final ValueChanged<ClientUser> onEditUser;
   final ValueChanged<ClientUser> onDeleteUser;
   final VoidCallback onAddClinic;
+  final ValueChanged<Clinic> onDeleteClinic;
   final VoidCallback onRetryUsers;
   final VoidCallback onRetryClinics;
 
@@ -35,8 +37,10 @@ class ClientDetailContent extends StatelessWidget {
     required this.onToggleStatus,
     required this.onEditClient,
     required this.onAddUser,
+    required this.onEditUser,
     required this.onDeleteUser,
     required this.onAddClinic,
+    required this.onDeleteClinic,
     required this.onRetryUsers,
     required this.onRetryClinics,
   });
@@ -86,8 +90,11 @@ class ClientDetailContent extends StatelessWidget {
                 emptyLabel: 'No hay usuarios registrados',
                 onRetry: onRetryUsers,
                 onAdd: onAddUser,
-                itemBuilder: (user) =>
-                    UserTile(user: user, onDelete: () => onDeleteUser(user)),
+                itemBuilder: (user) => UserTile(
+                  user: user,
+                  onEdit: () => onEditUser(user),
+                  onDelete: () => onDeleteUser(user),
+                ),
               ),
               ClientDetailAsyncList<Clinic>(
                 asyncValue: clinicsAsync,
@@ -95,8 +102,10 @@ class ClientDetailContent extends StatelessWidget {
                 emptyLabel: 'No hay clínicas registradas',
                 onRetry: onRetryClinics,
                 onAdd: onAddClinic,
-                itemBuilder: (clinic) =>
-                    ClinicTile(clinic: clinic, onDelete: () {}),
+                itemBuilder: (clinic) => ClinicTile(
+                  clinic: clinic,
+                  onDelete: () => onDeleteClinic(clinic),
+                ),
               ),
             ],
           ),

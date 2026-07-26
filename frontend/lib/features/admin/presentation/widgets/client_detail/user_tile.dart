@@ -5,9 +5,15 @@ import 'package:frontend/theme/app_theme.dart';
 
 class UserTile extends StatelessWidget {
   final ClientUser user;
+  final VoidCallback onEdit;
   final VoidCallback onDelete;
 
-  const UserTile({super.key, required this.user, required this.onDelete});
+  const UserTile({
+    super.key,
+    required this.user,
+    required this.onEdit,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +61,7 @@ class UserTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              user.role,
+              _roleLabel(user.role),
               style: AdminTextStyles.badge.copyWith(
                 color: AppTheme.accent,
                 fontWeight: FontWeight.w600,
@@ -63,6 +69,23 @@ class UserTile extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
+          Material(
+            color: Colors.transparent,
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: IconButton(
+              onPressed: onEdit,
+              tooltip: 'Editar roles',
+              splashRadius: 20,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints.tightFor(width: 40, height: 40),
+              icon: const Icon(
+                Icons.edit_outlined,
+                color: AppTheme.accent,
+                size: 20,
+              ),
+            ),
+          ),
           Material(
             color: Colors.transparent,
             shape: const CircleBorder(),
@@ -83,5 +106,20 @@ class UserTile extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+String _roleLabel(String role) {
+  switch (role.toLowerCase()) {
+    case 'admin':
+    case 'administrador':
+      return 'Administrador';
+    case 'doctor':
+      return 'Doctor';
+    case 'secretary':
+    case 'secretaria':
+      return 'Secretaria';
+    default:
+      return role;
   }
 }

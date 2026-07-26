@@ -46,7 +46,11 @@ class ClientUsersNotifier extends FamilyAsyncNotifier<List<ClientUser>, int> {
     if (state.hasValue) {
       state = AsyncData(
         state.requireValue
-            .map((u) => u.user.id == userId ? u.copyWith(isAdmin: isAdmin) : u)
+            .map(
+              (u) => u.user.id == userId
+                  ? u.copyWith(role: role, isAdmin: isAdmin)
+                  : u,
+            )
             .toList(),
       );
     }

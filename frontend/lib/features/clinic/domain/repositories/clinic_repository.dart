@@ -12,4 +12,6 @@ abstract class ClinicRepository {
     required String email,
     required int clientId,
   });
+
+  Future<void> deleteClinic(int clinicId);
 }

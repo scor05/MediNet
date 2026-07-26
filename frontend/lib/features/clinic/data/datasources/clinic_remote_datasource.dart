@@ -79,4 +79,22 @@ class ClinicRemoteDatasource {
       throw handleApiError(response);
     }
   }
+
+  Future<void> deleteClinic(int clinicId) async {
+    final token = Supabase.instance.client.auth.currentSession?.accessToken;
+
+    final response = await http
+        .delete(
+          Uri.parse('${AppConfig.apiUrl}/clinics/$clinicId'),
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode != 204) {
+      throw handleApiError(response);
+    }
+  }
 }

@@ -65,11 +65,11 @@ class ClientUserModel extends ClientUser {
 String _roleToString(int role) {
   switch (role) {
     case 0:
-      return 'Administrador';
+      return 'admin';
     case 1:
-      return 'Doctor';
+      return 'doctor';
     case 2:
-      return 'Paciente';
+      return 'secretary';
     default:
       throw ApiException('Rol desconocido: $role');
   }

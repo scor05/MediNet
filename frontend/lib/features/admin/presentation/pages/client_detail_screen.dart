@@ -4,12 +4,14 @@ import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/core/widgets/error_view.dart';
 import 'package:frontend/features/admin/presentation/dialogs/add_user_dialog.dart';
 import 'package:frontend/features/admin/presentation/dialogs/edit_client_dialog.dart';
+import 'package:frontend/features/admin/presentation/dialogs/edit_client_user_dialog.dart';
 import 'package:frontend/features/admin/presentation/providers/client_clinics_provider.dart';
 import 'package:frontend/features/admin/presentation/providers/client_users_provider.dart';
 import 'package:frontend/features/admin/presentation/providers/clients_provider.dart';
 import 'package:frontend/features/admin/presentation/widgets/client_detail/client_detail_content.dart';
 import 'package:frontend/features/client/domain/entities/client.dart';
 import 'package:frontend/features/client/domain/entities/client_user.dart';
+import 'package:frontend/features/clinic/domain/entities/clinic.dart';
 import 'package:frontend/theme/app_theme.dart';
 
 class ClientDetailScreen extends ConsumerStatefulWidget {
@@ -100,6 +102,14 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen>
     );
   }
 
+  void _showEditUserDialog(ClientUser user) {
+    showDialog(
+      context: context,
+      builder: (_) =>
+          EditClientUserDialog(clientId: widget.clientId, user: user),
+    );
+  }
+
   Future<void> _confirmDeleteUser(ClientUser user) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -130,6 +140,39 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen>
       _showError(e.message);
     } catch (_) {
       _showError('No se pudo quitar al usuario. Intenta de nuevo.');
+    }
+  }
+
+  Future<void> _confirmDeleteClinic(Clinic clinic) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Eliminar clínica'),
+        content: Text('¿Quieres eliminar la clínica ${clinic.name}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    try {
+      await ref
+          .read(clientClinicsNotifierProvider(widget.clientId).notifier)
+          .deleteClinic(clinic.id);
+    } on ApiException catch (e) {
+      _showError(e.message);
+    } catch (_) {
+      _showError('No se pudo eliminar la clínica. Intenta de nuevo.');
     }
   }
 
@@ -165,8 +208,10 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen>
           onToggleStatus: _toggleStatus,
           onEditClient: () => _showEditDialog(client),
           onAddUser: _showAddUserDialog,
+          onEditUser: _showEditUserDialog,
           onDeleteUser: _confirmDeleteUser,
           onAddClinic: () {},
+          onDeleteClinic: _confirmDeleteClinic,
           onRetryUsers: () => ref
               .read(clientUsersNotifierProvider(widget.clientId).notifier)
               .refresh(),
