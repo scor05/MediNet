@@ -68,6 +68,25 @@ class ClientUsersNotifier extends FamilyAsyncNotifier<List<ClientUser>, int> {
     }
   }
 
+  // Elimina un usuario del cliente y restaura la lista si la solicitud falla
+  Future<void> deleteUser(int userId) async {
+    final previousState = state;
+
+    if (state.hasValue) {
+      state = AsyncData(
+        state.requireValue.where((u) => u.user.id != userId).toList(),
+      );
+    }
+
+    try {
+      await ref.read(deleteClientUserUsecaseProvider).call(_clientId, userId);
+      ref.invalidate(availableUsersForClientProvider);
+    } catch (e) {
+      state = previousState;
+      rethrow;
+    }
+  }
+
   // Método para obtener los usuarios del cliente
   Future<List<ClientUser>> _fetch() {
     return ref.read(getClientUsersUsecaseProvider).call(_clientId);

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/features/client/data/providers/client_data_providers.dart';
 import 'package:frontend/features/client/domain/usecases/add_user_to_client_usecase.dart';
 import 'package:frontend/features/client/domain/usecases/create_client_usecase.dart';
+import 'package:frontend/features/client/domain/usecases/delete_client_user_usecase.dart';
 import 'package:frontend/features/client/domain/usecases/edit_client_usecase.dart';
 import 'package:frontend/features/client/domain/usecases/edit_client_user_usecase.dart';
 import 'package:frontend/features/client/domain/usecases/get_available_users_for_client_usecase.dart';
@@ -45,6 +46,11 @@ final addUserToClientUsecaseProvider = Provider((ref) {
 // Provider para el usecase editClientUser
 final editClientUserUsecaseProvider = Provider((ref) {
   return EditClientUserUsecase(ref.read(clientRepositoryProvider));
+});
+
+// Provider para el usecase deleteClientUser
+final deleteClientUserUsecaseProvider = Provider((ref) {
+  return DeleteClientUserUsecase(ref.read(clientRepositoryProvider));
 });
 
 // Provider para el usecase getClientUsers

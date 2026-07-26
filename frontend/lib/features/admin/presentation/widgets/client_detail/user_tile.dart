@@ -43,14 +43,8 @@ class UserTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  user.user.name,
-                  style: AdminTextStyles.tileTitle,
-                ),
-                Text(
-                  user.user.email,
-                  style: AdminTextStyles.tileSubtitle,
-                ),
+                Text(user.user.name, style: AdminTextStyles.tileTitle),
+                Text(user.user.email, style: AdminTextStyles.tileSubtitle),
               ],
             ),
           ),
@@ -69,15 +63,22 @@ class UserTile extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          IconButton(
-            onPressed: onDelete,
-            icon: const Icon(
-              Icons.delete_outline,
-              color: AdminColors.error,
-              size: 20,
+          Material(
+            color: Colors.transparent,
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: IconButton(
+              onPressed: onDelete,
+              tooltip: 'Quitar usuario',
+              splashRadius: 20,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints.tightFor(width: 40, height: 40),
+              icon: const Icon(
+                Icons.delete_outline,
+                color: AdminColors.error,
+                size: 20,
+              ),
             ),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
           ),
         ],
       ),

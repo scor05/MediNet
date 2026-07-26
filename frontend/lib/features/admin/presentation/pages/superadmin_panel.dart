@@ -4,6 +4,7 @@ import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/core/widgets/error_view.dart';
 import 'package:frontend/features/admin/presentation/pages/client_detail_screen.dart';
 import 'package:frontend/features/admin/presentation/providers/clients_provider.dart';
+import 'package:frontend/features/admin/presentation/widgets/superadmin_panel/create_client_dialog.dart';
 import 'package:frontend/features/admin/presentation/widgets/superadmin_panel/client_filter_bar.dart';
 import 'package:frontend/features/admin/presentation/widgets/superadmin_panel/clients_empty_view.dart';
 import 'package:frontend/features/admin/presentation/widgets/superadmin_panel/clients_list_view.dart';
@@ -61,6 +62,10 @@ class _SuperadminPanelState extends ConsumerState<SuperadminPanel> {
     );
   }
 
+  void _openCreateClientDialog() {
+    showDialog(context: context, builder: (_) => const CreateClientDialog());
+  }
+
   @override
   Widget build(BuildContext context) {
     final filteredAsync = ref.watch(filteredClientsProvider);
@@ -68,6 +73,19 @@ class _SuperadminPanelState extends ConsumerState<SuperadminPanel> {
 
     return Scaffold(
       backgroundColor: AppTheme.background,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _openCreateClientDialog,
+        backgroundColor: AppTheme.accent,
+        foregroundColor: AppTheme.background,
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        icon: const Icon(Icons.add, size: 24),
+        label: const Text(
+          'Nuevo cliente',
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+        ),
+      ),
       body: Column(
         children: [
           SuperadminHeader(onLogout: _logout),
