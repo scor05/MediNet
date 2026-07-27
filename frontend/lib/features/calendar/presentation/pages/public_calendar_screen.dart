@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/core/widgets/error_view.dart';
-import 'package:frontend/features/calendar/domain/entities/public_slot.dart';
-import 'package:frontend/features/calendar/presentation/dialogs/public_create_appointment_dialog.dart';
 import 'package:frontend/features/calendar/presentation/providers/public_calendar_provider.dart';
 import 'package:frontend/features/calendar/presentation/widgets/public_calendar/public_calendar_filter_bar.dart';
 import 'package:frontend/features/calendar/presentation/widgets/week_view.dart';
@@ -60,26 +58,6 @@ class _PublicCalendarScreenState extends ConsumerState<PublicCalendarScreen> {
         .update((weekStart) => weekStart.add(const Duration(days: 7)));
   }
 
-  Future<void> _openCreateAppointment() async {
-    final filters = ref.read(publicCalendarFilterProvider);
-
-    final selectedSlot = await showModalBottomSheet<PublicSlot>(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (_) => PublicCreateAppointmentDialog(
-        initialDoctorId: filters.doctorId,
-        initialClinicId: filters.clinicId,
-      ),
-    );
-
-    if (selectedSlot != null) {
-      ref.read(publicCalendarNotifierProvider.notifier).refresh();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final allAppointmentsAsync = ref.watch(publicCalendarNotifierProvider);
@@ -114,21 +92,8 @@ class _PublicCalendarScreenState extends ConsumerState<PublicCalendarScreen> {
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 6, 12, 4),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              FilledButton.icon(
-                onPressed: _openCreateAppointment,
-                icon: const Icon(Icons.event_available, size: 18),
-                label: const Text('Agendar cita'),
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size(0, 44),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 14,
-                  ),
-                  textStyle: const TextStyle(fontSize: 16),
-                ),
-              ),
-              const Spacer(),
               IconButton(
                 onPressed: _previousWeek,
                 icon: const Icon(Icons.chevron_left),
