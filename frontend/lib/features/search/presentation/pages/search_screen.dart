@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/features/calendar/domain/entities/public_slot.dart';
+import 'package:frontend/features/calendar/presentation/dialogs/public_create_appointment_dialog.dart';
 import 'package:frontend/features/calendar/presentation/pages/public_calendar_screen.dart';
+import 'package:frontend/features/calendar/presentation/providers/public_calendar_provider.dart';
 import 'package:frontend/features/clinic/domain/entities/clinic_search_result.dart';
 import 'package:frontend/features/search/presentation/providers/search_form_provider.dart';
 import 'package:frontend/features/search/presentation/widgets/search_filters_panel.dart';
@@ -51,6 +54,26 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     ref.read(searchFormNotifierProvider.notifier).submitSearch();
   }
 
+  Future<void> _openCreateAppointment() async {
+    final filters = ref.read(publicCalendarFilterProvider);
+
+    final selectedSlot = await showModalBottomSheet<PublicSlot>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => PublicCreateAppointmentDialog(
+        initialDoctorId: filters.doctorId,
+        initialClinicId: filters.clinicId,
+      ),
+    );
+
+    if (selectedSlot != null) {
+      ref.read(publicCalendarNotifierProvider.notifier).refresh();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(searchFormNotifierProvider);
@@ -75,6 +98,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             onDoctorCleared: _clearDoctor,
             onClinicCleared: _clearClinic,
             onSearchPressed: _submitSearch,
+            onSchedulePressed: _openCreateAppointment,
           ),
           Expanded(
             child: state.hasSearched

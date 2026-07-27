@@ -17,6 +17,7 @@ class SearchFiltersPanel extends StatelessWidget {
   final VoidCallback onDoctorCleared;
   final VoidCallback onClinicCleared;
   final VoidCallback onSearchPressed;
+  final VoidCallback onSchedulePressed;
 
   const SearchFiltersPanel({
     super.key,
@@ -30,6 +31,7 @@ class SearchFiltersPanel extends StatelessWidget {
     required this.onDoctorCleared,
     required this.onClinicCleared,
     required this.onSearchPressed,
+    required this.onSchedulePressed,
   });
 
   @override
@@ -91,6 +93,24 @@ class SearchFiltersPanel extends StatelessWidget {
                 ),
               ],
             ),
+            if (state.hasSearched) ...[
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: onSchedulePressed,
+                  icon: const Icon(Icons.event_available, size: 22),
+                  label: const Text('Agendar cita'),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(44),
+                    textStyle: const TextStyle(fontSize: 18),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                ),
+              ),
+            ],
             if (state.error != null) ...[
               const SizedBox(height: 6),
               Text(
