@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/auth/presentation/utils/logout_helper.dart';
 import 'package:frontend/features/auth/domain/entities/user_profile.dart';
 import 'package:frontend/features/calendar/presentation/providers/doctor_calendar_provider.dart';
@@ -7,7 +8,7 @@ import 'package:frontend/features/calendar/presentation/utils/calendar_dialog_he
 import 'package:frontend/features/calendar/presentation/widgets/calendar_app_bar.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_body.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_fab_menu.dart';
-import 'package:frontend/features/calendar/presentation/pages/settings_screen.dart';
+import 'package:frontend/features/calendar/presentation/widgets/calendar_shell.dart';
 
 class DoctorCalendarScreen extends ConsumerStatefulWidget {
   final UserProfile profile;
@@ -35,10 +36,7 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
 
     final weekStart = ref.read(doctorWeekStartProvider);
 
-    final created = await showCreateAppointmentSheet(
-      context: context,
-      weekStart: weekStart,
-    );
+    await showCreateAppointmentSheet(context: context, weekStart: weekStart);
 
     // El notifier ya actualizó el estado en createAppointment()
   }
@@ -54,14 +52,12 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
     await showBlockScheduleSheet(context: context);
   }
 
-  Future<void> _onBlockadeTap(appointment) async {
+  Future<void> _onBlockadeTap(Appointment appointment) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Eliminar bloqueo'),
-        content: const Text(
-          '¿Deseas eliminar este bloqueo de horario?',
-        ),
+        content: const Text('¿Deseas eliminar este bloqueo de horario?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -83,14 +79,14 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
           .read(doctorCalendarNotifierProvider.notifier)
           .deleteBlockade(appointment.id);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Bloqueo eliminado')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Bloqueo eliminado')));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     }
   }
 
@@ -108,14 +104,8 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
         ),
         settingsButton: IconButton(
           icon: const Icon(Icons.settings),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => SettingsScreen(profile: widget.profile),
-              ),
-            );
-          },
+          onPressed: () =>
+              CalendarShellNavigation.maybeOf(context)?.onOpenSettings(),
         ),
         onPreviousWeek: () => ref
             .read(doctorWeekStartProvider.notifier)
