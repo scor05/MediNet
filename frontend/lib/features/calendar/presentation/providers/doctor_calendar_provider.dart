@@ -99,6 +99,7 @@ class DoctorCalendarNotifier extends AsyncNotifier<List<Appointment>> {
           endTime: endTime,
           duration: duration,
         );
+    ref.invalidate(doctorSchedulesProvider);
     await refresh();
     return newSchedule;
   }
@@ -109,30 +110,37 @@ class DoctorCalendarNotifier extends AsyncNotifier<List<Appointment>> {
     required TimeOfDay startTime,
     required TimeOfDay endTime,
   }) async {
-    final blockade = await ref.read(createScheduleBlockadeUsecaseProvider).call(
+    final blockade = await ref
+        .read(createScheduleBlockadeUsecaseProvider)
+        .call(
           scheduleId: scheduleId,
           date: date,
           startTime: startTime,
           endTime: endTime,
         );
-    addAppointment(Appointment(
-      id: blockade.id,
-      scheduleId: blockade.idSchedule,
-      patientName: '',
-      date: DateTime.parse(blockade.date),
-      startTime: blockade.startTime,
-      status: 'blockade',
-      createdAt: DateTime.now(),
-      createdBy: 0,
-      updatedAt: DateTime.now(),
-      updatedBy: 0,
-      doctorId: 0,
-      doctorName: '',
-      clinicId: 0,
-      clinicName: '',
-      appointmentDuration: _calcDuration(blockade.startTime, blockade.endTime),
-      type: 'blockade',
-    ));
+    addAppointment(
+      Appointment(
+        id: blockade.id,
+        scheduleId: blockade.idSchedule,
+        patientName: '',
+        date: DateTime.parse(blockade.date),
+        startTime: blockade.startTime,
+        status: 'blockade',
+        createdAt: DateTime.now(),
+        createdBy: 0,
+        updatedAt: DateTime.now(),
+        updatedBy: 0,
+        doctorId: 0,
+        doctorName: '',
+        clinicId: 0,
+        clinicName: '',
+        appointmentDuration: _calcDuration(
+          blockade.startTime,
+          blockade.endTime,
+        ),
+        type: 'blockade',
+      ),
+    );
     refresh();
     return blockade;
   }
