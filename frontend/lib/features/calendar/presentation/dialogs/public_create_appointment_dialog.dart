@@ -263,7 +263,8 @@ class _PublicCreateAppointmentDialogState
     });
 
     try {
-      final patientId = _patientProfile?.id ??
+      final patientId =
+          _patientProfile?.id ??
           (await ref.read(getProfileUsecaseProvider).call()).id;
 
       await ref
@@ -288,11 +289,17 @@ class _PublicCreateAppointmentDialogState
     } catch (e) {
       if (!mounted) return;
 
+      final message = e is ApiException
+          ? e.message
+          : 'No se pudo enviar la solicitud.';
+
       setState(() {
-        _error = e is ApiException
-            ? e.message
-            : 'No se pudo enviar la solicitud.';
+        _error = message;
       });
+
+      final messenger = ScaffoldMessenger.of(context);
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(SnackBar(content: Text(message)));
     } finally {
       if (mounted) {
         setState(() => _saving = false);
@@ -362,12 +369,18 @@ class _PublicCreateAppointmentDialogState
                           Expanded(
                             child: Text(
                               _profileError!,
-                              style: const TextStyle(color: Colors.red, fontSize: 12),
+                              style: const TextStyle(
+                                color: Colors.red,
+                                fontSize: 12,
+                              ),
                             ),
                           ),
                           TextButton(
                             onPressed: _loadPatientProfile,
-                            child: const Text('Reintentar', style: TextStyle(fontSize: 12)),
+                            child: const Text(
+                              'Reintentar',
+                              style: TextStyle(fontSize: 12),
+                            ),
                           ),
                         ],
                       ),

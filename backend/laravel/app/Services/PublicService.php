@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Repositories\AppointmentRepository;
 use App\Repositories\PublicRepository;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class PublicService
 {
@@ -13,9 +12,9 @@ class PublicService
     public function __construct(
         private PublicRepository $repository,
         private AppointmentRepository $appointmentRepository,
-        private NotificationService $notificationService
-    ) {
-    }
+        private NotificationService $notificationService,
+        private AppointmentAvailabilityService $availabilityService,
+    ) {}
 
     // Se obtienen los doctores con horarios activos
     public function getDoctors(?int $clinicId)
@@ -38,17 +37,11 @@ class PublicService
     // Se crea una solicitud pública de cita
     public function createAppointment(array $data)
     {
-        $isTaken = $this->repository->appointmentExists(
-            idSchedule: $data['id_schedule'],
-            date: $data['date'],
-            startTime: $data['start_time'],
+        $this->availabilityService->ensureAvailable(
+            $data['id_schedule'],
+            $data['date'],
+            $data['start_time'],
         );
-
-        if ($isTaken) {
-            throw ValidationException::withMessages([
-                'start_time' => ['El horario seleccionado ya no está disponible.'],
-            ]);
-        }
 
         $data['status'] = 'requested';
         $data['created_by'] = $data['id_patient'];

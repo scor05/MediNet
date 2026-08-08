@@ -35,7 +35,20 @@ class _CreateAppointmentDialogState
         .read(createAppointmentFormProvider(widget.weekStart).notifier)
         .submit(patientName: _patientCtrl.text);
 
-    if (!mounted || created == null) return;
+    if (!mounted) return;
+
+    if (created == null) {
+      final message = ref
+          .read(createAppointmentFormProvider(widget.weekStart))
+          .error;
+
+      if (message != null) {
+        final messenger = ScaffoldMessenger.of(context);
+        messenger.hideCurrentSnackBar();
+        messenger.showSnackBar(SnackBar(content: Text(message)));
+      }
+      return;
+    }
 
     Navigator.of(context).pop(created);
 

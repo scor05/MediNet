@@ -20,7 +20,7 @@ class PublicRepository
             ->where('client_users.is_active', true)
             ->where('schedules.is_active', true)
             ->where('clinics.is_active', true)
-            ->when($clinicId, fn($query) => $query->where('clinics.id', $clinicId))
+            ->when($clinicId, fn ($query) => $query->where('clinics.id', $clinicId))
             ->select([
                 'users.id',
                 'users.name',
@@ -44,7 +44,7 @@ class PublicRepository
             ->where('clinics.is_active', true)
             ->where('schedules.is_active', true)
             ->where('users.is_active', true)
-            ->when($doctorId, fn($query) => $query->where('users.id', $doctorId))
+            ->when($doctorId, fn ($query) => $query->where('users.id', $doctorId))
             ->select([
                 'clinics.id',
                 'clinics.name',
@@ -93,14 +93,16 @@ class PublicRepository
 
         $scheduleIds = $schedules->pluck('id')->all();
 
-        $taken = DB::table('appointments')
+        $appointments = DB::table('appointments')
             ->whereIn('id_schedule', $scheduleIds)
             ->where('date', $date)
             ->whereNotIn('status', ['rejected', 'cancelled'])
-            ->get(['id_schedule', 'start_time'])
-            ->mapWithKeys(fn($appointment) => [
-                $appointment->id_schedule . '-' . substr($appointment->start_time, 0, 5) => true,
-            ]);
+            ->get(['id_schedule', 'start_time']);
+
+        $blockades = DB::table('schedule_blockades')
+            ->whereIn('id_schedule', $scheduleIds)
+            ->where('date', $date)
+            ->get(['id_schedule', 'start_time', 'end_time']);
 
         $slots = [];
 
@@ -110,9 +112,29 @@ class PublicRepository
 
             for ($current = $start; $current + $schedule->duration <= $end; $current += $schedule->duration) {
                 $startTime = $this->minutesToTime($current);
-                $key = $schedule->id . '-' . $startTime;
+                $slotEnd = $current + (int) $schedule->duration;
+                $isTaken = $appointments->contains(function ($appointment) use ($schedule, $current, $slotEnd) {
+                    if ((int) $appointment->id_schedule !== (int) $schedule->id) {
+                        return false;
+                    }
 
-                if ($taken->has($key)) {
+                    $appointmentStart = $this->timeToMinutes($appointment->start_time);
+                    $appointmentEnd = $appointmentStart + (int) $schedule->duration;
+
+                    return $appointmentStart < $slotEnd && $appointmentEnd > $current;
+                });
+
+                if ($isTaken) {
+                    continue;
+                }
+
+                $isBlocked = $blockades->contains(
+                    fn ($blockade) => (int) $blockade->id_schedule === (int) $schedule->id
+                        && $this->timeToMinutes($blockade->start_time) < $slotEnd
+                        && $this->timeToMinutes($blockade->end_time) > $current
+                );
+
+                if ($isBlocked) {
                     continue;
                 }
 
@@ -135,20 +157,6 @@ class PublicRepository
         return $slots;
     }
 
-    // Se verifica si un horario ya fue tomado por una cita activa o solicitada
-    public function appointmentExists(
-        int $idSchedule,
-        string $date,
-        string $startTime,
-    ): bool {
-        return DB::table('appointments')
-            ->where('id_schedule', $idSchedule)
-            ->where('date', $date)
-            ->where('start_time', $startTime)
-            ->whereNotIn('status', ['rejected', 'cancelled'])
-            ->exists();
-    }
-
     // Se crea una solicitud pública de cita
     public function createAppointment(array $data): Appointment
     {
@@ -158,6 +166,7 @@ class PublicRepository
     private function timeToMinutes(string $time): int
     {
         [$hour, $minute] = array_map('intval', explode(':', substr($time, 0, 5)));
+
         return ($hour * 60) + $minute;
     }
 
@@ -165,8 +174,9 @@ class PublicRepository
     {
         $hour = intdiv($minutes, 60);
         $minute = $minutes % 60;
+
         return str_pad((string) $hour, 2, '0', STR_PAD_LEFT)
-            . ':'
-            . str_pad((string) $minute, 2, '0', STR_PAD_LEFT);
+            .':'
+            .str_pad((string) $minute, 2, '0', STR_PAD_LEFT);
     }
 }

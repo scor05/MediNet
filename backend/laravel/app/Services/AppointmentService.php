@@ -3,21 +3,17 @@
 namespace App\Services;
 
 use App\Repositories\AppointmentRepository;
-use App\Repositories\ScheduleBlockadeRepository;
-use App\Services\UserService;
-use App\Services\NotificationService;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
 
 class AppointmentService
 {
     // Se inyecta el repositorio
-    public function __construct(private AppointmentRepository $repository,
+    public function __construct(
+        private AppointmentRepository $repository,
         private UserService $userService,
-        private ScheduleBlockadeRepository $blockadeRepository,
-        private NotificationService $notificationService)
-    {
-    }
+        private AppointmentAvailabilityService $availabilityService,
+        private NotificationService $notificationService
+    ) {}
 
     // Se obtienen todas las citas
     public function getAll()
@@ -34,7 +30,7 @@ class AppointmentService
     // Se crea una nueva cita
     public function create($data)
     {
-        $this->validateConflict(
+        $this->availabilityService->ensureAvailable(
             $data['id_schedule'],
             $data['date'],
             $data['start_time']
@@ -62,7 +58,7 @@ class AppointmentService
             array_key_exists('start_time', $data) ||
             (($data['status'] ?? null) === 'accepted')
         ) {
-            $this->validateConflict(
+            $this->availabilityService->ensureAvailable(
                 $idSchedule,
                 $date,
                 $startTime,
@@ -128,30 +124,30 @@ class AppointmentService
 
         if ($oldAppointment->status !== $newAppointment->status) {
             $changes[] = 'Estado: '
-                . $this->formatStatus($oldAppointment->status)
-                . ' -> '
-                . $this->formatStatus($newAppointment->status);
+                .$this->formatStatus($oldAppointment->status)
+                .' -> '
+                .$this->formatStatus($newAppointment->status);
         }
 
         if ($oldAppointment->date !== $newAppointment->date) {
             $changes[] = 'Fecha: '
-                . $this->formatDate($oldAppointment->date)
-                . ' -> '
-                . $this->formatDate($newAppointment->date);
+                .$this->formatDate($oldAppointment->date)
+                .' -> '
+                .$this->formatDate($newAppointment->date);
         }
 
         if ($this->formatTime($oldAppointment->start_time) !== $this->formatTime($newAppointment->start_time)) {
             $changes[] = 'Hora de inicio: '
-                . $this->formatTime($oldAppointment->start_time)
-                . ' -> '
-                . $this->formatTime($newAppointment->start_time);
+                .$this->formatTime($oldAppointment->start_time)
+                .' -> '
+                .$this->formatTime($newAppointment->start_time);
         }
 
         if ($oldAppointment->name_patient !== $newAppointment->name_patient) {
             $changes[] = 'Paciente: '
-                . $oldAppointment->name_patient
-                . ' -> '
-                . $newAppointment->name_patient;
+                .$oldAppointment->name_patient
+                .' -> '
+                .$newAppointment->name_patient;
         }
 
         return $changes;
@@ -205,38 +201,5 @@ class AppointmentService
     public function delete(int $id)
     {
         $this->repository->delete($id);
-    }
-
-    // Se valida si la cita por crear/actualizar no genera conflictos
-    private function validateConflict(
-        int $idSchedule,
-        string $date,
-        string $startTime,
-        ?int $ignoreAppointmentId = null
-    ): void {
-        $conflict = $this->repository->findAppointment(
-            $idSchedule,
-            $date,
-            $startTime,
-            $ignoreAppointmentId
-        );
-
-        if ($conflict) {
-            throw ValidationException::withMessages([
-                'start_time' => ['Ya existe una cita en ese horario'],
-            ]);
-        }
-
-        $blockade = $this->blockadeRepository->findBlockadeAtTime(
-            $idSchedule,
-            $date,
-            $startTime
-        );
-
-        if ($blockade) {
-            throw ValidationException::withMessages([
-                'start_time' => ['Ese horario está bloqueado y no permite nuevas citas.'],
-            ]);
-        }
     }
 }
