@@ -36,9 +36,9 @@ class WaitlistRemoteDatasource {
 
   // Crea un nuevo waitlist
   Future<WaitlistModel> createWaitlist({
-    required int patientId,
-    required int targetAppointmentId,
-    required int fallbackAppointmentId,
+    required int scheduleId,
+    required DateTime date,
+    required String startTime,
   }) async {
     final token = Supabase.instance.client.auth.currentSession?.accessToken;
 
@@ -51,17 +51,18 @@ class WaitlistRemoteDatasource {
             'Authorization': 'Bearer $token',
           },
           body: jsonEncode({
-            'id_patient': patientId,
-            'id_target_appointment': targetAppointmentId,
-            'id_fallback_appointment': fallbackAppointmentId,
-            'status': 'active',
+            'id_schedule': scheduleId,
+            'date': date.toIso8601String().substring(0, 10),
+            'start_time': startTime.substring(0, 5),
           }),
         )
         .timeout(_defaultTimeout);
 
     if (response.statusCode == 201) {
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      return WaitlistModel.fromJson(data);
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+      return WaitlistModel.fromJson(
+        responseData['data'] as Map<String, dynamic>,
+      );
     } else {
       throw handleApiError(response);
     }

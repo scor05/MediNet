@@ -2,54 +2,89 @@
 
 namespace App\Services;
 
+use App\Repositories\AppointmentRepository;
 use App\Repositories\WaitlistRepository;
-use App\Services\NotificationService;
 use Illuminate\Validation\ValidationException;
 
 class WaitlistService
 {
     private const VALID_STATUSES = [
-        'active',
+        'waiting',
         'notified',
-        'expired',
         'fulfilled',
         'cancelled',
     ];
 
-    // Se inyectan las dependencias
     public function __construct(
         private WaitlistRepository $repository,
-        private NotificationService $notificationService
-    ) {
-    }
+        private AppointmentRepository $appointmentRepository,
+    ) {}
 
-    // Se obtienen todos los registros
     public function getAll()
     {
         return $this->repository->findAll();
     }
 
-    // Se obtiene un registro por su id
     public function getById(int $id)
     {
         return $this->repository->findById($id);
     }
 
-    // Se obtienen los registros de un paciente
     public function getByPatient(int $patientId)
     {
         return $this->repository->findByPatient($patientId);
     }
 
-    // Se crea un nuevo registro de lista de espera
-    public function create(array $data)
+    public function join(array $data)
     {
-        $this->validateStatus($data['status'] ?? 'active');
+        if (! isset($data['id_target_appointment'])) {
+            $targetAppointment = $this->appointmentRepository->findOccupyingSlot(
+                $data['id_schedule'],
+                $data['date'],
+                $data['start_time'],
+            );
 
-        return $this->repository->create($data);
+            if ($targetAppointment === null) {
+                throw ValidationException::withMessages([
+                    'start_time' => ['No existe una cita activa para ese horario.'],
+                ]);
+            }
+
+            $data['id_target_appointment'] = $targetAppointment->id;
+        }
+
+        unset($data['id_schedule'], $data['date'], $data['start_time']);
+
+        $duplicate = $this->repository->findDuplicate(
+            $data['id_patient'],
+            $data['id_target_appointment']
+        );
+
+        if ($duplicate !== null) {
+            if ($duplicate->status === 'cancelled') {
+                return $this->repository->update($duplicate->id, [
+                    'id_fallback_appointment' => null,
+                    'status' => 'waiting',
+                ]);
+            }
+
+            throw ValidationException::withMessages([
+                'id_target_appointment' => ['Ya estás en la lista de espera para esta cita.'],
+            ]);
+        }
+
+        return $this->repository->create([
+            ...$data,
+            'id_fallback_appointment' => $data['id_fallback_appointment'] ?? null,
+            'status' => 'waiting',
+        ]);
     }
 
-    // Se actualiza un registro
+    public function create(array $data)
+    {
+        return $this->join($data);
+    }
+
     public function update(int $id, array $data)
     {
         if (isset($data['status'])) {
@@ -59,64 +94,22 @@ class WaitlistService
         return $this->repository->update($id, $data);
     }
 
-    // Se elimina un registro
-    public function delete(int $id)
+    public function leave(int $id): bool
     {
-        $this->repository->delete($id);
+        return $this->repository->delete($id);
     }
 
-    /**
-     * Notifica a los pacientes en lista de espera cuando se libera un horario.
-     * Se llama automáticamente cuando una cita es cancelada o rechazada.
-     */
-    public function notifySlotFreed(int $appointmentId): void
+    public function delete(int $id): bool
     {
-        $activeWaitlists = $this->repository->findActiveByTargetAppointment($appointmentId);
-
-        foreach ($activeWaitlists as $waitlist) {
-            $ctx = $this->repository->findNotificationContext($waitlist->id);
-
-            if (!$ctx) {
-                continue;
-            }
-
-            $message = "¡Se ha liberado un espacio! "
-                . "Dr. {$ctx->doctor_name}, "
-                . "Clínica {$ctx->clinic_name}, "
-                . "{$this->formatDate($ctx->date)} "
-                . "a las {$this->formatTime($ctx->start_time)}. "
-                . "El horario que solicitaste ya está disponible.";
-
-            $this->notificationService->dispatch(
-                'waitlist_alert',
-                $waitlist->id_patient,
-                $message
-            );
-
-            // Actualizar el status del waitlist a 'notified'
-            $this->repository->update($waitlist->id, ['status' => 'notified']);
-        }
+        return $this->leave($id);
     }
 
-    // Valida que el status sea válido
     private function validateStatus(string $status): void
     {
-        if (!in_array($status, self::VALID_STATUSES)) {
+        if (! in_array($status, self::VALID_STATUSES, true)) {
             throw ValidationException::withMessages([
                 'status' => ['Estado de lista de espera inválido.'],
             ]);
         }
-    }
-
-    // Formatea la fecha para el mensaje de notificación
-    private function formatDate($date): string
-    {
-        return date('d/m/Y', strtotime((string) $date));
-    }
-
-    // Formatea la hora para el mensaje de notificación
-    private function formatTime($time): string
-    {
-        return substr((string) $time, 0, 5);
     }
 }

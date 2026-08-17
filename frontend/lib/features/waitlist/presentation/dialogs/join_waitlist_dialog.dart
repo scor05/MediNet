@@ -6,17 +6,15 @@ import 'package:frontend/features/waitlist/domain/providers/waitlist_domain_prov
 /// Diálogo de confirmación para unirse a la lista de espera.
 /// Retorna `true` si el registro fue exitoso.
 class JoinWaitlistDialog extends ConsumerStatefulWidget {
-  final int targetAppointmentId;
-  final int fallbackAppointmentId;
+  final int scheduleId;
   final String doctorName;
   final String clinicName;
-  final String date;
+  final DateTime date;
   final String startTime;
 
   const JoinWaitlistDialog({
     super.key,
-    required this.targetAppointmentId,
-    required this.fallbackAppointmentId,
+    required this.scheduleId,
     required this.doctorName,
     required this.clinicName,
     required this.date,
@@ -38,10 +36,13 @@ class _JoinWaitlistDialogState extends ConsumerState<JoinWaitlistDialog> {
     });
 
     try {
-      await ref.read(createWaitlistUsecaseProvider).call(
-        targetAppointmentId: widget.targetAppointmentId,
-        fallbackAppointmentId: widget.fallbackAppointmentId,
-      );
+      await ref
+          .read(createWaitlistUsecaseProvider)
+          .call(
+            scheduleId: widget.scheduleId,
+            date: widget.date,
+            startTime: widget.startTime,
+          );
 
       if (!mounted) return;
       Navigator.of(context).pop(true);
@@ -77,7 +78,12 @@ class _JoinWaitlistDialogState extends ConsumerState<JoinWaitlistDialog> {
           const SizedBox(height: 6),
           _buildInfoRow(Icons.local_hospital_outlined, widget.clinicName),
           const SizedBox(height: 6),
-          _buildInfoRow(Icons.calendar_today_outlined, widget.date),
+          _buildInfoRow(
+            Icons.calendar_today_outlined,
+            '${widget.date.day.toString().padLeft(2, '0')}/'
+            '${widget.date.month.toString().padLeft(2, '0')}/'
+            '${widget.date.year}',
+          ),
           const SizedBox(height: 6),
           _buildInfoRow(Icons.access_time, widget.startTime),
           if (_error != null) ...[
@@ -116,12 +122,7 @@ class _JoinWaitlistDialogState extends ConsumerState<JoinWaitlistDialog> {
       children: [
         Icon(icon, size: 18, color: Colors.grey.shade600),
         const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            style: const TextStyle(fontSize: 14),
-          ),
-        ),
+        Expanded(child: Text(text, style: const TextStyle(fontSize: 14))),
       ],
     );
   }

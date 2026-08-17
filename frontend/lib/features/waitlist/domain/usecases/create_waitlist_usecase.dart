@@ -7,12 +7,14 @@ class CreateWaitlistUsecase {
   CreateWaitlistUsecase(this.repository);
 
   Future<Waitlist> call({
-    required int targetAppointmentId,
-    required int fallbackAppointmentId,
+    required int scheduleId,
+    required DateTime date,
+    required String startTime,
   }) {
     return repository.createWaitlist(
-      targetAppointmentId: targetAppointmentId,
-      fallbackAppointmentId: fallbackAppointmentId,
+      scheduleId: scheduleId,
+      date: date,
+      startTime: startTime,
     );
   }
 }

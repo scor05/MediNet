@@ -14,7 +14,7 @@ class AppointmentService
         private UserService $userService,
         private ScheduleBlockadeRepository $blockadeRepository,
         private NotificationService $notificationService,
-        private WaitlistService $waitlistService,
+        private WaitlistPromotionService $waitlistPromotionService,
         private AppointmentAvailabilityService $availabilityService
     ) {}
 
@@ -100,12 +100,13 @@ class AppointmentService
         $appointment = DB::transaction(function () use ($id, $data, $oldAppointment) {
             $appointment = $this->repository->update($id, $data);
             $this->notifyUpdatedAppointment($oldAppointment, $appointment);
+            $this->waitlistPromotionService->promoteIfFreed(
+                $oldAppointment,
+                $appointment
+            );
 
             return $appointment;
         });
-
-        // Notificar a pacientes en lista de espera si se liberó el horario
-        $this->notifyWaitlistIfSlotFreed($oldAppointment, $appointment);
 
         return $appointment;
     }
@@ -225,22 +226,6 @@ class AppointmentService
             'rescheduled' => 'Recalendarizada',
             default => $status,
         };
-    }
-
-    /**
-     * Si la cita cambió a cancelled o rejected, notifica a los pacientes
-     * en lista de espera que el horario se ha liberado.
-     */
-    private function notifyWaitlistIfSlotFreed($oldAppointment, $newAppointment): void
-    {
-        $freedStatuses = ['cancelled', 'rejected'];
-
-        $statusChanged = $oldAppointment->status !== $newAppointment->status;
-        $isNowFreed = in_array($newAppointment->status, $freedStatuses);
-
-        if ($statusChanged && $isNowFreed) {
-            $this->waitlistService->notifySlotFreed($newAppointment->id);
-        }
     }
 
     // Se elimina una cita

@@ -31,7 +31,7 @@ class PatientWaitlistNotifier extends AutoDisposeAsyncNotifier<List<Waitlist>> {
 */
 
 // Provider del notifier de waitlists del paciente
-final patientWaitlistNotifierProvider = AutoDisposeAsyncNotifierProvider<
-  PatientWaitlistNotifier,
-  List<Waitlist>
->(PatientWaitlistNotifier.new);
+final patientWaitlistNotifierProvider =
+    AutoDisposeAsyncNotifierProvider<PatientWaitlistNotifier, List<Waitlist>>(
+      PatientWaitlistNotifier.new,
+    );

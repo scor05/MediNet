@@ -10,7 +10,7 @@ use App\Services\AppointmentAvailabilityService;
 use App\Services\AppointmentService;
 use App\Services\NotificationService;
 use App\Services\UserService;
-use App\Services\WaitlistService;
+use App\Services\WaitlistPromotionService;
 use PHPUnit\Framework\TestCase;
 
 class AppointmentServiceTest extends TestCase
@@ -22,7 +22,7 @@ class AppointmentServiceTest extends TestCase
         $availabilityService = $this->createMock(AppointmentAvailabilityService::class);
         $blockadeRepository = $this->createStub(ScheduleBlockadeRepository::class);
         $notificationService = $this->createMock(NotificationService::class);
-        $waitlistService = $this->createStub(WaitlistService::class);
+        $waitlistPromotionService = $this->createStub(WaitlistPromotionService::class);
 
         $data = [
             'id_schedule' => 11,
@@ -77,7 +77,7 @@ class AppointmentServiceTest extends TestCase
             $userService,
             $blockadeRepository,
             $notificationService,
-            $waitlistService,
+            $waitlistPromotionService,
             $availabilityService,
         );
 
@@ -91,7 +91,7 @@ class AppointmentServiceTest extends TestCase
         $availabilityService = $this->createMock(AppointmentAvailabilityService::class);
         $blockadeRepository = $this->createStub(ScheduleBlockadeRepository::class);
         $notificationService = $this->createStub(NotificationService::class);
-        $waitlistService = $this->createStub(WaitlistService::class);
+        $waitlistPromotionService = $this->createStub(WaitlistPromotionService::class);
 
         $availabilityService->method('ensureAvailable')
             ->willThrowException(new AppointmentUnavailableException(
@@ -106,7 +106,7 @@ class AppointmentServiceTest extends TestCase
             $userService,
             $blockadeRepository,
             $notificationService,
-            $waitlistService,
+            $waitlistPromotionService,
             $availabilityService,
         );
 
@@ -127,7 +127,7 @@ class AppointmentServiceTest extends TestCase
         $availabilityService = $this->createStub(AppointmentAvailabilityService::class);
         $blockadeRepository = $this->createStub(ScheduleBlockadeRepository::class);
         $notificationService = $this->createMock(NotificationService::class);
-        $waitlistService = $this->createStub(WaitlistService::class);
+        $waitlistPromotionService = $this->createStub(WaitlistPromotionService::class);
 
         $data = [
             'id_schedule' => 11,
@@ -152,7 +152,7 @@ class AppointmentServiceTest extends TestCase
             $userService,
             $blockadeRepository,
             $notificationService,
-            $waitlistService,
+            $waitlistPromotionService,
             $availabilityService,
         );
 

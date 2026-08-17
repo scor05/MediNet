@@ -6,8 +6,9 @@ abstract class WaitlistRepository {
 
   /// Crear un nuevo registro de lista de espera
   Future<Waitlist> createWaitlist({
-    required int targetAppointmentId,
-    required int fallbackAppointmentId,
+    required int scheduleId,
+    required DateTime date,
+    required String startTime,
   });
 
   /// Cancelar un registro de lista de espera
