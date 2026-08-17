@@ -1,13 +1,12 @@
 <?php
 
 namespace App\Services;
+
 use App\Repositories\CalendarRepository;
 
 class CalendarService
 {
-    public function __construct(protected CalendarRepository $calendarRepository)
-    {
-    }
+    public function __construct(protected CalendarRepository $calendarRepository) {}
 
     // Se obtienen todas las citas de un doctor, con posibilidad de filtrarlas
     public function getDoctorCalendar(
@@ -55,6 +54,12 @@ class CalendarService
             status: $status,
         );
 
+        $formattedAppointments = $this->formatAppointments($appointments);
+
+        if ($status !== null) {
+            return $formattedAppointments;
+        }
+
         $blockades = $this->calendarRepository->getBlockadesForSecretary(
             secretaryId: $secretaryId,
             dateFrom: $dateFrom,
@@ -62,7 +67,7 @@ class CalendarService
         );
 
         return array_merge(
-            $this->formatAppointments($appointments),
+            $formattedAppointments,
             $this->formatBlockades($blockades)
         );
     }
@@ -142,18 +147,18 @@ class CalendarService
     {
         return array_map(function ($blockade) {
             return [
-                'id'          => $blockade->id,
-                'type'        => 'blockade',
-                'date'        => $blockade->date,
-                'start_time'  => $blockade->start_time,
-                'end_time'    => $blockade->end_time,
+                'id' => $blockade->id,
+                'type' => 'blockade',
+                'date' => $blockade->date,
+                'start_time' => $blockade->start_time,
+                'end_time' => $blockade->end_time,
                 'schedule_id' => $blockade->id_schedule,
-                'doctor'      => [
-                    'id'   => $blockade->doctor_id,
+                'doctor' => [
+                    'id' => $blockade->doctor_id,
                     'name' => $blockade->doctor_name,
                 ],
-                'clinic'      => [
-                    'id'   => $blockade->clinic_id,
+                'clinic' => [
+                    'id' => $blockade->clinic_id,
                     'name' => $blockade->clinic_name,
                 ],
             ];
