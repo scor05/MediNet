@@ -18,6 +18,7 @@ class NotificationService
         'reschedule',
         'acceptance',
         'rejection',
+        'waitlist_alert',
     ];
 
     private const VALID_CHANNELS = [
