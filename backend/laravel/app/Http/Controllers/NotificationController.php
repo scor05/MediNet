@@ -36,7 +36,7 @@ class NotificationController extends Controller
     {
         $validated = $request->validate([
             'id_user' => 'required|integer|exists:users,id',
-            'type'    => ['required', Rule::in(['reminder', 'cancellation', 'reschedule', 'acceptance', 'rejection'])],
+            'type'    => ['required', Rule::in(['reminder', 'cancellation', 'reschedule', 'acceptance', 'rejection', 'waitlist_alert'])],
             'message' => 'required|string',
             'channel' => ['required', Rule::in(['email', 'sms', 'push', 'whatsapp'])],
         ]);
