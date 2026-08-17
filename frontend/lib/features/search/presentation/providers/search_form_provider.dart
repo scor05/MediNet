@@ -86,6 +86,8 @@ class SearchFormState {
 class SearchFormNotifier extends AutoDisposeNotifier<SearchFormState> {
   Timer? _doctorDebounce;
   Timer? _clinicDebounce;
+  int _doctorRequestId = 0;
+  int _clinicRequestId = 0;
 
   @override
   SearchFormState build() {
@@ -99,6 +101,7 @@ class SearchFormNotifier extends AutoDisposeNotifier<SearchFormState> {
 
   void onDoctorQueryChanged(String query) {
     _doctorDebounce?.cancel();
+    final requestId = ++_doctorRequestId;
 
     state = state.copyWith(
       clearSelectedDoctor: true,
@@ -111,6 +114,11 @@ class SearchFormNotifier extends AutoDisposeNotifier<SearchFormState> {
 
     final cleanQuery = query.trim();
 
+    if (cleanQuery.isEmpty) {
+      unawaited(_searchDoctors('', requestId));
+      return;
+    }
+
     if (cleanQuery.length < 2) {
       state = state.copyWith(loadingDoctors: false);
       return;
@@ -118,12 +126,13 @@ class SearchFormNotifier extends AutoDisposeNotifier<SearchFormState> {
 
     _doctorDebounce = Timer(
       const Duration(milliseconds: 400),
-      () => _searchDoctors(cleanQuery),
+      () => _searchDoctors(cleanQuery, requestId),
     );
   }
 
   void onClinicQueryChanged(String query) {
     _clinicDebounce?.cancel();
+    final requestId = ++_clinicRequestId;
 
     state = state.copyWith(
       clearSelectedClinic: true,
@@ -136,6 +145,11 @@ class SearchFormNotifier extends AutoDisposeNotifier<SearchFormState> {
 
     final cleanQuery = query.trim();
 
+    if (cleanQuery.isEmpty) {
+      unawaited(_searchClinics('', requestId));
+      return;
+    }
+
     if (cleanQuery.length < 2) {
       state = state.copyWith(loadingClinics: false);
       return;
@@ -143,21 +157,41 @@ class SearchFormNotifier extends AutoDisposeNotifier<SearchFormState> {
 
     _clinicDebounce = Timer(
       const Duration(milliseconds: 400),
-      () => _searchClinics(cleanQuery),
+      () => _searchClinics(cleanQuery, requestId),
     );
   }
 
-  Future<void> _searchDoctors(String query) async {
+  void showDoctorSuggestions() {
+    if (state.selectedDoctor != null) return;
+
+    _doctorDebounce?.cancel();
+    final requestId = ++_doctorRequestId;
+    unawaited(_searchDoctors('', requestId));
+  }
+
+  void showClinicSuggestions() {
+    if (state.selectedClinic != null) return;
+
+    _clinicDebounce?.cancel();
+    final requestId = ++_clinicRequestId;
+    unawaited(_searchClinics('', requestId));
+  }
+
+  Future<void> _searchDoctors(String query, int requestId) async {
     state = state.copyWith(loadingDoctors: true, clearError: true);
 
     try {
       final result = await ref.read(searchUsecaseProvider).call(query);
 
+      if (requestId != _doctorRequestId) return;
+
       state = state.copyWith(
-        doctorResults: result.doctors,
+        doctorResults: result.doctors.take(16).toList(),
         loadingDoctors: false,
       );
     } catch (e) {
+      if (requestId != _doctorRequestId) return;
+
       state = state.copyWith(
         doctorResults: const [],
         loadingDoctors: false,
@@ -166,17 +200,21 @@ class SearchFormNotifier extends AutoDisposeNotifier<SearchFormState> {
     }
   }
 
-  Future<void> _searchClinics(String query) async {
+  Future<void> _searchClinics(String query, int requestId) async {
     state = state.copyWith(loadingClinics: true, clearError: true);
 
     try {
       final result = await ref.read(searchUsecaseProvider).call(query);
 
+      if (requestId != _clinicRequestId) return;
+
       state = state.copyWith(
-        clinicResults: result.clinics,
+        clinicResults: result.clinics.take(16).toList(),
         loadingClinics: false,
       );
     } catch (e) {
+      if (requestId != _clinicRequestId) return;
+
       state = state.copyWith(
         clinicResults: const [],
         loadingClinics: false,
@@ -187,9 +225,11 @@ class SearchFormNotifier extends AutoDisposeNotifier<SearchFormState> {
 
   void selectDoctor(DoctorSearchResult doctor) {
     _doctorDebounce?.cancel();
+    _doctorRequestId++;
 
     state = state.copyWith(
       selectedDoctor: doctor,
+      loadingDoctors: false,
       clearDoctorResults: true,
       hasSearched: false,
       clearSubmittedDoctor: true,
@@ -200,9 +240,11 @@ class SearchFormNotifier extends AutoDisposeNotifier<SearchFormState> {
 
   void selectClinic(ClinicSearchResult clinic) {
     _clinicDebounce?.cancel();
+    _clinicRequestId++;
 
     state = state.copyWith(
       selectedClinic: clinic,
+      loadingClinics: false,
       clearClinicResults: true,
       hasSearched: false,
       clearSubmittedDoctor: true,
@@ -213,8 +255,10 @@ class SearchFormNotifier extends AutoDisposeNotifier<SearchFormState> {
 
   void clearDoctor() {
     _doctorDebounce?.cancel();
+    _doctorRequestId++;
 
     state = state.copyWith(
+      loadingDoctors: false,
       clearSelectedDoctor: true,
       clearDoctorResults: true,
       hasSearched: false,
@@ -226,8 +270,10 @@ class SearchFormNotifier extends AutoDisposeNotifier<SearchFormState> {
 
   void clearClinic() {
     _clinicDebounce?.cancel();
+    _clinicRequestId++;
 
     state = state.copyWith(
+      loadingClinics: false,
       clearSelectedClinic: true,
       clearClinicResults: true,
       hasSearched: false,
