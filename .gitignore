@@ -22,3 +22,4 @@ lib/config/supabase_config.dart
 
 # migración a postgres
 /migration/
+/migrations/

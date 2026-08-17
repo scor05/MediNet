@@ -31,30 +31,45 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   void _selectDoctor(DoctorSearchResult doctor) {
     _doctorCtrl.text = doctor.name;
+    _clinicCtrl.clear();
+
     ref.read(searchFormNotifierProvider.notifier).selectDoctor(doctor);
   }
 
   void _selectClinic(ClinicSearchResult clinic) {
     _clinicCtrl.text = clinic.name;
+
     ref.read(searchFormNotifierProvider.notifier).selectClinic(clinic);
   }
 
   void _clearDoctor() {
     _doctorCtrl.clear();
+    _clinicCtrl.clear();
+
     final notifier = ref.read(searchFormNotifierProvider.notifier);
+
     notifier.clearDoctor();
     notifier.showDoctorSuggestions();
   }
 
   void _clearClinic() {
     _clinicCtrl.clear();
+
     final notifier = ref.read(searchFormNotifierProvider.notifier);
+
     notifier.clearClinic();
     notifier.showClinicSuggestions();
   }
 
+  void _onDoctorChanged(String query) {
+    _clinicCtrl.clear();
+
+    ref.read(searchFormNotifierProvider.notifier).onDoctorQueryChanged(query);
+  }
+
   void _submitSearch() {
     FocusScope.of(context).unfocus();
+
     ref.read(searchFormNotifierProvider.notifier).submitSearch();
   }
 
@@ -95,7 +110,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             doctorController: _doctorCtrl,
             clinicController: _clinicCtrl,
             state: state,
-            onDoctorChanged: notifier.onDoctorQueryChanged,
+            onDoctorChanged: _onDoctorChanged,
             onClinicChanged: notifier.onClinicQueryChanged,
             onDoctorSelected: _selectDoctor,
             onClinicSelected: _selectClinic,

@@ -67,25 +67,30 @@ class SearchFiltersPanel extends StatelessWidget {
                     onEmptyFocus: onDoctorEmptyFocus,
                   ),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: SearchInputField<ClinicSearchResult>(
-                    compact: true,
-                    controller: clinicController,
-                    label: 'Clínica',
-                    hintText: 'Nombre de la clínica',
-                    loading: state.loadingClinics,
-                    selectedItem: state.selectedClinic,
-                    results: state.clinicResults,
-                    titleBuilder: (clinic) => clinic.name,
-                    subtitleBuilder: (clinic) => clinic.address,
-                    onChanged: onClinicChanged,
-                    onSelected: onClinicSelected,
-                    onClear: onClinicCleared,
-                    onEmptyFocus: onClinicEmptyFocus,
+
+                if (state.selectedDoctor != null) ...[
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: SearchInputField<ClinicSearchResult>(
+                      compact: true,
+                      controller: clinicController,
+                      label: 'Clínica',
+                      hintText: 'Nombre de la clínica',
+                      loading: state.loadingClinics,
+                      selectedItem: state.selectedClinic,
+                      results: state.clinicResults,
+                      titleBuilder: (clinic) => clinic.name,
+                      subtitleBuilder: (clinic) => clinic.address,
+                      onChanged: onClinicChanged,
+                      onSelected: onClinicSelected,
+                      onClear: onClinicCleared,
+                      onEmptyFocus: onClinicEmptyFocus,
+                    ),
                   ),
-                ),
+                ],
+
                 const SizedBox(width: 10),
+
                 SizedBox.square(
                   dimension: 44,
                   child: ElevatedButton(
