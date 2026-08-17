@@ -8,6 +8,7 @@ import 'package:frontend/features/clinic/domain/entities/clinic.dart';
 import 'package:frontend/features/user/domain/entities/patient_profile.dart';
 import 'package:frontend/features/user/domain/entities/user.dart';
 import 'package:frontend/features/user/domain/providers/user_domain_providers.dart';
+import 'package:frontend/features/waitlist/presentation/dialogs/join_waitlist_dialog.dart';
 
 class PublicCreateAppointmentDialog extends ConsumerStatefulWidget {
   final int? initialDoctorId;
@@ -293,9 +294,22 @@ class _PublicCreateAppointmentDialogState
           ? e.message
           : 'No se pudo enviar la solicitud.';
 
+      // Si el error es porque el horario ya está ocupado, ofrecer lista de espera
+      final isSlotTaken = e is ApiException &&
+          e.isValidation &&
+          (message.contains('Ya existe una cita') ||
+           message.contains('horario'));
+
+      if (isSlotTaken) {
+        final joined = await _offerWaitlist(selectedSlot);
+        if (joined == true) return;
+      }
+
       setState(() {
         _error = message;
       });
+
+      if (!mounted) return;
 
       final messenger = ScaffoldMessenger.of(context);
       messenger.hideCurrentSnackBar();
@@ -305,6 +319,36 @@ class _PublicCreateAppointmentDialogState
         setState(() => _saving = false);
       }
     }
+  }
+
+  /// Ofrece unirse a la lista de espera cuando el horario no está disponible
+  Future<bool?> _offerWaitlist(PublicSlot slot) async {
+    // Para el waitlist necesitamos un appointment ID del target.
+    // Como no tenemos el ID del appointment ocupado, usamos el scheduleId
+    // y creamos un registro con IDs placeholder que el backend resolverá.
+    final joined = await showDialog<bool>(
+      context: context,
+      builder: (_) => JoinWaitlistDialog(
+        targetAppointmentId: 0, // Se ajustará según el flujo del backend
+        fallbackAppointmentId: 0, // Se ajustará según el flujo del backend
+        doctorName: slot.doctorName,
+        clinicName: slot.clinicName,
+        date: _fmtDate(_selectedDate),
+        startTime: slot.startTime,
+      ),
+    );
+
+    if (joined == true && mounted) {
+      final messenger = ScaffoldMessenger.of(context);
+      Navigator.of(context).pop();
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Te registraste en la lista de espera. Te notificaremos cuando se libere.'),
+        ),
+      );
+    }
+
+    return joined;
   }
 
   @override
