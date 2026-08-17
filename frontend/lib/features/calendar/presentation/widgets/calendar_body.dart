@@ -14,6 +14,7 @@ class CalendarBody extends ConsumerStatefulWidget {
   final bool showDoctor;
   final bool showPatient;
   final bool showSchedules;
+  final void Function(Appointment)? onAppointmentTap;
   final void Function(Appointment)? onBlockadeTap;
 
   const CalendarBody({
@@ -24,6 +25,7 @@ class CalendarBody extends ConsumerStatefulWidget {
     this.showDoctor = false,
     this.showPatient = false,
     this.showSchedules = false,
+    this.onAppointmentTap,
     this.onBlockadeTap,
   });
 
@@ -39,14 +41,10 @@ class _CalendarBodyState extends ConsumerState<CalendarBody> {
         : const AsyncValue<List<Schedule>>.data([]);
 
     return schedulesAsync.when(
-      loading: () => const Center(
-        child: CircularProgressIndicator(),
-      ),
+      loading: () => const Center(child: CircularProgressIndicator()),
 
       error: (e, _) => ErrorView(
-        message: e is ApiException
-            ? e.message
-            : 'Error cargando horarios.',
+        message: e is ApiException ? e.message : 'Error cargando horarios.',
         onRetry: widget.onRetry,
       ),
 
@@ -54,14 +52,10 @@ class _CalendarBodyState extends ConsumerState<CalendarBody> {
         return widget.calendarAsync.when(
           skipLoadingOnReload: true,
 
-          loading: () => const Center(
-            child: CircularProgressIndicator(),
-          ),
+          loading: () => const Center(child: CircularProgressIndicator()),
 
           error: (e, _) => ErrorView(
-            message: e is ApiException
-                ? e.message
-                : 'Error inesperado.',
+            message: e is ApiException ? e.message : 'Error inesperado.',
             onRetry: widget.onRetry,
           ),
 
@@ -73,6 +67,7 @@ class _CalendarBodyState extends ConsumerState<CalendarBody> {
                 schedules: schedules,
                 showDoctor: widget.showDoctor,
                 showPatient: widget.showPatient,
+                onAppointmentTap: widget.onAppointmentTap,
                 onBlockadeTap: widget.onBlockadeTap,
               ),
 

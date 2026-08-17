@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/auth/domain/entities/user_profile.dart';
 import 'package:frontend/features/auth/presentation/utils/logout_helper.dart';
+import 'package:frontend/features/calendar/presentation/dialogs/appointment_detail_dialog.dart';
 import 'package:frontend/features/calendar/presentation/providers/secretary_calendar_provider.dart';
 import 'package:frontend/features/calendar/presentation/providers/secretary_requested_appointments_provider.dart';
 import 'package:frontend/features/calendar/presentation/utils/calendar_dialog_helpers.dart';
@@ -102,6 +103,14 @@ class _SecretaryCalendarScreenState
     }
   }
 
+  void _openAppointmentDetail(Appointment appointment) {
+    showAppointmentDetailSheet(
+      context: context,
+      appointment: appointment,
+      onCancelled: ref.read(secretaryCalendarNotifierProvider.notifier).refresh,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final calendarAsync = ref.watch(secretaryCalendarNotifierProvider);
@@ -134,6 +143,7 @@ class _SecretaryCalendarScreenState
             onRetry: ref
                 .read(secretaryCalendarNotifierProvider.notifier)
                 .refresh,
+            onAppointmentTap: _openAppointmentDetail,
             onBlockadeTap: _onBlockadeTap,
           ),
           if (_fabOpen)

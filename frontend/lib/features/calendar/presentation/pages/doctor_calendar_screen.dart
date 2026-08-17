@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/auth/presentation/utils/logout_helper.dart';
 import 'package:frontend/features/auth/domain/entities/user_profile.dart';
+import 'package:frontend/features/calendar/presentation/dialogs/appointment_detail_dialog.dart';
 import 'package:frontend/features/calendar/presentation/providers/doctor_calendar_provider.dart';
 import 'package:frontend/features/calendar/presentation/utils/calendar_dialog_helpers.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_app_bar.dart';
@@ -90,6 +91,14 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
     }
   }
 
+  void _openAppointmentDetail(Appointment appointment) {
+    showAppointmentDetailSheet(
+      context: context,
+      appointment: appointment,
+      onCancelled: ref.read(doctorCalendarNotifierProvider.notifier).refresh,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final calendarAsync = ref.watch(doctorCalendarNotifierProvider);
@@ -122,6 +131,7 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
             onRetry: ref.read(doctorCalendarNotifierProvider.notifier).refresh,
             showPatient: true,
             showSchedules: true,
+            onAppointmentTap: _openAppointmentDetail,
             onBlockadeTap: _onBlockadeTap,
           ),
           if (_fabOpen)

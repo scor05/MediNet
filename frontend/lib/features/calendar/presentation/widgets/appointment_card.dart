@@ -63,7 +63,7 @@ class AppointmentCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(6),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -71,15 +71,21 @@ class AppointmentCard extends StatelessWidget {
                 Text(
                   appointment.doctorName,
                   style: CalendarTextStyles.appointmentTime,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               if (showPatient)
                 Text(
                   appointment.patientName,
                   style: CalendarTextStyles.appointmentTime,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               Text(
                 '${_formatTime(appointment.startTime)} - ${_calculateEndTime(appointment.startTime, appointment.appointmentDuration)}',
                 style: CalendarTextStyles.appointmentPatient,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),

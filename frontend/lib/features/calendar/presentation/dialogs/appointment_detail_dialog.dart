@@ -2,13 +2,35 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/appointment/domain/providers/appointment_domain_providers.dart';
-import 'package:frontend/features/calendar/presentation/providers/public_calendar_provider.dart';
 import 'package:frontend/theme/calendar_theme.dart';
 
-class PublicAppointmentDetailDialog extends ConsumerWidget {
-  final Appointment appointment;
+Future<void> showAppointmentDetailSheet({
+  required BuildContext context,
+  required Appointment appointment,
+  Future<void> Function()? onCancelled,
+}) {
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
+    builder: (_) => AppointmentDetailDialog(
+      appointment: appointment,
+      onCancelled: onCancelled,
+    ),
+  );
+}
 
-  const PublicAppointmentDetailDialog({super.key, required this.appointment});
+class AppointmentDetailDialog extends ConsumerWidget {
+  final Appointment appointment;
+  final Future<void> Function()? onCancelled;
+
+  const AppointmentDetailDialog({
+    super.key,
+    required this.appointment,
+    this.onCancelled,
+  });
 
   Color _statusColor() {
     return switch (appointment.status) {
@@ -99,7 +121,7 @@ class PublicAppointmentDetailDialog extends ConsumerWidget {
         status: 'cancelled',
       );
 
-      await ref.read(publicCalendarNotifierProvider.notifier).refresh();
+      await onCancelled?.call();
 
       if (!context.mounted) return;
 
