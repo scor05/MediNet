@@ -49,6 +49,7 @@ class DoctorCalendarNotifier extends AsyncNotifier<List<Appointment>> {
     required DateTime date,
     required TimeOfDay startTime,
     required String patientName,
+    int? patientId,
     required String status,
     required int duration,
   }) async {
@@ -59,6 +60,7 @@ class DoctorCalendarNotifier extends AsyncNotifier<List<Appointment>> {
           date: date,
           startTime: startTime,
           patientName: patientName,
+          patientId: patientId,
           status: status,
         );
     final withDuration = newAppointment.copyWith(appointmentDuration: duration);

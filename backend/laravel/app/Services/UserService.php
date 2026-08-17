@@ -7,9 +7,7 @@ use App\Repositories\UserRepository;
 class UserService
 {
     // Se inyecta el repositorio
-    public function __construct(private UserRepository $repository)
-    {
-    }
+    public function __construct(private UserRepository $repository) {}
 
     // Se obtienen todos los usuarios
     public function getAll()
@@ -53,7 +51,6 @@ class UserService
         $this->repository->delete($id);
     }
 
-
     // Se obtiene información básica del usuario
     public function getProfile($id)
     {
@@ -76,5 +73,10 @@ class UserService
     public function getAvailable(string $search)
     {
         return $this->repository->findAvailable($search);
+    }
+
+    public function searchPatients(string $search)
+    {
+        return $this->repository->searchPatients($search);
     }
 }

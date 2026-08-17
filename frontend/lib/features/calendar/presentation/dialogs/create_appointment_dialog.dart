@@ -6,6 +6,8 @@ import 'package:frontend/features/calendar/presentation/widgets/create_appointme
 import 'package:frontend/features/calendar/presentation/widgets/create_appointment/dialog_handle.dart';
 import 'package:frontend/features/calendar/presentation/widgets/create_appointment/schedule_dropdown.dart';
 import 'package:frontend/features/calendar/presentation/widgets/create_appointment/time_slot_dropdown.dart';
+import 'package:frontend/features/search/presentation/widgets/search_input_field.dart';
+import 'package:frontend/features/user/domain/entities/user.dart';
 
 class CreateAppointmentDialog extends ConsumerStatefulWidget {
   final DateTime weekStart;
@@ -26,6 +28,25 @@ class _CreateAppointmentDialogState
   void dispose() {
     _patientCtrl.dispose();
     super.dispose();
+  }
+
+  void _selectPatient(User patient) {
+    _patientCtrl.value = TextEditingValue(
+      text: patient.name,
+      selection: TextSelection.collapsed(offset: patient.name.length),
+    );
+    ref
+        .read(createAppointmentFormProvider(widget.weekStart).notifier)
+        .selectPatient(patient);
+  }
+
+  void _clearPatient() {
+    _patientCtrl.clear();
+    final notifier = ref.read(
+      createAppointmentFormProvider(widget.weekStart).notifier,
+    );
+    notifier.clearPatient();
+    notifier.showPatientSuggestions();
   }
 
   Future<void> _submit() async {
@@ -67,7 +88,7 @@ class _CreateAppointmentDialogState
       createAppointmentFormProvider(widget.weekStart).notifier,
     );
 
-    return Padding(
+    return SingleChildScrollView(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
         left: 16,
@@ -120,14 +141,19 @@ class _CreateAppointmentDialogState
               ),
               const SizedBox(height: 10),
 
-              TextFormField(
+              SearchInputField<User>(
                 controller: _patientCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Nombre del paciente',
-                ),
-                validator: (value) =>
-                    value == null || value.trim().isEmpty ? 'Requerido' : null,
-                onChanged: (_) => formNotifier.clearError(),
+                label: 'Paciente',
+                hintText: 'Nombre del paciente',
+                loading: formState.loadingPatients,
+                selectedItem: formState.selectedPatient,
+                results: formState.patientResults,
+                titleBuilder: (patient) => patient.name,
+                subtitleBuilder: (patient) => patient.email,
+                onChanged: formNotifier.onPatientQueryChanged,
+                onSelected: _selectPatient,
+                onClear: _clearPatient,
+                onEmptyFocus: formNotifier.showPatientSuggestions,
               ),
 
               if (formState.error != null) ...[

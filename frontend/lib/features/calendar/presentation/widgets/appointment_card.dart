@@ -40,8 +40,14 @@ class AppointmentCard extends StatelessWidget {
     final hour = int.parse(parts[0]);
     final minute = int.parse(parts[1]);
     final second = parts.length > 2 ? int.parse(parts[2]) : 0;
-    final endDateTime = DateTime(2026, 1, 1, hour, minute, second)
-        .add(Duration(minutes: durationMinutes));
+    final endDateTime = DateTime(
+      2026,
+      1,
+      1,
+      hour,
+      minute,
+      second,
+    ).add(Duration(minutes: durationMinutes));
     return '${endDateTime.hour}:${endDateTime.minute.toString().padLeft(2, '0')}';
   }
 
@@ -50,30 +56,33 @@ class AppointmentCard extends StatelessWidget {
     if (appointment.isBlockade) {
       return GestureDetector(onTap: onTap, child: _buildBlockadeCard());
     }
-
     return Card(
       color: _statusColor(),
       margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(6),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (showDoctor)
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(6),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (showDoctor)
+                Text(
+                  appointment.doctorName,
+                  style: CalendarTextStyles.appointmentTime,
+                ),
+              if (showPatient)
+                Text(
+                  appointment.patientName,
+                  style: CalendarTextStyles.appointmentTime,
+                ),
               Text(
-                appointment.doctorName,
-                style: CalendarTextStyles.appointmentTime,
+                '${_formatTime(appointment.startTime)} - ${_calculateEndTime(appointment.startTime, appointment.appointmentDuration)}',
+                style: CalendarTextStyles.appointmentPatient,
               ),
-            if (showPatient)
-              Text(
-                appointment.patientName,
-                style: CalendarTextStyles.appointmentTime,
-              ),
-            Text(
-              '${_formatTime(appointment.startTime)} - ${_calculateEndTime(appointment.startTime, appointment.appointmentDuration)}',
-              style: CalendarTextStyles.appointmentPatient,
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -3,76 +3,88 @@
 namespace App\Repositories;
 
 use App\Models\Waitlist;
-use Illuminate\Support\Facades\DB;
 
 class WaitlistRepository
 {
-    // Se obtienen todos los registros de lista de espera
     public function findAll()
     {
-        return Waitlist::all();
+        return Waitlist::with([
+            'patient',
+            'targetAppointment',
+            'fallbackAppointment'
+        ])->get();
     }
 
-    // Se obtiene un registro por su id
-    public function findById(int $id)
+    public function findById($id)
     {
-        return Waitlist::findOrFail($id);
+        return Waitlist::with([
+            'patient',
+            'targetAppointment',
+            'fallbackAppointment'
+        ])->find($id);
     }
 
-    // Se obtienen los registros de un paciente
-    public function findByPatient(int $patientId)
+    public function findByPatient($patientId)
+    {
+        return Waitlist::with([
+            'targetAppointment',
+            'fallbackAppointment'
+        ])
+        ->where('id_patient', $patientId)
+        ->get();
+    }
+
+    public function findDuplicate($patientId, $appointmentId)
     {
         return Waitlist::where('id_patient', $patientId)
-            ->orderBy('created_at', 'desc')
-            ->get();
+            ->where('id_target_appointment', $appointmentId)
+            ->first();
     }
 
-    // Se obtienen los waitlists activos vinculados a una cita target
-    public function findActiveByTargetAppointment(int $appointmentId)
+    public function findActiveByTargetAppointment($appointmentId)
     {
-        return Waitlist::where('id_target_appointment', $appointmentId)
-            ->where('status', 'active')
-            ->get();
+        return Waitlist::where(
+            'id_target_appointment',
+            $appointmentId
+        )
+        ->where('status', 'waiting')
+        ->get();
     }
 
-    // Se crea un nuevo registro
     public function create(array $data)
     {
         return Waitlist::create($data);
     }
 
-    // Se actualiza un registro
-    public function update(int $id, array $data)
+    public function update($id, array $data)
     {
-        $waitlist = Waitlist::findOrFail($id);
+        $waitlist = Waitlist::find($id);
+
+        if (!$waitlist) {
+            return null;
+        }
+
         $waitlist->update($data);
+
         return $waitlist;
     }
 
-    // Se elimina un registro
-    public function delete(int $id)
+    public function delete($id)
     {
-        $waitlist = Waitlist::findOrFail($id);
-        $waitlist->delete();
+        $waitlist = Waitlist::find($id);
+
+        if (!$waitlist) {
+            return false;
+        }
+
+        return $waitlist->delete();
     }
 
-    // Retorna datos contextuales para construir el mensaje de notificación
-    public function findNotificationContext(int $waitlistId)
+    public function findNotificationContext($id)
     {
-        return DB::table('waitlists')
-            ->join('appointments', 'appointments.id', '=', 'waitlists.id_target_appointment')
-            ->join('schedules', 'schedules.id', '=', 'appointments.id_schedule')
-            ->join('clinics', 'clinics.id', '=', 'schedules.id_clinic')
-            ->join('users as doctor', 'doctor.id', '=', 'schedules.id_doctor')
-            ->where('waitlists.id', $waitlistId)
-            ->select([
-                'waitlists.id as waitlist_id',
-                'waitlists.id_patient',
-                'appointments.date',
-                'appointments.start_time',
-                'doctor.name as doctor_name',
-                'clinics.name as clinic_name',
-            ])
-            ->first();
+        return Waitlist::with([
+            'patient',
+            'targetAppointment'
+        ])->find($id);
     }
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
@@ -5,6 +7,8 @@ import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/calendar/presentation/providers/doctor_calendar_provider.dart';
 import 'package:frontend/features/calendar/presentation/utils/appointment_time_utils.dart';
 import 'package:frontend/features/schedule/domain/entities/schedule.dart';
+import 'package:frontend/features/user/domain/entities/user.dart';
+import 'package:frontend/features/user/domain/providers/user_domain_providers.dart';
 
 class CreateAppointmentFormState {
   final List<Schedule> schedules;
@@ -13,6 +17,9 @@ class CreateAppointmentFormState {
   final String? selectedTime;
   final List<String> timeSlots;
   final bool loadingSchedules;
+  final List<User> patientResults;
+  final User? selectedPatient;
+  final bool loadingPatients;
   final bool saving;
   final String? error;
 
@@ -23,6 +30,9 @@ class CreateAppointmentFormState {
     this.selectedTime,
     this.timeSlots = const [],
     this.loadingSchedules = false,
+    this.patientResults = const [],
+    this.selectedPatient,
+    this.loadingPatients = false,
     this.saving = false,
     this.error,
   });
@@ -34,12 +44,17 @@ class CreateAppointmentFormState {
     String? selectedTime,
     List<String>? timeSlots,
     bool? loadingSchedules,
+    List<User>? patientResults,
+    User? selectedPatient,
+    bool? loadingPatients,
     bool? saving,
     String? error,
     bool clearError = false,
     bool clearSelectedSchedule = false,
     bool clearSelectedDate = false,
     bool clearSelectedTime = false,
+    bool clearPatientResults = false,
+    bool clearSelectedPatient = false,
   }) {
     return CreateAppointmentFormState(
       schedules: schedules ?? this.schedules,
@@ -54,6 +69,13 @@ class CreateAppointmentFormState {
           : selectedTime ?? this.selectedTime,
       timeSlots: timeSlots ?? this.timeSlots,
       loadingSchedules: loadingSchedules ?? this.loadingSchedules,
+      patientResults: clearPatientResults
+          ? const []
+          : patientResults ?? this.patientResults,
+      selectedPatient: clearSelectedPatient
+          ? null
+          : selectedPatient ?? this.selectedPatient,
+      loadingPatients: loadingPatients ?? this.loadingPatients,
       saving: saving ?? this.saving,
       error: clearError ? null : error ?? this.error,
     );
@@ -69,8 +91,12 @@ final createAppointmentFormProvider =
 
 class CreateAppointmentFormNotifier
     extends AutoDisposeFamilyNotifier<CreateAppointmentFormState, DateTime> {
+  Timer? _patientDebounce;
+  int _patientRequestId = 0;
+
   @override
   CreateAppointmentFormState build(DateTime weekStart) {
+    ref.onDispose(() => _patientDebounce?.cancel());
     Future.microtask(loadSchedules);
 
     return const CreateAppointmentFormState(loadingSchedules: true);
@@ -142,10 +168,94 @@ class CreateAppointmentFormNotifier
     state = state.copyWith(clearError: true);
   }
 
+  void onPatientQueryChanged(String query) {
+    _patientDebounce?.cancel();
+    final requestId = ++_patientRequestId;
+
+    state = state.copyWith(
+      clearSelectedPatient: true,
+      clearPatientResults: true,
+      loadingPatients: false,
+      clearError: true,
+    );
+
+    final cleanQuery = query.trim();
+    if (cleanQuery.isEmpty) {
+      unawaited(_searchPatients('', requestId));
+      return;
+    }
+
+    if (cleanQuery.length < 2) return;
+
+    _patientDebounce = Timer(
+      const Duration(milliseconds: 400),
+      () => _searchPatients(cleanQuery, requestId),
+    );
+  }
+
+  void showPatientSuggestions() {
+    if (state.selectedPatient != null) return;
+
+    _patientDebounce?.cancel();
+    final requestId = ++_patientRequestId;
+    unawaited(_searchPatients('', requestId));
+  }
+
+  Future<void> _searchPatients(String query, int requestId) async {
+    state = state.copyWith(loadingPatients: true, clearError: true);
+
+    try {
+      final results = await ref.read(searchPatientsUsecaseProvider).call(query);
+      if (requestId != _patientRequestId) return;
+
+      state = state.copyWith(
+        patientResults: results.take(16).toList(),
+        loadingPatients: false,
+      );
+    } catch (e) {
+      if (requestId != _patientRequestId) return;
+
+      state = state.copyWith(
+        clearPatientResults: true,
+        loadingPatients: false,
+        error: e is ApiException
+            ? e.message
+            : 'No se pudieron buscar pacientes.',
+      );
+    }
+  }
+
+  void selectPatient(User patient) {
+    _patientDebounce?.cancel();
+    _patientRequestId++;
+    state = state.copyWith(
+      selectedPatient: patient,
+      clearPatientResults: true,
+      loadingPatients: false,
+      clearError: true,
+    );
+  }
+
+  void clearPatient() {
+    _patientDebounce?.cancel();
+    _patientRequestId++;
+    state = state.copyWith(
+      clearSelectedPatient: true,
+      clearPatientResults: true,
+      loadingPatients: false,
+      clearError: true,
+    );
+  }
+
   Future<Appointment?> submit({required String patientName}) async {
     final selectedSchedule = state.selectedSchedule;
     final selectedDate = state.selectedDate;
     final selectedTime = state.selectedTime;
+
+    if (patientName.trim().isEmpty) {
+      state = state.copyWith(error: 'Ingresa el nombre del paciente.');
+      return null;
+    }
 
     if (selectedSchedule == null ||
         selectedDate == null ||
@@ -171,6 +281,7 @@ class CreateAppointmentFormNotifier
             date: selectedDate,
             startTime: startTime,
             patientName: patientName.trim(),
+            patientId: state.selectedPatient?.id,
             status: 'accepted',
             duration: selectedSchedule.duration,
           );

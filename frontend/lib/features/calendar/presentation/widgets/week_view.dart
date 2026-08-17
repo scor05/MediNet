@@ -12,6 +12,7 @@ class WeekView extends StatelessWidget {
   final bool showDoctor;
   final bool showPatient;
   final bool compact;
+  final void Function(Appointment)? onAppointmentTap;
   final void Function(Appointment)? onBlockadeTap;
 
   const WeekView({
@@ -22,6 +23,7 @@ class WeekView extends StatelessWidget {
     this.showDoctor = false,
     this.showPatient = false,
     this.compact = false,
+    this.onAppointmentTap,
     this.onBlockadeTap,
   });
 
@@ -59,6 +61,7 @@ class WeekView extends StatelessWidget {
                     startHour: startHour,
                     endHour: endHour,
                     hourHeight: hourHeight,
+                    onAppointmentTap: onAppointmentTap,
                     onBlockadeTap: onBlockadeTap,
                   ),
                 ),

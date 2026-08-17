@@ -13,6 +13,7 @@ class CreateAppointmentUsecase {
     required DateTime date,
     required TimeOfDay startTime,
     required String patientName,
+    int? patientId,
     required String status,
   }) async {
     return await repository.createAppointment(
@@ -20,6 +21,7 @@ class CreateAppointmentUsecase {
       date: date,
       startTime: startTime,
       patientName: patientName,
+      patientId: patientId,
       status: status,
     );
   }

@@ -15,6 +15,7 @@ class DayColumn extends StatelessWidget {
   final int endHour;
   final double hourHeight;
   final void Function(Appointment)? onBlockadeTap;
+  final void Function(Appointment)? onAppointmentTap;
 
   const DayColumn({
     super.key,
@@ -26,6 +27,7 @@ class DayColumn extends StatelessWidget {
     required this.startHour,
     required this.endHour,
     required this.hourHeight,
+    this.onAppointmentTap,
     this.onBlockadeTap,
   });
 
@@ -85,8 +87,10 @@ class DayColumn extends StatelessWidget {
 
           ...schedules.map((schedule) {
             final top = _topFromTime(schedule.startTime);
-            final height =
-                _heightFromTimeRange(schedule.startTime, schedule.endTime);
+            final height = _heightFromTimeRange(
+              schedule.startTime,
+              schedule.endTime,
+            );
             final color = getClinicColor(schedule.clinicName);
             final textColor = color.withOpacity(0.75);
 
@@ -134,7 +138,7 @@ class DayColumn extends StatelessWidget {
                 showPatient: showPatient,
                 onTap: appointment.isBlockade
                     ? () => onBlockadeTap?.call(appointment)
-                    : null,
+                    : () => onAppointmentTap?.call(appointment),
               ),
             );
           }),
