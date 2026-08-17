@@ -4,74 +4,115 @@ namespace App\Http\Controllers;
 
 use App\Services\WaitlistService;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class WaitlistController extends Controller
 {
-    // Se inyecta el servicio
-    public function __construct(private WaitlistService $service)
-    {
+    protected WaitlistService $service;
+
+    public function __construct(
+        WaitlistService $service
+    ) {
+        $this->service = $service;
     }
 
-    // Se obtienen todos los registros de lista de espera
     public function index()
     {
-        return response()->json($this->service->getAll());
+        return response()->json(
+            $this->service->getAll()
+        );
     }
 
-    // Se obtiene un registro por su id
-    public function show(int $id)
+    public function show($id)
     {
-        return response()->json($this->service->getById($id));
-    }
+        $waitlist = $this->service->getById($id);
 
-    // Se obtienen los registros de un paciente
-    public function indexByPatient(int $patientId)
-    {
-        return response()->json($this->service->getByPatient($patientId));
-    }
-
-    // Se crea un nuevo registro de lista de espera
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'id_patient' => 'required|integer|exists:users,id',
-            'id_target_appointment' => 'required|integer|exists:appointments,id',
-            'id_fallback_appointment' => 'required|integer|exists:appointments,id',
-            'status' => [
-                'sometimes',
-                Rule::in(['active', 'notified', 'expired', 'fulfilled', 'cancelled']),
-            ],
-        ]);
-
-        // Status por defecto
-        if (!isset($validated['status'])) {
-            $validated['status'] = 'active';
+        if (!$waitlist) {
+            return response()->json([
+                'message' => 'Registro no encontrado'
+            ], 404);
         }
 
-        return response()->json($this->service->create($validated), 201);
+        return response()->json($waitlist);
     }
 
-    // Se actualiza un registro de lista de espera
-    public function update(Request $request, int $id)
+    public function indexByPatient($patientId)
     {
-        $validated = $request->validate([
-            'id_patient' => 'sometimes|integer|exists:users,id',
-            'id_target_appointment' => 'sometimes|integer|exists:appointments,id',
-            'id_fallback_appointment' => 'sometimes|integer|exists:appointments,id',
-            'status' => [
-                'sometimes',
-                Rule::in(['active', 'notified', 'expired', 'fulfilled', 'cancelled']),
+        return response()->json(
+            $this->service->getByPatient($patientId)
+        );
+    }
+
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'id_patient' => [
+                'required',
+                'exists:patients,id'
+            ],
+
+            'id_target_appointment' => [
+                'required',
+                'exists:appointments,id'
+            ],
+
+            'id_fallback_appointment' => [
+                'nullable',
+                'exists:appointments,id',
+                'different:id_target_appointment'
             ],
         ]);
 
-        return response()->json($this->service->update($id, $validated));
+        $waitlist = $this->service->join($data);
+
+        return response()->json([
+            'message' =>
+                'Paciente agregado a la lista de espera',
+            'data' => $waitlist
+        ], 201);
     }
 
-    // Se elimina un registro de lista de espera
-    public function destroy(int $id)
+    public function update(Request $request, $id)
     {
-        $this->service->delete($id);
-        return response()->json(null, 204);
+        $data = $request->validate([
+            'status' => [
+                'sometimes',
+                'in:waiting,notified,cancelled'
+            ],
+
+            'id_fallback_appointment' => [
+                'nullable',
+                'exists:appointments,id'
+            ]
+        ]);
+
+        $waitlist =
+            $this->service->update($id, $data);
+
+        if (!$waitlist) {
+            return response()->json([
+                'message' => 'Registro no encontrado'
+            ], 404);
+        }
+
+        return response()->json([
+            'message' => 'Lista de espera actualizada',
+            'data' => $waitlist
+        ]);
+    }
+
+    public function destroy($id)
+    {
+        $deleted = $this->service->leave($id);
+
+        if (!$deleted) {
+            return response()->json([
+                'message' => 'Registro no encontrado'
+            ], 404);
+        }
+
+        return response()->json([
+            'message' =>
+                'Paciente eliminado de la lista de espera'
+        ]);
     }
 }
