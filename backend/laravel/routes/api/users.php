@@ -21,4 +21,7 @@ Route::prefix('users')->group(function () {
     Route::delete('/{doctorId}/specialties/{specialtyId}', [DoctorSpecialtyController::class, 'destroy'])->whereNumber('doctorId')->whereNumber('specialtyId');
 
     Route::get('/{doctorId}/schedules', [ScheduleController::class, 'index']);
+
+    // Datos básicos de un paciente (solo para secretarias autorizadas)
+    Route::get('/{patientId}/patient-info', [UserController::class, 'patientInfo'])->whereNumber('patientId');
 });

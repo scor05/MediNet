@@ -82,4 +82,26 @@ class UserRemoteDatasource {
       throw handleApiError(response);
     }
   }
+
+  // Obtiene datos básicos de un paciente (para secretarias autorizadas)
+  Future<Map<String, dynamic>> getPatientBasicInfo(int patientId) async {
+    final token = Supabase.instance.client.auth.currentSession?.accessToken;
+
+    final response = await http
+        .get(
+          Uri.parse('${AppConfig.apiUrl}/users/$patientId/patient-info'),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw handleApiError(response);
+    }
+  }
 }
