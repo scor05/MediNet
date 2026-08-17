@@ -107249,7 +107249,7 @@ A.asT.prototype={
 $0(){return this.a.un(this.b,this.c)},
 $S:0}
 A.Xy.prototype={
-C(a){var s=this,r=null,q=s.e,p=q.c,o=A.bx(A.b1c(!0,s.c,"Nombre del doctor","Doctor",q.r,s.f,s.y,s.Q,s.w,q.a,p,new A.asO(),new A.asP(),t.x_),1),n=q.d,m=A.bx(A.b1c(!0,s.d,"Nombre de la cl\xednica","Cl\xednica",q.w,s.r,s.z,s.as,s.x,q.b,n,new A.asQ(),new A.asR(),t.AI),1),l=A.Rk().aBY(B.a6F,B.a6G),k=t.p
+C(a){var s=this,r=null,q=s.e,p=q.c,o=A.bx(A.b1c(!0,s.c,"Nombre del doctor o su especialidad","Doctor (o especialidad)",q.r,s.f,s.y,s.Q,s.w,q.a,p,new A.asO(),new A.asP(),t.x_),1),n=q.d,m=A.bx(A.b1c(!0,s.d,"Nombre de la cl\xednica","Cl\xednica",q.w,s.r,s.z,s.as,s.x,q.b,n,new A.asQ(),new A.asR(),t.AI),1),l=A.Rk().aBY(B.a6F,B.a6G),k=t.p
 l=A.b([A.bL(A.b([o,B.DZ,m,B.DZ,A.XX(A.h5(B.NG,p!=null||n!=null?s.at:r,l),44)],k),B.V,B.k,B.n,0,r)],k)
 if(q.x){p=A.TQ(r,r,B.YM,new A.cd(A.bU(6),B.o),r,B.a2b)
 B.b.L(l,A.b([B.aP,A.bP(new A.Fj(!0,s.ax,r,r,r,p,B.m,r,!1,r,!0,r,new A.a1z(B.EU,B.NV,p,r,r),r),r,1/0)],k))}q=q.y

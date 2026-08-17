@@ -11,7 +11,11 @@ class SearchRepository
         $search = '%'.$query.'%';
 
         return $this->doctorsQuery()
-            ->where('users.name', 'ILIKE', $search)
+            ->where(function ($doctorQuery) use ($search) {
+                $doctorQuery
+                    ->where('users.name', 'ILIKE', $search)
+                    ->orWhere('specialties.specialty', 'ILIKE', $search);
+            })
             ->orderBy('users.name')
             ->limit($limit)
             ->get();

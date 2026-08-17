@@ -54,8 +54,8 @@ class SearchFiltersPanel extends StatelessWidget {
                   child: SearchInputField<DoctorSearchResult>(
                     compact: true,
                     controller: doctorController,
-                    label: 'Doctor',
-                    hintText: 'Nombre del doctor',
+                    label: 'Doctor (o especialidad)',
+                    hintText: 'Nombre del doctor o su especialidad',
                     loading: state.loadingDoctors,
                     selectedItem: state.selectedDoctor,
                     results: state.doctorResults,
