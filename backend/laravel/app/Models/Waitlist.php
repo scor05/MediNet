@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Waitlist extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'id_patient',
         'id_target_appointment',
@@ -13,21 +16,27 @@ class Waitlist extends Model
         'status',
     ];
 
-    // Relación con el paciente
     public function patient()
     {
-        return $this->belongsTo(User::class, 'id_patient');
+        return $this->belongsTo(
+            Patient::class,
+            'id_patient'
+        );
     }
 
-    // Relación con la cita objetivo (la que el paciente desea)
     public function targetAppointment()
     {
-        return $this->belongsTo(Appointment::class, 'id_target_appointment');
+        return $this->belongsTo(
+            Appointment::class,
+            'id_target_appointment'
+        );
     }
 
-    // Relación con la cita de respaldo (la que el paciente tiene actualmente)
     public function fallbackAppointment()
     {
-        return $this->belongsTo(Appointment::class, 'id_fallback_appointment');
+        return $this->belongsTo(
+            Appointment::class,
+            'id_fallback_appointment'
+        );
     }
 }
