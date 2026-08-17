@@ -2,9 +2,9 @@
 
 namespace App\Repositories;
 
+use App\Models\Superadmin;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use App\Models\Superadmin;
 
 class UserRepository
 {
@@ -31,6 +31,7 @@ class UserRepository
     {
         $user = User::findOrFail($id);
         $user->update($data);
+
         return $user;
     }
 
@@ -39,6 +40,7 @@ class UserRepository
     {
         $user = User::findOrFail($id);
         $user->update(['fcm_token' => $fcmToken]);
+
         return $user;
     }
 
@@ -151,6 +153,31 @@ class UserRepository
             ->select('id', 'name', 'email')
             ->orderBy('name')
             ->limit(8)
+            ->get()
+            ->toArray();
+    }
+
+    // Busca cuentas activas que pueden vincularse como pacientes a una cita.
+    public function searchPatients(string $search)
+    {
+        return User::where('is_active', true)
+            ->whereNotIn('id', function ($query) {
+                $query->select('id_user')
+                    ->from('superadmins');
+            })
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($patientQuery) use ($search) {
+                    $patientQuery->where('name', 'ilike', "%{$search}%")
+                        ->orWhere('email', 'ilike', "%{$search}%");
+                });
+            })
+            ->when(
+                $search === '',
+                fn ($query) => $query->inRandomOrder(),
+                fn ($query) => $query->orderBy('name')
+            )
+            ->select('id', 'name', 'email')
+            ->limit(16)
             ->get()
             ->toArray();
     }

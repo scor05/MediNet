@@ -65,7 +65,6 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
     }
   }
 
-
   // Obtiene las citas de una secretaria
   @override
   Future<List<Appointment>> getPatientAppointments({
@@ -95,6 +94,7 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
     required DateTime date,
     required TimeOfDay startTime,
     required String patientName,
+    int? patientId,
     required String status,
   }) async {
     try {
@@ -103,6 +103,7 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
         date: date,
         startTime: startTime,
         patientName: patientName,
+        patientId: patientId,
         status: status,
       );
     } on ApiException {

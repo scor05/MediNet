@@ -4,10 +4,15 @@ import 'package:frontend/features/user/domain/entities/patient_profile.dart';
 import 'package:frontend/features/user/domain/usecases/get_available_users_usecase.dart';
 import 'package:frontend/features/user/domain/usecases/get_patient_profile_usecase.dart';
 import 'package:frontend/features/user/domain/usecases/save_fcm_token_usecase.dart';
+import 'package:frontend/features/user/domain/usecases/search_patients_usecase.dart';
 
 // Provider para el usecase getAvailableUsers
 final getAvailableUsersUsecaseProvider = Provider((ref) {
   return GetAvailableUsersUsecase(ref.read(userRepositoryProvider));
+});
+
+final searchPatientsUsecaseProvider = Provider((ref) {
+  return SearchPatientsUsecase(ref.read(userRepositoryProvider));
 });
 
 // Provider para guardar el token FCM
@@ -21,6 +26,8 @@ final getPatientProfileUsecaseProvider = Provider((ref) {
 });
 
 // FutureProvider autodispose para consultar el perfil del paciente
-final patientProfileFutureProvider = FutureProvider.autoDispose<PatientProfile>((ref) {
-  return ref.read(getPatientProfileUsecaseProvider).call();
-});
+final patientProfileFutureProvider = FutureProvider.autoDispose<PatientProfile>(
+  (ref) {
+    return ref.read(getPatientProfileUsecaseProvider).call();
+  },
+);
