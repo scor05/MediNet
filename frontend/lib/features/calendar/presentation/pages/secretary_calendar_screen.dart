@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/auth/domain/entities/user_profile.dart';
 import 'package:frontend/features/auth/presentation/utils/logout_helper.dart';
-import 'package:frontend/features/calendar/presentation/pages/settings_screen.dart';
 import 'package:frontend/features/calendar/presentation/providers/secretary_calendar_provider.dart';
 import 'package:frontend/features/calendar/presentation/providers/secretary_requested_appointments_provider.dart';
 import 'package:frontend/features/calendar/presentation/utils/calendar_dialog_helpers.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_app_bar.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_body.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_fab_menu.dart';
+import 'package:frontend/features/calendar/presentation/widgets/calendar_shell.dart';
 
 class SecretaryCalendarScreen extends ConsumerStatefulWidget {
   final UserProfile profile;
@@ -44,7 +45,9 @@ class _SecretaryCalendarScreenState
 
     if (created != null) {
       ref.read(secretaryCalendarNotifierProvider.notifier).refresh();
-      ref.read(secretaryRequestedAppointmentsNotifierProvider.notifier).refresh();
+      ref
+          .read(secretaryRequestedAppointmentsNotifierProvider.notifier)
+          .refresh();
     }
   }
 
@@ -59,14 +62,12 @@ class _SecretaryCalendarScreenState
     await showBlockScheduleSecretarySheet(context: context);
   }
 
-  Future<void> _onBlockadeTap(appointment) async {
+  Future<void> _onBlockadeTap(Appointment appointment) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Eliminar bloqueo'),
-        content: const Text(
-          '¿Deseas eliminar este bloqueo de horario?',
-        ),
+        content: const Text('¿Deseas eliminar este bloqueo de horario?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -88,14 +89,14 @@ class _SecretaryCalendarScreenState
           .read(secretaryCalendarNotifierProvider.notifier)
           .deleteBlockade(appointment.id);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Bloqueo eliminado')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Bloqueo eliminado')));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     }
   }
 
@@ -113,14 +114,8 @@ class _SecretaryCalendarScreenState
         ),
         settingsButton: IconButton(
           icon: const Icon(Icons.settings),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => SettingsScreen(profile: widget.profile),
-              ),
-            );
-          },
+          onPressed: () =>
+              CalendarShellNavigation.maybeOf(context)?.onOpenSettings(),
         ),
         onPreviousWeek: () => ref
             .read(secretaryWeekStartProvider.notifier)
