@@ -66,6 +66,12 @@ class UserService
         return $this->repository->findAvailableForClient($clientId, $search);
     }
 
+    // Se obtiene la información básica de un paciente (para secretarias)
+    public function getPatientBasicInfo(int $patientId, int $secretaryId)
+    {
+        return $this->repository->getPatientBasicInfo($patientId, $secretaryId);
+    }
+
     // Se obtienen todos los usuarios que no son superadmins
     public function getAvailable(string $search)
     {

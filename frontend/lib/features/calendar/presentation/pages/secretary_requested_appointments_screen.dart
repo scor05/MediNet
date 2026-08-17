@@ -4,6 +4,7 @@ import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/calendar/presentation/providers/secretary_calendar_provider.dart';
 import 'package:frontend/features/calendar/presentation/providers/secretary_requested_appointments_provider.dart';
+import 'package:frontend/features/user/presentation/dialogs/patient_info_dialog.dart';
 import 'package:frontend/theme/app_theme.dart';
 
 class SecretaryRequestedAppointmentsScreen extends ConsumerWidget {
@@ -233,6 +234,27 @@ class _RequestedAppointmentCard extends StatelessWidget {
                 ),
               ],
             ),
+            if (appointment.patientId != null) ...[
+              const SizedBox(height: 8),
+              Builder(
+                builder: (ctx) => TextButton.icon(
+                  icon: const Icon(Icons.info_outline, size: 16),
+                  label: const Text('Ver datos del paciente'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppTheme.secondary,
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                  ),
+                  onPressed: () => showDialog(
+                    context: ctx,
+                    builder: (_) => PatientInfoDialog(
+                      patientId: appointment.patientId!,
+                      patientName: appointment.patientName,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

@@ -94,4 +94,20 @@ class UserController extends Controller
 
         return response()->json($users);
     }
+
+    // Se obtiene la información básica de un paciente (para secretarias autorizadas)
+    public function patientInfo(Request $request, int $patientId)
+    {
+        $secretaryId = $request->user()->id;
+
+        $patient = $this->service->getPatientBasicInfo($patientId, $secretaryId);
+
+        if (!$patient) {
+            return response()->json([
+                'message' => 'No tienes permiso para ver este paciente.'
+            ], 403);
+        }
+
+        return response()->json($patient);
+    }
 }

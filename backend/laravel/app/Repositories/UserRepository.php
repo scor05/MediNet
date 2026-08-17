@@ -156,6 +156,47 @@ class UserRepository
     }
 
     /*
+    PATIENT INFO (para secretarias autorizadas)
+    */
+
+    // Se obtiene la información básica de un paciente (nombre, correo, teléfono)
+    // Solo si la secretaria y el paciente comparten al menos un client_id
+    public function getPatientBasicInfo(int $patientId, int $secretaryId)
+    {
+        // Obtener los client_ids activos de la secretaria
+        $secretaryClientIds = DB::table('client_users')
+            ->where('id_user', $secretaryId)
+            ->where('is_active', true)
+            ->where('role', 2) // role 2 = secretary
+            ->pluck('id_client');
+
+        if ($secretaryClientIds->isEmpty()) {
+            return null;
+        }
+
+        // Verificar que el paciente tenga al menos una cita en un schedule
+        // de un doctor del mismo client
+        $hasAccess = DB::table('appointments')
+            ->join('schedules', 'schedules.id', '=', 'appointments.id_schedule')
+            ->join('client_users', function ($join) {
+                $join->on('client_users.id_user', '=', 'schedules.id_doctor')
+                    ->where('client_users.is_active', true);
+            })
+            ->where('appointments.id_patient', $patientId)
+            ->whereIn('client_users.id_client', $secretaryClientIds)
+            ->exists();
+
+        if (!$hasAccess) {
+            return null;
+        }
+
+        $user = User::select('id', 'name', 'email', 'phone')
+            ->find($patientId);
+
+        return $user;
+    }
+
+    /*
     HELPERS
     */
     private function _mapRole(int $role): string
