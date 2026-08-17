@@ -12,6 +12,21 @@ class UserRepositoryImpl implements UserRepository {
 
   UserRepositoryImpl(this.datasource);
 
+  @override
+  Future<List<User>> searchPatients(String search) async {
+    try {
+      return await datasource.searchPatients(search);
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw ApiException('Sin conexión. Verifica tu internet.');
+    } on TimeoutException {
+      throw ApiException('La solicitud tardó demasiado. Intenta de nuevo.');
+    } catch (_) {
+      throw ApiException('Error inesperado. Intenta de nuevo.');
+    }
+  }
+
   // Obtiene el perfil básico del paciente autenticado
   @override
   Future<PatientProfile> getPatientProfile() async {

@@ -10,6 +10,31 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:frontend/features/user/data/models/patient_profile_model.dart';
 
 class UserRemoteDatasource {
+  Future<List<UserModel>> searchPatients(String search) async {
+    final token = Supabase.instance.client.auth.currentSession?.accessToken;
+
+    final uri = Uri.parse(
+      '${AppConfig.apiUrl}/users/patients',
+    ).replace(queryParameters: {'search': search});
+    final response = await http
+        .get(
+          uri,
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((item) => UserModel.fromSearch(item)).toList();
+    }
+
+    throw handleApiError(response);
+  }
+
   // Se obtienen todos los usuarios que no son superadmins
   Future<List<UserModel>> getAvailableUsers(String search) async {
     final token = Supabase.instance.client.auth.currentSession?.accessToken;

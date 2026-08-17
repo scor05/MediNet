@@ -31,6 +31,7 @@ abstract class AppointmentRepository {
     required DateTime date,
     required TimeOfDay startTime,
     required String patientName,
+    int? patientId,
     required String status,
   });
 

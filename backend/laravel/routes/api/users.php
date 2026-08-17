@@ -1,15 +1,16 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DoctorSpecialtyController;
-use App\Http\Controllers\UserController;
 use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\Route;
 
 Route::prefix('users')->group(function () {
     Route::post('/fcm-token', [UserController::class, 'saveFcmToken']);
 
     Route::get('/available/{clientId}', [UserController::class, 'availableForClient']);
     Route::get('/available', [UserController::class, 'available']);
+    Route::get('/patients', [UserController::class, 'patients']);
 
     Route::get('/', [UserController::class, 'index']);
     Route::get('/{id}', [UserController::class, 'show'])->whereNumber('id');

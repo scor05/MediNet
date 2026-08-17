@@ -152,6 +152,7 @@ class AppointmentRemoteDatasource {
     required DateTime date,
     required TimeOfDay startTime,
     required String patientName,
+    int? patientId,
     required String status,
   }) async {
     final token = Supabase.instance.client.auth.currentSession?.accessToken;
@@ -169,6 +170,7 @@ class AppointmentRemoteDatasource {
             'date': date.toIso8601String().substring(0, 10),
             'start_time': _fmtTime(startTime),
             'name_patient': patientName,
+            'id_patient': ?patientId,
             'status': status,
           }),
         )
