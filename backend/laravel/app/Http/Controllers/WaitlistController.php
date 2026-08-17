@@ -26,9 +26,9 @@ class WaitlistController extends Controller
     {
         $waitlist = $this->service->getById($id);
 
-        if (!$waitlist) {
+        if (! $waitlist) {
             return response()->json([
-                'message' => 'Registro no encontrado'
+                'message' => 'Registro no encontrado',
             ], 404);
         }
 
@@ -45,29 +45,40 @@ class WaitlistController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'id_patient' => [
-                'required',
-                'exists:patients,id'
+            'id_target_appointment' => [
+                'nullable',
+                'exists:appointments,id',
             ],
 
-            'id_target_appointment' => [
-                'required',
-                'exists:appointments,id'
+            'id_schedule' => [
+                'required_without:id_target_appointment',
+                'integer',
+                'exists:schedules,id',
+            ],
+
+            'date' => [
+                'required_without:id_target_appointment',
+                'date_format:Y-m-d',
+            ],
+
+            'start_time' => [
+                'required_without:id_target_appointment',
+                'date_format:H:i',
             ],
 
             'id_fallback_appointment' => [
                 'nullable',
                 'exists:appointments,id',
-                'different:id_target_appointment'
+                'different:id_target_appointment',
             ],
         ]);
+        $data['id_patient'] = $request->user()->id;
 
         $waitlist = $this->service->join($data);
 
         return response()->json([
-            'message' =>
-                'Paciente agregado a la lista de espera',
-            'data' => $waitlist
+            'message' => 'Paciente agregado a la lista de espera',
+            'data' => $waitlist,
         ], 201);
     }
 
@@ -76,27 +87,27 @@ class WaitlistController extends Controller
         $data = $request->validate([
             'status' => [
                 'sometimes',
-                'in:waiting,notified,cancelled'
+                'in:waiting,notified,fulfilled,cancelled',
             ],
 
             'id_fallback_appointment' => [
                 'nullable',
-                'exists:appointments,id'
-            ]
+                'exists:appointments,id',
+            ],
         ]);
 
         $waitlist =
             $this->service->update($id, $data);
 
-        if (!$waitlist) {
+        if (! $waitlist) {
             return response()->json([
-                'message' => 'Registro no encontrado'
+                'message' => 'Registro no encontrado',
             ], 404);
         }
 
         return response()->json([
             'message' => 'Lista de espera actualizada',
-            'data' => $waitlist
+            'data' => $waitlist,
         ]);
     }
 
@@ -104,15 +115,14 @@ class WaitlistController extends Controller
     {
         $deleted = $this->service->leave($id);
 
-        if (!$deleted) {
+        if (! $deleted) {
             return response()->json([
-                'message' => 'Registro no encontrado'
+                'message' => 'Registro no encontrado',
             ], 404);
         }
 
         return response()->json([
-            'message' =>
-                'Paciente eliminado de la lista de espera'
+            'message' => 'Paciente eliminado de la lista de espera',
         ]);
     }
 }

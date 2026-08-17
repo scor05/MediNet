@@ -2,7 +2,7 @@ class Waitlist {
   final int id;
   final int patientId;
   final int targetAppointmentId;
-  final int fallbackAppointmentId;
+  final int? fallbackAppointmentId;
   final String status;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -27,7 +27,8 @@ class Waitlist {
     this.targetStartTime,
   });
 
-  bool get isActive => status == 'active';
+  bool get isActive => status == 'waiting';
   bool get isNotified => status == 'notified';
+  bool get isFulfilled => status == 'fulfilled';
   bool get isCancelled => status == 'cancelled';
 }

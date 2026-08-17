@@ -6,85 +6,82 @@ use App\Models\Waitlist;
 
 class WaitlistRepository
 {
+    private const RELATIONS = [
+        'patient',
+        'targetAppointment',
+        'fallbackAppointment',
+    ];
+
     public function findAll()
     {
-        return Waitlist::with([
-            'patient',
-            'targetAppointment',
-            'fallbackAppointment'
-        ])->get();
+        return Waitlist::with(self::RELATIONS)
+            ->orderBy('created_at')
+            ->orderBy('id')
+            ->get();
     }
 
-    public function findById($id)
+    public function findById(int $id): ?Waitlist
     {
-        return Waitlist::with([
-            'patient',
-            'targetAppointment',
-            'fallbackAppointment'
-        ])->find($id);
+        return Waitlist::with(self::RELATIONS)->find($id);
     }
 
-    public function findByPatient($patientId)
+    public function findByPatient(int $patientId)
     {
-        return Waitlist::with([
-            'targetAppointment',
-            'fallbackAppointment'
-        ])
-        ->where('id_patient', $patientId)
-        ->get();
+        return Waitlist::with(['targetAppointment', 'fallbackAppointment'])
+            ->where('id_patient', $patientId)
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->get();
     }
 
-    public function findDuplicate($patientId, $appointmentId)
+    public function findDuplicate(int $patientId, int $appointmentId): ?Waitlist
     {
         return Waitlist::where('id_patient', $patientId)
             ->where('id_target_appointment', $appointmentId)
             ->first();
     }
 
-    public function findActiveByTargetAppointment($appointmentId)
+    /**
+     * Resolve the original queue when a previously promoted fallback frees
+     * the slot again, then lock and return the oldest waiting registration.
+     */
+    public function findFirstWaitingForFreedAppointment(int $appointmentId): ?Waitlist
     {
-        return Waitlist::where(
-            'id_target_appointment',
+        $rootAppointmentId = Waitlist::where(
+            'id_fallback_appointment',
             $appointmentId
-        )
-        ->where('status', 'waiting')
-        ->get();
+        )->value('id_target_appointment') ?? $appointmentId;
+
+        return Waitlist::where('id_target_appointment', $rootAppointmentId)
+            ->where('status', 'waiting')
+            ->orderBy('created_at')
+            ->orderBy('id')
+            ->lockForUpdate()
+            ->first();
     }
 
-    public function create(array $data)
+    public function create(array $data): Waitlist
     {
         return Waitlist::create($data);
     }
 
-    public function update($id, array $data)
+    public function update(int $id, array $data): ?Waitlist
     {
         $waitlist = Waitlist::find($id);
 
-        if (!$waitlist) {
+        if ($waitlist === null) {
             return null;
         }
 
         $waitlist->update($data);
 
-        return $waitlist;
+        return $waitlist->refresh();
     }
 
-    public function delete($id)
+    public function delete(int $id): bool
     {
         $waitlist = Waitlist::find($id);
 
-        if (!$waitlist) {
-            return false;
-        }
-
-        return $waitlist->delete();
-    }
-
-    public function findNotificationContext($id)
-    {
-        return Waitlist::with([
-            'patient',
-            'targetAppointment'
-        ])->find($id);
+        return $waitlist?->delete() ?? false;
     }
 }

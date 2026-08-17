@@ -295,10 +295,11 @@ class _PublicCreateAppointmentDialogState
           : 'No se pudo enviar la solicitud.';
 
       // Si el error es porque el horario ya está ocupado, ofrecer lista de espera
-      final isSlotTaken = e is ApiException &&
+      final isSlotTaken =
+          e is ApiException &&
           e.isValidation &&
           (message.contains('Ya existe una cita') ||
-           message.contains('horario'));
+              message.contains('horario'));
 
       if (isSlotTaken) {
         final joined = await _offerWaitlist(selectedSlot);
@@ -323,17 +324,13 @@ class _PublicCreateAppointmentDialogState
 
   /// Ofrece unirse a la lista de espera cuando el horario no está disponible
   Future<bool?> _offerWaitlist(PublicSlot slot) async {
-    // Para el waitlist necesitamos un appointment ID del target.
-    // Como no tenemos el ID del appointment ocupado, usamos el scheduleId
-    // y creamos un registro con IDs placeholder que el backend resolverá.
     final joined = await showDialog<bool>(
       context: context,
       builder: (_) => JoinWaitlistDialog(
-        targetAppointmentId: 0, // Se ajustará según el flujo del backend
-        fallbackAppointmentId: 0, // Se ajustará según el flujo del backend
+        scheduleId: slot.scheduleId,
         doctorName: slot.doctorName,
         clinicName: slot.clinicName,
-        date: _fmtDate(_selectedDate),
+        date: _selectedDate,
         startTime: slot.startTime,
       ),
     );
@@ -343,7 +340,9 @@ class _PublicCreateAppointmentDialogState
       Navigator.of(context).pop();
       messenger.showSnackBar(
         const SnackBar(
-          content: Text('Te registraste en la lista de espera. Te notificaremos cuando se libere.'),
+          content: Text(
+            'Te registraste en la lista de espera. Te notificaremos cuando se libere.',
+          ),
         ),
       );
     }

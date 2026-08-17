@@ -19,7 +19,7 @@ class Waitlist extends Model
     public function patient()
     {
         return $this->belongsTo(
-            Patient::class,
+            User::class,
             'id_patient'
         );
     }

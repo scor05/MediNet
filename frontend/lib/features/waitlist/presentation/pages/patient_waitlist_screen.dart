@@ -31,8 +31,9 @@ class PatientWaitlistScreen extends ConsumerWidget {
           }
 
           return RefreshIndicator(
-            onRefresh:
-                ref.read(patientWaitlistNotifierProvider.notifier).refresh,
+            onRefresh: ref
+                .read(patientWaitlistNotifierProvider.notifier)
+                .refresh,
             child: ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: waitlists.length,
@@ -111,10 +112,7 @@ class _WaitlistCard extends ConsumerWidget {
             const SizedBox(height: 6),
             Text(
               'Registrado: ${_fmtDateTime(waitlist.createdAt)}',
-              style: const TextStyle(
-                fontSize: 12,
-                color: AppColors.textMuted,
-              ),
+              style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
             ),
           ],
         ),
@@ -159,9 +157,9 @@ class _WaitlistCard extends ConsumerWidget {
           final message = e is ApiException
               ? e.message
               : 'No se pudo cancelar el registro.';
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(message)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(message)));
         }
       }
     }
@@ -182,7 +180,7 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, color) = switch (status) {
-      'active' => ('En espera', AppColors.secondary),
+      'waiting' => ('En espera', AppColors.secondary),
       'notified' => ('Notificado', AppColors.success),
       'fulfilled' => ('Cumplido', AppColors.success),
       'expired' => ('Expirado', AppColors.textMuted),
@@ -221,12 +219,7 @@ class _InfoRow extends StatelessWidget {
       children: [
         Icon(icon, size: 16, color: AppColors.textSecondary),
         const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            style: const TextStyle(fontSize: 14),
-          ),
-        ),
+        Expanded(child: Text(text, style: const TextStyle(fontSize: 14))),
       ],
     );
   }

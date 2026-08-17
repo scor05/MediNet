@@ -31,15 +31,15 @@ class WaitlistRepositoryImpl implements WaitlistRepository {
 
   @override
   Future<Waitlist> createWaitlist({
-    required int targetAppointmentId,
-    required int fallbackAppointmentId,
+    required int scheduleId,
+    required DateTime date,
+    required String startTime,
   }) async {
     try {
-      final profile = await getProfileUsecase();
       return await datasource.createWaitlist(
-        patientId: profile.id,
-        targetAppointmentId: targetAppointmentId,
-        fallbackAppointmentId: fallbackAppointmentId,
+        scheduleId: scheduleId,
+        date: date,
+        startTime: startTime,
       );
     } on ApiException {
       rethrow;

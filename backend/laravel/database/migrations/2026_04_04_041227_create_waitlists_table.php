@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('id_patient')
-                ->constrained('patients')
+                ->constrained('users')
                 ->cascadeOnDelete();
 
             $table->foreignId('id_target_appointment')
@@ -27,15 +27,21 @@ return new class extends Migration
             $table->enum('status', [
                 'waiting',
                 'notified',
-                'cancelled'
+                'fulfilled',
+                'cancelled',
             ])->default('waiting');
 
             $table->timestamps();
 
             $table->unique([
                 'id_patient',
-                'id_target_appointment'
+                'id_target_appointment',
             ]);
+
+            $table->index(
+                ['id_target_appointment', 'status', 'created_at', 'id'],
+                'waitlists_target_status_created_idx'
+            );
         });
     }
 

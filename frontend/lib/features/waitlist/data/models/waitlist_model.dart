@@ -20,7 +20,7 @@ class WaitlistModel extends Waitlist {
       id: json['id'] as int,
       patientId: json['id_patient'] as int,
       targetAppointmentId: json['id_target_appointment'] as int,
-      fallbackAppointmentId: json['id_fallback_appointment'] as int,
+      fallbackAppointmentId: json['id_fallback_appointment'] as int?,
       status: json['status'] as String,
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),

@@ -58,6 +58,17 @@ class AppointmentRepository
         return $query->get();
     }
 
+    public function findOccupyingSlot(int $scheduleId, string $date, string $startTime): ?Appointment
+    {
+        return Appointment::where('id_schedule', $scheduleId)
+            ->where('date', $date)
+            ->where('start_time', $startTime)
+            ->whereIn('status', ['requested', 'accepted', 'rescheduled'])
+            ->orderBy('created_at')
+            ->orderBy('id')
+            ->first();
+    }
+
     // Retorna datos para mandar notificación
     public function findNotificationContext(int $appointmentId)
     {
@@ -73,6 +84,7 @@ class AppointmentRepository
                 'appointments.date',
                 'appointments.start_time',
                 'doctor.name as doctor_name',
+                'clinics.name as clinic_name',
                 'clinics.id_client as client_id',
             ])
             ->first();
