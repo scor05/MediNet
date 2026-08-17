@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/features/auth/presentation/pages/welcome_screen.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
+import 'package:frontend/features/appointment/domain/entities/appointment.dart';
+import 'package:frontend/features/calendar/presentation/dialogs/appointment_detail_dialog.dart';
 import 'package:frontend/features/calendar/presentation/providers/patient_calendar_provider.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_body.dart';
 import 'package:frontend/features/patient_profile/presentation/pages/patient_profile_screen.dart';
@@ -37,6 +39,14 @@ class _PatientCalendarScreenState extends ConsumerState<PatientCalendarScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const PatientWaitlistScreen()),
+    );
+  }
+
+  void _openAppointmentDetail(Appointment appointment) {
+    showAppointmentDetailSheet(
+      context: context,
+      appointment: appointment,
+      onCancelled: ref.read(patientCalendarNotifierProvider.notifier).refresh,
     );
   }
 
@@ -79,6 +89,7 @@ class _PatientCalendarScreenState extends ConsumerState<PatientCalendarScreen> {
         weekStart: weekStart,
         onRetry: ref.read(patientCalendarNotifierProvider.notifier).refresh,
         showDoctor: true,
+        onAppointmentTap: _openAppointmentDetail,
       ),
     );
   }
