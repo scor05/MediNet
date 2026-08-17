@@ -9,8 +9,17 @@ class SecretaryRequestedAppointmentsNotifier
     return _fetch();
   }
 
-  Future<List<Appointment>> _fetch() {
-    return ref.read(getSecretaryRequestedAppointmentsUsecaseProvider)();
+  Future<List<Appointment>> _fetch() async {
+    final appointments = await ref.read(
+      getSecretaryRequestedAppointmentsUsecaseProvider,
+    )();
+
+    return appointments
+        .where(
+          (appointment) =>
+              appointment.status == 'requested' && !appointment.isBlockade,
+        )
+        .toList();
   }
 
   Future<void> refresh() async {
