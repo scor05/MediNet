@@ -5,6 +5,8 @@ import 'package:frontend/core/widgets/error_view.dart';
 import 'package:frontend/features/calendar/presentation/providers/public_calendar_provider.dart';
 import 'package:frontend/features/calendar/presentation/widgets/public_calendar/public_calendar_filter_bar.dart';
 import 'package:frontend/features/calendar/presentation/widgets/week_view.dart';
+import 'package:frontend/features/appointment/domain/entities/appointment.dart';
+import 'package:frontend/features/calendar/presentation/dialogs/public_appointment_detail_dialog.dart';
 
 class PublicCalendarScreen extends ConsumerStatefulWidget {
   final int? doctorId;
@@ -44,6 +46,17 @@ class _PublicCalendarScreenState extends ConsumerState<PublicCalendarScreen> {
           doctorId: widget.doctorId,
           clinicId: widget.clinicId,
         );
+  }
+
+  void _openAppointmentDetail(Appointment appointment) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => PublicAppointmentDetailDialog(appointment: appointment),
+    );
   }
 
   void _previousWeek() {
@@ -132,6 +145,7 @@ class _PublicCalendarScreenState extends ConsumerState<PublicCalendarScreen> {
                 appointments: appointments,
                 schedules: const [],
                 compact: true,
+                onAppointmentTap: _openAppointmentDetail,
               );
             },
           ),
