@@ -83,7 +83,7 @@ class AppointmentModel extends Appointment {
     return AppointmentModel(
       id: json['id'],
       scheduleId: json['id_schedule'],
-      patientId: null,
+      patientId: json['id_patient'] as int?,
       patientName: json['name_patient'],
       date: DateTime.parse(json['date']),
       startTime: json['start_time'],

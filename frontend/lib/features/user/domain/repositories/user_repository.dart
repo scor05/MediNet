@@ -5,6 +5,9 @@ abstract class UserRepository {
   // Devuelve todos los usuarios que no son superadmin
   Future<List<User>> getAvailableUsers(String search);
 
+  // Busca cuentas activas que pueden vincularse como pacientes.
+  Future<List<User>> searchPatients(String search);
+
   // Guarda el token FCM del usuario
   Future<void> saveFcmToken();
 

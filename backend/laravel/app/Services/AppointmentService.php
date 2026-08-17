@@ -4,11 +4,6 @@ namespace App\Services;
 
 use App\Repositories\AppointmentRepository;
 use App\Repositories\ScheduleBlockadeRepository;
-use App\Services\UserService;
-use App\Services\NotificationService;
-use App\Services\WaitlistService;
-use App\Services\AppointmentAvailabilityService;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
 
 class AppointmentService
@@ -44,11 +39,35 @@ class AppointmentService
             $data['start_time']
         );
 
-        if (array_key_exists('id_patient', $data)) {
+        if (isset($data['id_patient'])) {
             $data['name_patient'] = $this->userService->getById($data['id_patient'])?->name;
         }
 
-        return $this->repository->create($data);
+        $appointment = $this->repository->create($data);
+
+        if (isset($data['id_patient'])) {
+            $this->notifyCreatedAppointment($appointment->id, $data['id_patient']);
+        }
+
+        return $appointment;
+    }
+
+    private function notifyCreatedAppointment(int $appointmentId, int $patientId): void
+    {
+        $context = $this->repository->findNotificationContext($appointmentId);
+
+        $this->notificationService->create([
+            'id_user' => $patientId,
+            'type' => 'acceptance',
+            'message' => 'Se ha agendado una cita con el Dr. '
+                .$context->doctor_name
+                .' el '
+                .$this->formatDate($context->date)
+                .' a las '
+                .$this->formatTime($context->start_time)
+                .'.',
+            'channel' => 'push',
+        ]);
     }
 
     // Se actualiza una cita

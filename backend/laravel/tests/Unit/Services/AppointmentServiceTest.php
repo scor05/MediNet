@@ -21,7 +21,7 @@ class AppointmentServiceTest extends TestCase
         $userService = $this->createMock(UserService::class);
         $availabilityService = $this->createMock(AppointmentAvailabilityService::class);
         $blockadeRepository = $this->createStub(ScheduleBlockadeRepository::class);
-        $notificationService = $this->createStub(NotificationService::class);
+        $notificationService = $this->createMock(NotificationService::class);
         $waitlistService = $this->createStub(WaitlistService::class);
 
         $data = [
@@ -46,6 +46,7 @@ class AppointmentServiceTest extends TestCase
             ->willReturn((object) ['name' => 'Ana Lopez']);
 
         $createdAppointment = new Appointment;
+        $createdAppointment->id = 25;
         $repository->expects($this->once())
             ->method('create')
             ->with($this->callback(
@@ -53,6 +54,23 @@ class AppointmentServiceTest extends TestCase
                     && $appointment['id_patient'] === 7
             ))
             ->willReturn($createdAppointment);
+        $repository->expects($this->once())
+            ->method('findNotificationContext')
+            ->with(25)
+            ->willReturn((object) [
+                'doctor_name' => 'Carlos Perez',
+                'date' => '2026-07-21',
+                'start_time' => '09:00:00',
+            ]);
+        $notificationService->expects($this->once())
+            ->method('create')
+            ->with($this->callback(
+                fn (array $notification) => $notification['id_user'] === 7
+                    && $notification['type'] === 'acceptance'
+                    && str_contains($notification['message'], 'Dr. Carlos Perez')
+                    && str_contains($notification['message'], '21/07/2026')
+                    && str_contains($notification['message'], '09:00')
+            ));
 
         $service = new AppointmentService(
             $repository,
@@ -100,5 +118,44 @@ class AppointmentServiceTest extends TestCase
             'date' => '2026-07-21',
             'start_time' => '09:00',
         ]);
+    }
+
+    public function test_create_keeps_a_free_name_without_linking_or_notifying_a_patient(): void
+    {
+        $repository = $this->createMock(AppointmentRepository::class);
+        $userService = $this->createMock(UserService::class);
+        $availabilityService = $this->createStub(AppointmentAvailabilityService::class);
+        $blockadeRepository = $this->createStub(ScheduleBlockadeRepository::class);
+        $notificationService = $this->createMock(NotificationService::class);
+        $waitlistService = $this->createStub(WaitlistService::class);
+
+        $data = [
+            'id_schedule' => 11,
+            'id_patient' => null,
+            'name_patient' => 'Paciente externo',
+            'date' => '2026-07-21',
+            'start_time' => '09:00',
+            'status' => 'accepted',
+        ];
+        $createdAppointment = new Appointment;
+
+        $userService->expects($this->never())->method('getById');
+        $repository->expects($this->once())
+            ->method('create')
+            ->with($data)
+            ->willReturn($createdAppointment);
+        $repository->expects($this->never())->method('findNotificationContext');
+        $notificationService->expects($this->never())->method('create');
+
+        $service = new AppointmentService(
+            $repository,
+            $userService,
+            $blockadeRepository,
+            $notificationService,
+            $waitlistService,
+            $availabilityService,
+        );
+
+        $this->assertSame($createdAppointment, $service->create($data));
     }
 }

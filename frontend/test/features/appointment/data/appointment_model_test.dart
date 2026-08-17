@@ -91,19 +91,22 @@ void main() {
       expect(model.patientName, equals(''));
     });
 
-    test('asigna correctamente doctorId, doctorName, clinicId y clinicName', () {
-      // Arrange
-      final json = buildBlockadeJson(startTime: '07:00', endTime: '08:00');
+    test(
+      'asigna correctamente doctorId, doctorName, clinicId y clinicName',
+      () {
+        // Arrange
+        final json = buildBlockadeJson(startTime: '07:00', endTime: '08:00');
 
-      // Act
-      final model = AppointmentModel.fromJson(json);
+        // Act
+        final model = AppointmentModel.fromJson(json);
 
-      // Assert
-      expect(model.doctorId, equals(7));
-      expect(model.doctorName, equals('Dr. García'));
-      expect(model.clinicId, equals(3));
-      expect(model.clinicName, equals('Clínica Central'));
-    });
+        // Assert
+        expect(model.doctorId, equals(7));
+        expect(model.doctorName, equals('Dr. García'));
+        expect(model.clinicId, equals(3));
+        expect(model.clinicName, equals('Clínica Central'));
+      },
+    );
   });
 
   group('AppointmentModel.fromJson — rama normal (cita estándar)', () {
@@ -162,5 +165,24 @@ void main() {
       expect(model.patientId, isNull);
       expect(model.patientName, equals(''));
     });
+  });
+
+  test('fromCreation conserva el id del paciente vinculado', () {
+    final model = AppointmentModel.fromCreation({
+      'id': 101,
+      'id_schedule': 21,
+      'id_patient': 14,
+      'name_patient': 'Ana Lopez',
+      'date': '2026-08-20',
+      'start_time': '09:00:00',
+      'status': 'accepted',
+      'created_at': '2026-08-17T08:00:00.000Z',
+      'created_by': 3,
+      'updated_at': '2026-08-17T08:00:00.000Z',
+      'updated_by': 3,
+    });
+
+    expect(model.patientId, 14);
+    expect(model.patientName, 'Ana Lopez');
   });
 }

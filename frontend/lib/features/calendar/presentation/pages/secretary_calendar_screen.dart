@@ -44,10 +44,12 @@ class _SecretaryCalendarScreenState
     );
 
     if (created != null) {
-      ref.read(secretaryCalendarNotifierProvider.notifier).refresh();
-      ref
-          .read(secretaryRequestedAppointmentsNotifierProvider.notifier)
-          .refresh();
+      await Future.wait([
+        ref.read(secretaryCalendarNotifierProvider.notifier).refresh(),
+        ref
+            .read(secretaryRequestedAppointmentsNotifierProvider.notifier)
+            .refresh(),
+      ]);
     }
   }
 

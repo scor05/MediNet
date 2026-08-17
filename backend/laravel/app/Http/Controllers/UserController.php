@@ -2,16 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Services\UserService;
 use App\Http\Requests\AvailableUsersRequest;
+use App\Services\UserService;
+use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
     // Se inyecta el servicio
-    public function __construct(private UserService $service)
-    {
-    }
+    public function __construct(private UserService $service) {}
 
     // Se obtienen todos los usuarios
     public function index()
@@ -22,9 +20,10 @@ class UserController extends Controller
     // Se obtiene un usuario por su ID
     public function show($id)
     {
-        if (!is_numeric($id)) {
+        if (! is_numeric($id)) {
             return response()->json(['error' => 'El ID debe ser un número.'], 400);
         }
+
         return response()->json($this->service->getById($id));
     }
 
@@ -33,7 +32,7 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|unique:users,email,' . $id,
+            'email' => 'sometimes|email|unique:users,email,'.$id,
             'phone' => 'sometimes|nullable|string|max:20',
             'is_active' => 'sometimes|boolean',
         ], [
@@ -62,9 +61,9 @@ class UserController extends Controller
     public function destroy($id)
     {
         $this->service->delete($id);
+
         return response()->json(null, 204);
     }
-
 
     // Se obtiene información básica del usuario
     public function profile(Request $request)
@@ -93,5 +92,14 @@ class UserController extends Controller
         );
 
         return response()->json($users);
+    }
+
+    public function patients(AvailableUsersRequest $request)
+    {
+        return response()->json(
+            $this->service->searchPatients(
+                trim($request->validated('search', ''))
+            )
+        );
     }
 }
