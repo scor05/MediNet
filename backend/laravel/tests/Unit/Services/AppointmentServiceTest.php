@@ -5,10 +5,12 @@ namespace Tests\Unit\Services;
 use App\Exceptions\AppointmentUnavailableException;
 use App\Models\Appointment;
 use App\Repositories\AppointmentRepository;
+use App\Repositories\ScheduleBlockadeRepository;
 use App\Services\AppointmentAvailabilityService;
 use App\Services\AppointmentService;
 use App\Services\NotificationService;
 use App\Services\UserService;
+use App\Services\WaitlistService;
 use PHPUnit\Framework\TestCase;
 
 class AppointmentServiceTest extends TestCase
@@ -18,7 +20,9 @@ class AppointmentServiceTest extends TestCase
         $repository = $this->createMock(AppointmentRepository::class);
         $userService = $this->createMock(UserService::class);
         $availabilityService = $this->createMock(AppointmentAvailabilityService::class);
+        $blockadeRepository = $this->createStub(ScheduleBlockadeRepository::class);
         $notificationService = $this->createStub(NotificationService::class);
+        $waitlistService = $this->createStub(WaitlistService::class);
 
         $data = [
             'id_schedule' => 11,
@@ -33,7 +37,7 @@ class AppointmentServiceTest extends TestCase
 
         $availabilityService->expects($this->once())
             ->method('ensureAvailable')
-            ->with(11, '2026-07-21', '09:00', null)
+            ->with(11, '2026-07-21', '09:00')
             ->willReturnCallback(static function (): void {});
 
         $userService->expects($this->once())
@@ -53,8 +57,10 @@ class AppointmentServiceTest extends TestCase
         $service = new AppointmentService(
             $repository,
             $userService,
-            $availabilityService,
+            $blockadeRepository,
             $notificationService,
+            $waitlistService,
+            $availabilityService,
         );
 
         $this->assertSame($createdAppointment, $service->create($data));
@@ -65,7 +71,9 @@ class AppointmentServiceTest extends TestCase
         $repository = $this->createMock(AppointmentRepository::class);
         $userService = $this->createMock(UserService::class);
         $availabilityService = $this->createMock(AppointmentAvailabilityService::class);
+        $blockadeRepository = $this->createStub(ScheduleBlockadeRepository::class);
         $notificationService = $this->createStub(NotificationService::class);
+        $waitlistService = $this->createStub(WaitlistService::class);
 
         $availabilityService->method('ensureAvailable')
             ->willThrowException(new AppointmentUnavailableException(
@@ -78,8 +86,10 @@ class AppointmentServiceTest extends TestCase
         $service = new AppointmentService(
             $repository,
             $userService,
-            $availabilityService,
+            $blockadeRepository,
             $notificationService,
+            $waitlistService,
+            $availabilityService,
         );
 
         $this->expectException(AppointmentUnavailableException::class);

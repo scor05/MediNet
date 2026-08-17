@@ -16,6 +16,8 @@ class SearchFiltersPanel extends StatelessWidget {
   final ValueChanged<ClinicSearchResult> onClinicSelected;
   final VoidCallback onDoctorCleared;
   final VoidCallback onClinicCleared;
+  final VoidCallback onDoctorEmptyFocus;
+  final VoidCallback onClinicEmptyFocus;
   final VoidCallback onSearchPressed;
   final VoidCallback onSchedulePressed;
 
@@ -30,6 +32,8 @@ class SearchFiltersPanel extends StatelessWidget {
     required this.onClinicSelected,
     required this.onDoctorCleared,
     required this.onClinicCleared,
+    required this.onDoctorEmptyFocus,
+    required this.onClinicEmptyFocus,
     required this.onSearchPressed,
     required this.onSchedulePressed,
   });
@@ -60,6 +64,7 @@ class SearchFiltersPanel extends StatelessWidget {
                     onChanged: onDoctorChanged,
                     onSelected: onDoctorSelected,
                     onClear: onDoctorCleared,
+                    onEmptyFocus: onDoctorEmptyFocus,
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -77,6 +82,7 @@ class SearchFiltersPanel extends StatelessWidget {
                     onChanged: onClinicChanged,
                     onSelected: onClinicSelected,
                     onClear: onClinicCleared,
+                    onEmptyFocus: onClinicEmptyFocus,
                   ),
                 ),
                 const SizedBox(width: 10),

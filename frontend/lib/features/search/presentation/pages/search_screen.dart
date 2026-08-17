@@ -41,12 +41,16 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   void _clearDoctor() {
     _doctorCtrl.clear();
-    ref.read(searchFormNotifierProvider.notifier).clearDoctor();
+    final notifier = ref.read(searchFormNotifierProvider.notifier);
+    notifier.clearDoctor();
+    notifier.showDoctorSuggestions();
   }
 
   void _clearClinic() {
     _clinicCtrl.clear();
-    ref.read(searchFormNotifierProvider.notifier).clearClinic();
+    final notifier = ref.read(searchFormNotifierProvider.notifier);
+    notifier.clearClinic();
+    notifier.showClinicSuggestions();
   }
 
   void _submitSearch() {
@@ -97,6 +101,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             onClinicSelected: _selectClinic,
             onDoctorCleared: _clearDoctor,
             onClinicCleared: _clearClinic,
+            onDoctorEmptyFocus: notifier.showDoctorSuggestions,
+            onClinicEmptyFocus: notifier.showClinicSuggestions,
             onSearchPressed: _submitSearch,
             onSchedulePressed: _openCreateAppointment,
           ),
