@@ -30,6 +30,7 @@ class AppointmentRepository
     {
         $appointment = Appointment::findOrFail($id);
         $appointment->update($data);
+
         return $appointment;
     }
 
@@ -40,23 +41,21 @@ class AppointmentRepository
         $appointment->delete();
     }
 
-    // Se busca si existe una cita en una hora, fecha y schedule
-    public function findAppointment(
+    // Se buscan citas que todavía reservan o solicitan un espacio del horario
+    public function findActiveByScheduleAndDate(
         int $idSchedule,
         string $date,
-        string $startTime,
         ?int $ignoreAppointmentId = null
-    ): ?Appointment {
+    ) {
         $query = Appointment::where('id_schedule', $idSchedule)
             ->where('date', $date)
-            ->where('start_time', $startTime)
-            ->where('status', 'accepted');
+            ->whereNotIn('status', ['rejected', 'cancelled']);
 
         if ($ignoreAppointmentId !== null) {
             $query->where('id', '!=', $ignoreAppointmentId);
         }
 
-        return $query->first();
+        return $query->get();
     }
 
     // Retorna datos para mandar notificación
