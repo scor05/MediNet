@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Clinic extends Model
 {
+    protected $attributes = [
+        'is_active' => true,
+    ];
+
     // Columnas de la tabla en la base de datos
     protected $fillable = [
         'name',

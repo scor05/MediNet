@@ -21,7 +21,8 @@ class ClinicModel extends Clinic {
       email: json['email'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
-      isActive: json['is_active'] as bool,
+      // Older create responses omitted this database-backed default.
+      isActive: json['is_active'] as bool? ?? true,
     );
   }
 }
