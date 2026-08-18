@@ -65,7 +65,9 @@ class SecretaryRequestedAppointmentsScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               ElevatedButton(
                 onPressed: ref
-                    .read(secretaryRequestedAppointmentsNotifierProvider.notifier)
+                    .read(
+                      secretaryRequestedAppointmentsNotifierProvider.notifier,
+                    )
                     .refresh,
                 child: const Text('Reintentar'),
               ),
@@ -244,6 +246,7 @@ class _RequestedAppointmentCard extends StatelessWidget {
                     foregroundColor: AppTheme.secondary,
                     visualDensity: VisualDensity.compact,
                     padding: EdgeInsets.zero,
+                    alignment: Alignment.center,
                   ),
                   onPressed: () => showDialog(
                     context: ctx,
