@@ -22,6 +22,28 @@ class ClientClinicsNotifier extends FamilyAsyncNotifier<List<Clinic>, int> {
     state = await AsyncValue.guard(_fetch);
   }
 
+  Future<Clinic> createClinic({
+    required String name,
+    required String address,
+    required String phone,
+    required String email,
+  }) async {
+    final clinic = await ref
+        .read(createClinicUsecaseProvider)
+        .call(name, address, phone, email, _clientId);
+
+    final current = state.asData?.value;
+    if (current == null) {
+      await refresh();
+    } else {
+      final updated = [...current, clinic]
+        ..sort((a, b) => a.name.compareTo(b.name));
+      state = AsyncData(updated);
+    }
+
+    return clinic;
+  }
+
   Future<void> deleteClinic(int clinicId) async {
     final previousState = state;
 

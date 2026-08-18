@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/core/widgets/error_view.dart';
+import 'package:frontend/features/admin/presentation/dialogs/add_clinic_dialog.dart';
 import 'package:frontend/features/admin/presentation/dialogs/add_user_dialog.dart';
 import 'package:frontend/features/admin/presentation/dialogs/edit_client_dialog.dart';
 import 'package:frontend/features/admin/presentation/dialogs/edit_client_user_dialog.dart';
@@ -110,6 +111,30 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen>
     );
   }
 
+  void _showAddClinicDialog() {
+    showDialog<void>(
+      context: context,
+      builder: (_) => AddClinicDialog(
+        onCreate:
+            ({
+              required name,
+              required address,
+              required phone,
+              required email,
+            }) {
+              return ref
+                  .read(clientClinicsNotifierProvider(widget.clientId).notifier)
+                  .createClinic(
+                    name: name,
+                    address: address,
+                    phone: phone,
+                    email: email,
+                  );
+            },
+      ),
+    );
+  }
+
   Future<void> _confirmDeleteUser(ClientUser user) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -210,7 +235,7 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen>
           onAddUser: _showAddUserDialog,
           onEditUser: _showEditUserDialog,
           onDeleteUser: _confirmDeleteUser,
-          onAddClinic: () {},
+          onAddClinic: _showAddClinicDialog,
           onDeleteClinic: _confirmDeleteClinic,
           onRetryUsers: () => ref
               .read(clientUsersNotifierProvider(widget.clientId).notifier)

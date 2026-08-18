@@ -68,7 +68,7 @@ class ClinicRemoteDatasource {
             'address': address,
             'phone': phone,
             'email': email,
-            'client_id': clientId,
+            'id_client': clientId,
           }),
         )
         .timeout(const Duration(seconds: 10));

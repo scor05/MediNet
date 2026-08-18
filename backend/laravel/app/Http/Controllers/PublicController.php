@@ -2,15 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Services\PublicService;
+use Illuminate\Http\Request;
 
 class PublicController extends Controller
 {
     // Se inyecta el servicio
-    public function __construct(private PublicService $service)
-    {
-    }
+    public function __construct(private PublicService $service) {}
 
     // Se obtienen los doctores disponibles públicamente
     public function doctors(Request $request)
@@ -32,7 +30,7 @@ class PublicController extends Controller
         return response()->json($this->service->getClinics($validated['doctor_id'] ?? null));
     }
 
-    // Se obtienen los slots disponibles para agendar una cita
+    // Se obtienen los slots libres u ocupados; los bloqueados se excluyen
     public function slots(Request $request)
     {
         $validated = $request->validate([
