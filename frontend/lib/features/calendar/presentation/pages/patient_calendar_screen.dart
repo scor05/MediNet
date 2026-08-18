@@ -7,7 +7,6 @@ import 'package:frontend/features/calendar/presentation/dialogs/appointment_deta
 import 'package:frontend/features/calendar/presentation/providers/patient_calendar_provider.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_body.dart';
 import 'package:frontend/features/patient_profile/presentation/pages/patient_profile_screen.dart';
-import 'package:frontend/features/waitlist/presentation/pages/patient_waitlist_screen.dart';
 
 class PatientCalendarScreen extends ConsumerStatefulWidget {
   const PatientCalendarScreen({super.key});
@@ -35,13 +34,6 @@ class _PatientCalendarScreenState extends ConsumerState<PatientCalendarScreen> {
     );
   }
 
-  void _goToWaitlist() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const PatientWaitlistScreen()),
-    );
-  }
-
   void _openAppointmentDetail(Appointment appointment) {
     showAppointmentDetailSheet(
       context: context,
@@ -60,11 +52,6 @@ class _PatientCalendarScreenState extends ConsumerState<PatientCalendarScreen> {
         title: const Text('Mis citas'),
         leading: IconButton(icon: const Icon(Icons.logout), onPressed: _logout),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.hourglass_empty),
-            tooltip: 'Mi lista de espera',
-            onPressed: _goToWaitlist,
-          ),
           IconButton(
             icon: const Icon(Icons.person_outline),
             tooltip: 'Mi perfil',

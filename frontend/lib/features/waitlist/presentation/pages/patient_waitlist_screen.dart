@@ -55,6 +55,11 @@ class _WaitlistCard extends ConsumerWidget {
 
   const _WaitlistCard({required this.waitlist});
 
+  static const _metadataStyle = TextStyle(
+    fontSize: 12,
+    color: AppColors.textMuted,
+  );
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Card(
@@ -65,6 +70,19 @@ class _WaitlistCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (waitlist.doctorName case final doctorName?) ...[
+              Text(
+                'Dr. $doctorName',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 8),
+            ],
             Row(
               children: [
                 _StatusBadge(status: waitlist.status),
@@ -83,36 +101,26 @@ class _WaitlistCard extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 8),
-            if (waitlist.doctorName != null)
-              _InfoRow(
-                icon: Icons.person_outline,
-                text: 'Dr. ${waitlist.doctorName}',
-              ),
             if (waitlist.clinicName != null) ...[
-              const SizedBox(height: 4),
               _InfoRow(
                 icon: Icons.local_hospital_outlined,
                 text: waitlist.clinicName!,
               ),
             ],
-            if (waitlist.targetDate != null) ...[
-              const SizedBox(height: 4),
-              _InfoRow(
-                icon: Icons.calendar_today_outlined,
-                text: waitlist.targetDate!,
+            const SizedBox(height: 10),
+            if (waitlist.targetDate case final targetDate?)
+              Text(
+                'Fecha: ${_fmtTargetDate(targetDate)}',
+                style: _metadataStyle,
               ),
-            ],
-            if (waitlist.targetStartTime != null) ...[
-              const SizedBox(height: 4),
-              _InfoRow(
-                icon: Icons.access_time,
-                text: waitlist.targetStartTime!,
+            if (waitlist.targetStartTime case final targetStartTime?)
+              Text(
+                'Hora: ${_fmtTargetTime(targetStartTime)}',
+                style: _metadataStyle,
               ),
-            ],
-            const SizedBox(height: 6),
             Text(
               'Registrado: ${_fmtDateTime(waitlist.createdAt)}',
-              style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+              style: _metadataStyle,
             ),
           ],
         ),
@@ -169,6 +177,18 @@ class _WaitlistCard extends ConsumerWidget {
     return '${dt.day}/${dt.month}/${dt.year} '
         '${dt.hour.toString().padLeft(2, '0')}:'
         '${dt.minute.toString().padLeft(2, '0')}';
+  }
+
+  String _fmtTargetDate(String value) {
+    final date = DateTime.tryParse(value);
+    if (date == null) return value;
+
+    return '${date.day.toString().padLeft(2, '0')}/'
+        '${date.month.toString().padLeft(2, '0')}/${date.year}';
+  }
+
+  String _fmtTargetTime(String value) {
+    return value.length >= 5 ? value.substring(0, 5) : value;
   }
 }
 
