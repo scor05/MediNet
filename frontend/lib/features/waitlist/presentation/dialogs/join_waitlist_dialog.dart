@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/features/waitlist/domain/providers/waitlist_domain_providers.dart';
+import 'package:frontend/features/waitlist/presentation/providers/waitlist_provider.dart';
 
 /// Diálogo de confirmación para unirse a la lista de espera.
 /// Retorna `true` si el registro fue exitoso.
@@ -43,6 +44,8 @@ class _JoinWaitlistDialogState extends ConsumerState<JoinWaitlistDialog> {
             date: widget.date,
             startTime: widget.startTime,
           );
+
+      ref.invalidate(patientWaitlistNotifierProvider);
 
       if (!mounted) return;
       Navigator.of(context).pop(true);
