@@ -66,6 +66,35 @@ class ClinicRemoteDatasource {
     }
   }
 
+  Future<ClinicModel> updateClinic({
+    required int clinicId,
+    required String name,
+    required String address,
+    required String phone,
+    required String email,
+  }) async {
+    final headers = await _authenticatedHeaders();
+
+    final response = await http
+        .patch(
+          Uri.parse('${AppConfig.apiUrl}/clinics/$clinicId'),
+          headers: headers,
+          body: jsonEncode({
+            'name': name,
+            'address': address,
+            'phone': phone,
+            'email': email,
+          }),
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode == 200) {
+      return ClinicModel.fromJson(jsonDecode(response.body));
+    } else {
+      throw handleApiError(response);
+    }
+  }
+
   Future<void> deleteClinic(int clinicId) async {
     final headers = await _authenticatedHeaders(includeContentType: false);
 

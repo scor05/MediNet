@@ -4,9 +4,15 @@ import 'package:frontend/theme/app_theme.dart';
 
 class ClinicTile extends StatelessWidget {
   final Clinic clinic;
+  final VoidCallback onEdit;
   final VoidCallback onDelete;
 
-  const ClinicTile({super.key, required this.clinic, required this.onDelete});
+  const ClinicTile({
+    super.key,
+    required this.clinic,
+    required this.onEdit,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +32,7 @@ class ClinicTile extends StatelessWidget {
       child: Row(
         children: [
           const Icon(
-            Icons.local_hospital_outlined,
+            Icons.location_on_outlined,
             color: AppTheme.accent,
             size: 22,
           ),
@@ -35,6 +41,23 @@ class ClinicTile extends StatelessWidget {
             child: Text(
               clinic.name,
               style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+            ),
+          ),
+          Material(
+            color: Colors.transparent,
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: IconButton(
+              onPressed: onEdit,
+              tooltip: 'Editar clínica',
+              splashRadius: 20,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints.tightFor(width: 40, height: 40),
+              icon: const Icon(
+                Icons.edit_outlined,
+                color: AppTheme.accent,
+                size: 20,
+              ),
             ),
           ),
           Material(

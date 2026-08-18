@@ -135,6 +135,32 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen>
     );
   }
 
+  void _showEditClinicDialog(Clinic clinic) {
+    showDialog<void>(
+      context: context,
+      builder: (_) => AddClinicDialog.edit(
+        clinic: clinic,
+        onSave:
+            ({
+              required name,
+              required address,
+              required phone,
+              required email,
+            }) {
+              return ref
+                  .read(clientClinicsNotifierProvider(widget.clientId).notifier)
+                  .updateClinic(
+                    clinicId: clinic.id,
+                    name: name,
+                    address: address,
+                    phone: phone,
+                    email: email,
+                  );
+            },
+      ),
+    );
+  }
+
   Future<void> _confirmDeleteUser(ClientUser user) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -236,6 +262,7 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen>
           onEditUser: _showEditUserDialog,
           onDeleteUser: _confirmDeleteUser,
           onAddClinic: _showAddClinicDialog,
+          onEditClinic: _showEditClinicDialog,
           onDeleteClinic: _confirmDeleteClinic,
           onRetryUsers: () => ref
               .read(clientUsersNotifierProvider(widget.clientId).notifier)

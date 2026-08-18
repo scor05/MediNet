@@ -13,5 +13,13 @@ abstract class ClinicRepository {
     required int clientId,
   });
 
+  Future<Clinic> updateClinic({
+    required int clinicId,
+    required String name,
+    required String address,
+    required String phone,
+    required String email,
+  });
+
   Future<void> deleteClinic(int clinicId);
 }

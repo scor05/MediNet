@@ -103,7 +103,7 @@ class _WaitlistCard extends ConsumerWidget {
             const SizedBox(height: 8),
             if (waitlist.clinicName != null) ...[
               _InfoRow(
-                icon: Icons.local_hospital_outlined,
+                icon: Icons.location_on_outlined,
                 text: waitlist.clinicName!,
               ),
             ],
