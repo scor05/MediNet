@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Models\Waitlist;
+use Illuminate\Support\Facades\DB;
 
 class WaitlistRepository
 {
@@ -27,10 +28,26 @@ class WaitlistRepository
 
     public function findByPatient(int $patientId)
     {
-        return Waitlist::with(['targetAppointment', 'fallbackAppointment'])
-            ->where('id_patient', $patientId)
-            ->orderByDesc('created_at')
-            ->orderByDesc('id')
+        return DB::table('waitlists')
+            ->join(
+                'appointments AS target',
+                'target.id',
+                '=',
+                'waitlists.id_target_appointment'
+            )
+            ->join('schedules', 'schedules.id', '=', 'target.id_schedule')
+            ->join('users AS doctor', 'doctor.id', '=', 'schedules.id_doctor')
+            ->join('clinics', 'clinics.id', '=', 'schedules.id_clinic')
+            ->where('waitlists.id_patient', $patientId)
+            ->select([
+                'waitlists.*',
+                'doctor.name AS doctor_name',
+                'clinics.name AS clinic_name',
+                'target.date AS target_date',
+                'target.start_time AS target_start_time',
+            ])
+            ->orderByDesc('waitlists.created_at')
+            ->orderByDesc('waitlists.id')
             ->get();
     }
 
