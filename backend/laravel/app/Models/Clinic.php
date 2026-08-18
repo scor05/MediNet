@@ -12,5 +12,11 @@ class Clinic extends Model
         'address',
         'phone',
         'email',
+        'id_client',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
     ];
 }
