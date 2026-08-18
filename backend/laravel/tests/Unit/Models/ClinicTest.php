@@ -7,6 +7,14 @@ use PHPUnit\Framework\TestCase;
 
 class ClinicTest extends TestCase
 {
+    public function test_new_clinic_exposes_the_database_active_default(): void
+    {
+        $clinic = new Clinic;
+
+        $this->assertTrue($clinic->is_active);
+        $this->assertTrue($clinic->toArray()['is_active']);
+    }
+
     public function test_client_and_active_status_are_mass_assignable(): void
     {
         $clinic = new Clinic;
