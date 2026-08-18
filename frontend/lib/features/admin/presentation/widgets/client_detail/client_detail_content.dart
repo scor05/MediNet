@@ -22,6 +22,7 @@ class ClientDetailContent extends StatelessWidget {
   final ValueChanged<ClientUser> onEditUser;
   final ValueChanged<ClientUser> onDeleteUser;
   final VoidCallback onAddClinic;
+  final ValueChanged<Clinic> onEditClinic;
   final ValueChanged<Clinic> onDeleteClinic;
   final VoidCallback onRetryUsers;
   final VoidCallback onRetryClinics;
@@ -40,6 +41,7 @@ class ClientDetailContent extends StatelessWidget {
     required this.onEditUser,
     required this.onDeleteUser,
     required this.onAddClinic,
+    required this.onEditClinic,
     required this.onDeleteClinic,
     required this.onRetryUsers,
     required this.onRetryClinics,
@@ -104,6 +106,7 @@ class ClientDetailContent extends StatelessWidget {
                 onAdd: onAddClinic,
                 itemBuilder: (clinic) => ClinicTile(
                   clinic: clinic,
+                  onEdit: () => onEditClinic(clinic),
                   onDelete: () => onDeleteClinic(clinic),
                 ),
               ),

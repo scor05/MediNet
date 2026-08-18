@@ -3,6 +3,7 @@ import 'package:frontend/features/clinic/data/providers/clinic_data_providers.da
 import 'package:frontend/features/clinic/domain/usecases/create_clinic_usecase.dart';
 import 'package:frontend/features/clinic/domain/usecases/delete_clinic_usecase.dart';
 import 'package:frontend/features/clinic/domain/usecases/get_clinics_usecase.dart';
+import 'package:frontend/features/clinic/domain/usecases/update_clinic_usecase.dart';
 
 // Provider para el usecase createClinic
 final createClinicUsecaseProvider = Provider((ref) {
@@ -16,4 +17,8 @@ final getClinicsUsecaseProvider = Provider((ref) {
 
 final deleteClinicUsecaseProvider = Provider((ref) {
   return DeleteClinicUsecase(ref.read(clinicRepositoryProvider));
+});
+
+final updateClinicUsecaseProvider = Provider((ref) {
+  return UpdateClinicUsecase(ref.read(clinicRepositoryProvider));
 });

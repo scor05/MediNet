@@ -220,7 +220,7 @@ class _RequestedAppointmentCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             _AppointmentDetailRow(
-              icon: Icons.local_hospital_outlined,
+              icon: Icons.location_on_outlined,
               label: appointment.clinicName,
             ),
             const SizedBox(height: 14),

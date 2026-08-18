@@ -56,6 +56,33 @@ class ClinicRepositoryImpl implements ClinicRepository {
   }
 
   @override
+  Future<Clinic> updateClinic({
+    required int clinicId,
+    required String name,
+    required String address,
+    required String phone,
+    required String email,
+  }) async {
+    try {
+      return await datasource.updateClinic(
+        clinicId: clinicId,
+        name: name,
+        address: address,
+        phone: phone,
+        email: email,
+      );
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw ApiException('Sin conexión. Verifica tu internet.');
+    } on TimeoutException {
+      throw ApiException('La solicitud tardó demasiado. Intenta de nuevo.');
+    } catch (_) {
+      throw ApiException('Error inesperado. Intenta de nuevo.');
+    }
+  }
+
+  @override
   Future<void> deleteClinic(int clinicId) async {
     try {
       await datasource.deleteClinic(clinicId);

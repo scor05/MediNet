@@ -76,7 +76,7 @@ class _JoinWaitlistDialogState extends ConsumerState<JoinWaitlistDialog> {
           const SizedBox(height: 16),
           _buildInfoRow(Icons.person_outline, 'Dr. ${widget.doctorName}'),
           const SizedBox(height: 6),
-          _buildInfoRow(Icons.local_hospital_outlined, widget.clinicName),
+          _buildInfoRow(Icons.location_on_outlined, widget.clinicName),
           const SizedBox(height: 6),
           _buildInfoRow(
             Icons.calendar_today_outlined,

@@ -184,7 +184,7 @@ class AppointmentDetailDialog extends ConsumerWidget {
             ),
 
             _DetailRow(
-              icon: Icons.local_hospital_outlined,
+              icon: Icons.location_on_outlined,
               label: 'Clínica',
               value: appointment.clinicName,
             ),

@@ -67,4 +67,63 @@ void main() {
     expect(submittedEmail, 'central@medinet.lat');
     expect(find.text('Agregar clínica'), findsNothing);
   });
+
+  testWidgets('prefills and submits the clinic edit form', (tester) async {
+    final clinic = Clinic(
+      id: 9,
+      name: 'Clínica Central',
+      address: 'Zona 15',
+      phone: '2222-3333',
+      email: 'central@medinet.lat',
+      createdAt: DateTime(2026, 8, 17),
+      updatedAt: DateTime(2026, 8, 17),
+      isActive: true,
+    );
+    String? submittedName;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () => showDialog<void>(
+                context: context,
+                builder: (_) => AddClinicDialog.edit(
+                  clinic: clinic,
+                  onSave:
+                      ({
+                        required name,
+                        required address,
+                        required phone,
+                        required email,
+                      }) async {
+                        submittedName = name;
+                        return clinic.copyWith(name: name);
+                      },
+                ),
+              ),
+              child: const Text('Abrir'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Abrir'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Editar clínica'), findsOneWidget);
+    expect(find.text('Clínica Central'), findsOneWidget);
+    expect(find.text('Zona 15'), findsOneWidget);
+    expect(find.text('2222-3333'), findsOneWidget);
+    expect(find.text('central@medinet.lat'), findsOneWidget);
+
+    final fields = find.byType(TextFormField);
+    await tester.enterText(fields.first, 'Clínica Renovada');
+    await tester.tap(find.text('Guardar'));
+    await tester.pumpAndSettle();
+
+    expect(submittedName, 'Clínica Renovada');
+    expect(find.text('Editar clínica'), findsNothing);
+  });
 }

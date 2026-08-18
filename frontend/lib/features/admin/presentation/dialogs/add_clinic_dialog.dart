@@ -11,9 +11,19 @@ typedef CreateClinicCallback =
     });
 
 class AddClinicDialog extends StatefulWidget {
-  final CreateClinicCallback onCreate;
+  final Clinic? initialClinic;
+  final CreateClinicCallback onSubmit;
 
-  const AddClinicDialog({super.key, required this.onCreate});
+  const AddClinicDialog({super.key, required CreateClinicCallback onCreate})
+    : initialClinic = null,
+      onSubmit = onCreate;
+
+  const AddClinicDialog.edit({
+    super.key,
+    required Clinic clinic,
+    required CreateClinicCallback onSave,
+  }) : initialClinic = clinic,
+       onSubmit = onSave;
 
   @override
   State<AddClinicDialog> createState() => _AddClinicDialogState();
@@ -28,6 +38,20 @@ class _AddClinicDialogState extends State<AddClinicDialog> {
 
   bool _isSubmitting = false;
   String? _error;
+
+  bool get _isEditing => widget.initialClinic != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final clinic = widget.initialClinic;
+    if (clinic == null) return;
+
+    _nameController.text = clinic.name;
+    _addressController.text = clinic.address;
+    _phoneController.text = clinic.phone;
+    _emailController.text = clinic.email;
+  }
 
   @override
   void dispose() {
@@ -47,7 +71,7 @@ class _AddClinicDialogState extends State<AddClinicDialog> {
     });
 
     try {
-      await widget.onCreate(
+      await widget.onSubmit(
         name: _nameController.text.trim(),
         address: _addressController.text.trim(),
         phone: _phoneController.text.trim(),
@@ -58,7 +82,13 @@ class _AddClinicDialogState extends State<AddClinicDialog> {
     } on ApiException catch (e) {
       if (mounted) setState(() => _error = e.message);
     } catch (_) {
-      if (mounted) setState(() => _error = 'No se pudo crear la clínica.');
+      if (mounted) {
+        setState(
+          () => _error = _isEditing
+              ? 'No se pudo actualizar la clínica.'
+              : 'No se pudo crear la clínica.',
+        );
+      }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -84,7 +114,7 @@ class _AddClinicDialogState extends State<AddClinicDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Agregar clínica'),
+      title: Text(_isEditing ? 'Editar clínica' : 'Agregar clínica'),
       content: SizedBox(
         width: 420,
         child: SingleChildScrollView(
@@ -97,7 +127,7 @@ class _AddClinicDialogState extends State<AddClinicDialog> {
                   controller: _nameController,
                   decoration: const InputDecoration(
                     labelText: 'Nombre',
-                    prefixIcon: Icon(Icons.local_hospital_outlined),
+                    prefixIcon: Icon(Icons.location_on_outlined),
                   ),
                   textCapitalization: TextCapitalization.words,
                   textInputAction: TextInputAction.next,
@@ -170,7 +200,7 @@ class _AddClinicDialogState extends State<AddClinicDialog> {
                     color: Colors.white,
                   ),
                 )
-              : const Text('Crear'),
+              : Text(_isEditing ? 'Guardar' : 'Crear'),
         ),
       ],
     );
