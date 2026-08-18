@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:frontend/config/app_config.dart';
+import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/core/network/api_exception_handler.dart';
 import 'package:frontend/features/clinic/data/models/clinic_model.dart';
 import 'package:http/http.dart' as http;
@@ -9,30 +10,19 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class ClinicRemoteDatasource {
   // Se obtienen las clínicas del cliente
   Future<List<ClinicModel>> getClinics(int? clientId) async {
-    final token = Supabase.instance.client.auth.currentSession?.accessToken;
+    final headers = await _authenticatedHeaders();
 
     late final http.Response response;
 
     if (clientId == null) {
       response = await http
-          .get(
-            Uri.parse('${AppConfig.apiUrl}/clinics'),
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $token',
-            },
-          )
+          .get(Uri.parse('${AppConfig.apiUrl}/clinics'), headers: headers)
           .timeout(const Duration(seconds: 10));
     } else {
       response = await http
           .get(
             Uri.parse('${AppConfig.apiUrl}/clients/$clientId/clinics'),
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $token',
-            },
+            headers: headers,
           )
           .timeout(const Duration(seconds: 10));
     }
@@ -53,16 +43,12 @@ class ClinicRemoteDatasource {
     required String email,
     required int clientId,
   }) async {
-    final token = Supabase.instance.client.auth.currentSession?.accessToken;
+    final headers = await _authenticatedHeaders();
 
     final response = await http
         .post(
           Uri.parse('${AppConfig.apiUrl}/clinics'),
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
+          headers: headers,
           body: jsonEncode({
             'name': name,
             'address': address,
@@ -81,20 +67,55 @@ class ClinicRemoteDatasource {
   }
 
   Future<void> deleteClinic(int clinicId) async {
-    final token = Supabase.instance.client.auth.currentSession?.accessToken;
+    final headers = await _authenticatedHeaders(includeContentType: false);
 
     final response = await http
         .delete(
           Uri.parse('${AppConfig.apiUrl}/clinics/$clinicId'),
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
+          headers: headers,
         )
         .timeout(const Duration(seconds: 10));
 
     if (response.statusCode != 204) {
       throw handleApiError(response);
     }
+  }
+
+  Future<Map<String, String>> _authenticatedHeaders({
+    bool includeContentType = true,
+  }) async {
+    final auth = Supabase.instance.client.auth;
+    var session = auth.currentSession;
+
+    if (session == null) {
+      throw ApiException(
+        'Tu sesión expiró. Inicia sesión nuevamente.',
+        statusCode: 401,
+      );
+    }
+
+    if (session.isExpired) {
+      try {
+        session = (await auth.refreshSession()).session;
+      } catch (_) {
+        throw ApiException(
+          'No se pudo renovar tu sesión. Inicia sesión nuevamente.',
+          statusCode: 401,
+        );
+      }
+    }
+
+    if (session == null) {
+      throw ApiException(
+        'Tu sesión expiró. Inicia sesión nuevamente.',
+        statusCode: 401,
+      );
+    }
+
+    return {
+      'Accept': 'application/json',
+      if (includeContentType) 'Content-Type': 'application/json',
+      'Authorization': 'Bearer ${session.accessToken}',
+    };
   }
 }
