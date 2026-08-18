@@ -60,7 +60,7 @@ class PublicRepository
             ->get();
     }
 
-    // Se obtienen los slots disponibles por doctor, clínica y fecha
+    // Se obtienen los slots no bloqueados por doctor, clínica y fecha
     public function findSlots(int $doctorId, int $clinicId, string $date): array
     {
         $dayOfWeek = Carbon::parse($date)->dayOfWeekIso - 1;
@@ -124,10 +124,6 @@ class PublicRepository
                     return $appointmentStart < $slotEnd && $appointmentEnd > $current;
                 });
 
-                if ($isTaken) {
-                    continue;
-                }
-
                 $isBlocked = $blockades->contains(
                     fn ($blockade) => (int) $blockade->id_schedule === (int) $schedule->id
                         && $this->timeToMinutes($blockade->start_time) < $slotEnd
@@ -142,6 +138,7 @@ class PublicRepository
                     'schedule_id' => $schedule->id,
                     'start_time' => $startTime,
                     'end_time' => $this->minutesToTime($current + $schedule->duration),
+                    'is_occupied' => $isTaken,
                     'doctor' => [
                         'id' => $schedule->doctor_id,
                         'name' => $schedule->doctor_name,

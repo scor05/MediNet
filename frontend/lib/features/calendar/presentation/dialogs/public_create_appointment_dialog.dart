@@ -249,7 +249,7 @@ class _PublicCreateAppointmentDialogState
     final selectedSlot = _selectedSlot;
 
     if (selectedSlot == null) {
-      setState(() => _error = 'Selecciona un horario disponible.');
+      setState(() => _error = 'Selecciona un horario.');
       return;
     }
 
@@ -264,6 +264,11 @@ class _PublicCreateAppointmentDialogState
     });
 
     try {
+      if (selectedSlot.isOccupied) {
+        await _offerWaitlist(selectedSlot);
+        return;
+      }
+
       final patientId =
           _patientProfile?.id ??
           (await ref.read(getProfileUsecaseProvider).call()).id;
@@ -299,7 +304,7 @@ class _PublicCreateAppointmentDialogState
           e is ApiException &&
           e.isValidation &&
           (message.contains('Ya existe una cita') ||
-              message.contains('horario'));
+              message.toLowerCase().contains('ocupado'));
 
       if (isSlotTaken) {
         final joined = await _offerWaitlist(selectedSlot);
@@ -341,7 +346,7 @@ class _PublicCreateAppointmentDialogState
       messenger.showSnackBar(
         const SnackBar(
           content: Text(
-            'Te registraste en la lista de espera. Te notificaremos cuando se libere.',
+            'Su cita ha sido agregada a la lista de espera para ese horario.',
           ),
         ),
       );
@@ -508,7 +513,7 @@ class _PublicCreateAppointmentDialogState
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Horarios disponibles',
+                      'Horarios',
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                     const SizedBox(height: 10),
@@ -521,7 +526,7 @@ class _PublicCreateAppointmentDialogState
                       )
                     else if (_slots.isEmpty)
                       const Text(
-                        'No hay slots disponibles para esta selección.',
+                        'No hay horarios para esta selección.',
                         style: TextStyle(color: Colors.grey),
                       )
                     else
@@ -535,6 +540,12 @@ class _PublicCreateAppointmentDialogState
                                   '${slot.startTime} - ${slot.endTime}',
                                 ),
                                 selected: _selectedSlot == slot,
+                                backgroundColor: slot.isOccupied
+                                    ? Colors.orange.shade100
+                                    : null,
+                                selectedColor: slot.isOccupied
+                                    ? Colors.orange.shade300
+                                    : null,
                                 onSelected: (_) {
                                   setState(() => _selectedSlot = slot);
                                 },
@@ -542,6 +553,14 @@ class _PublicCreateAppointmentDialogState
                             )
                             .toList(),
                       ),
+                    if (_slots.any((slot) => slot.isOccupied)) ...[
+                      const SizedBox(height: 10),
+                      Text(
+                        '*Horarios marcados con color naranja están ocupados, '
+                        'se enviará su solicitud de cita a lista de espera.',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
                   ],
 
                   if (_error != null &&

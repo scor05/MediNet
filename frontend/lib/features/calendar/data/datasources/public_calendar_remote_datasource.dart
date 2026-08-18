@@ -62,7 +62,7 @@ class PublicCalendarRemoteDatasource {
     }
   }
 
-  // Obtiene los slots disponibles para una fecha
+  // Obtiene los slots no bloqueados para una fecha
   Future<List<PublicSlotModel>> getSlots({
     required int doctorId,
     required int clinicId,

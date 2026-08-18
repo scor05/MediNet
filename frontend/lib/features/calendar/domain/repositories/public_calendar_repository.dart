@@ -9,7 +9,7 @@ abstract class PublicCalendarRepository {
   // Obtiene las clínicas disponibles para calendario público
   Future<List<Clinic>> getClinics({int? doctorId});
 
-  // Obtiene los slots disponibles para doctor, clínica y fecha
+  // Obtiene los slots no bloqueados para doctor, clínica y fecha
   Future<List<PublicSlot>> getSlots({
     required int doctorId,
     required int clinicId,

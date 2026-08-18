@@ -28,7 +28,7 @@ class PublicService
         return $this->repository->findClinics($doctorId);
     }
 
-    // Se obtienen los slots disponibles por doctor, clínica y fecha
+    // Se obtienen los slots no bloqueados por doctor, clínica y fecha
     public function getSlots(int $doctorId, int $clinicId, string $date): array
     {
         return $this->repository->findSlots($doctorId, $clinicId, $date);
