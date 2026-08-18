@@ -75,6 +75,7 @@ class _CalendarShellState extends State<CalendarShell> {
       child: Scaffold(
         body: IndexedStack(index: _currentIndex, children: _pages),
         bottomNavigationBar: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
           currentIndex: _currentIndex,
           onTap: (index) {
             setState(() => _currentIndex = index);

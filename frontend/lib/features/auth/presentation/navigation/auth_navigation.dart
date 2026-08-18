@@ -10,6 +10,7 @@ import 'package:frontend/features/calendar/presentation/pages/secretary_calendar
 import 'package:frontend/features/calendar/presentation/pages/secretary_requested_appointments_screen.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_shell.dart';
 import 'package:frontend/features/search/presentation/pages/search_screen.dart';
+import 'package:frontend/features/waitlist/presentation/pages/patient_waitlist_screen.dart';
 
 class AuthNavigation {
   const AuthNavigation._();
@@ -88,11 +89,15 @@ class AuthNavigation {
         return CalendarShell(
           calendarScreen: const PatientCalendarScreen(),
           profile: profile,
-          extraPages: const [SearchScreen()],
+          extraPages: const [SearchScreen(), PatientWaitlistScreen()],
           extraItems: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.search),
               label: 'Agendar Cita',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.hourglass_empty),
+              label: 'En espera',
             ),
           ],
         );
