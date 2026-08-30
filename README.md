@@ -36,3 +36,37 @@ proyecto. El documento en cuestión se puede encontrar aquí: [pdf entrega](http
 En esta carpeta se encuentra el PDF terminado para el segundo corte del proyecto, con los pasos de Design Studio, requisitos funcionales, mapa de historias de usuario, diagrama de casos de uso y varios otros
 diagramas/tablas. La versión con historial de este documento se puede encontrar en: [pdf corte #2](https://uvggt-my.sharepoint.com/:w:/g/personal/her24337_uvg_edu_gt/IQCoU9rFR4qMRpwIobKMLeRwAcxiv-y_UoJub-nrUbe8cFI?e=h3qts2)
 
+## Entorno local con Docker Compose
+
+El entorno local incluye PostgreSQL, Laravel, el frontend Nginx, Laravel
+Reverb y el worker de colas. Antes de construir la imagen del frontend se
+debe generar el bundle web con los endpoints locales:
+
+```bash
+cd frontend
+flutter build web \
+  --dart-define=API_URL=http://localhost:8880/api \
+  --dart-define=REVERB_WS_HOST=localhost \
+  --dart-define=REVERB_WS_PORT=8081 \
+  --dart-define=REVERB_WS_SCHEME=ws \
+  --dart-define=REVERB_APP_KEY=4e836df03ccf5c509e2b22c46f29daa58152ce10
+cd ..
+```
+
+Después se prepara y levanta el entorno desde la raíz del repositorio:
+
+```bash
+docker compose --env-file ./backend/.env build backend frontend
+docker compose --env-file ./backend/.env run --rm backend composer install --no-interaction --prefer-dist
+docker compose --env-file ./backend/.env run --rm backend php artisan migrate --force
+docker compose --env-file ./backend/.env up -d
+docker compose --env-file ./backend/.env ps
+```
+
+El frontend queda disponible en `http://localhost:3055`, la API en
+`http://localhost:8880/api`, Reverb en `ws://localhost:8081` y PostgreSQL en
+`127.0.0.1:5433`. Para observar los procesos de tiempo real:
+
+```bash
+docker compose --env-file ./backend/.env logs -f reverb queue
+```

@@ -7,6 +7,7 @@ use App\Models\Appointment;
 use App\Repositories\AppointmentRepository;
 use App\Repositories\ScheduleBlockadeRepository;
 use App\Services\AppointmentAvailabilityService;
+use App\Services\AppointmentRealtimeService;
 use App\Services\AppointmentService;
 use App\Services\NotificationService;
 use App\Services\UserService;
@@ -23,6 +24,7 @@ class AppointmentServiceTest extends TestCase
         $blockadeRepository = $this->createStub(ScheduleBlockadeRepository::class);
         $notificationService = $this->createMock(NotificationService::class);
         $waitlistPromotionService = $this->createStub(WaitlistPromotionService::class);
+        $realtimeService = $this->createMock(AppointmentRealtimeService::class);
 
         $data = [
             'id_schedule' => 11,
@@ -71,6 +73,9 @@ class AppointmentServiceTest extends TestCase
                     && str_contains($notification['message'], '21/07/2026')
                     && str_contains($notification['message'], '09:00')
             ));
+        $realtimeService->expects($this->once())
+            ->method('created')
+            ->with($createdAppointment);
 
         $service = new AppointmentService(
             $repository,
@@ -79,6 +84,7 @@ class AppointmentServiceTest extends TestCase
             $notificationService,
             $waitlistPromotionService,
             $availabilityService,
+            $realtimeService,
         );
 
         $this->assertSame($createdAppointment, $service->create($data));
@@ -92,6 +98,7 @@ class AppointmentServiceTest extends TestCase
         $blockadeRepository = $this->createStub(ScheduleBlockadeRepository::class);
         $notificationService = $this->createStub(NotificationService::class);
         $waitlistPromotionService = $this->createStub(WaitlistPromotionService::class);
+        $realtimeService = $this->createMock(AppointmentRealtimeService::class);
 
         $availabilityService->method('ensureAvailable')
             ->willThrowException(new AppointmentUnavailableException(
@@ -100,6 +107,7 @@ class AppointmentServiceTest extends TestCase
 
         $repository->expects($this->never())->method('create');
         $userService->expects($this->never())->method('getById');
+        $realtimeService->expects($this->never())->method('created');
 
         $service = new AppointmentService(
             $repository,
@@ -108,6 +116,7 @@ class AppointmentServiceTest extends TestCase
             $notificationService,
             $waitlistPromotionService,
             $availabilityService,
+            $realtimeService,
         );
 
         $this->expectException(AppointmentUnavailableException::class);
@@ -128,6 +137,7 @@ class AppointmentServiceTest extends TestCase
         $blockadeRepository = $this->createStub(ScheduleBlockadeRepository::class);
         $notificationService = $this->createMock(NotificationService::class);
         $waitlistPromotionService = $this->createStub(WaitlistPromotionService::class);
+        $realtimeService = $this->createMock(AppointmentRealtimeService::class);
 
         $data = [
             'id_schedule' => 11,
@@ -146,6 +156,9 @@ class AppointmentServiceTest extends TestCase
             ->willReturn($createdAppointment);
         $repository->expects($this->never())->method('findNotificationContext');
         $notificationService->expects($this->never())->method('create');
+        $realtimeService->expects($this->once())
+            ->method('created')
+            ->with($createdAppointment);
 
         $service = new AppointmentService(
             $repository,
@@ -154,6 +167,7 @@ class AppointmentServiceTest extends TestCase
             $notificationService,
             $waitlistPromotionService,
             $availabilityService,
+            $realtimeService,
         );
 
         $this->assertSame($createdAppointment, $service->create($data));

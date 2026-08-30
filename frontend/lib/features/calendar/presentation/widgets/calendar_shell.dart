@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/features/auth/domain/entities/user_profile.dart';
 import 'package:frontend/features/calendar/presentation/pages/settings_screen.dart';
+import 'package:frontend/features/calendar/presentation/providers/patient_appointment_realtime_provider.dart';
 import 'package:frontend/theme/calendar_theme.dart';
 
 class CalendarShellNavigation extends InheritedWidget {
@@ -23,7 +25,7 @@ class CalendarShellNavigation extends InheritedWidget {
   bool updateShouldNotify(CalendarShellNavigation oldWidget) => false;
 }
 
-class CalendarShell extends StatefulWidget {
+class CalendarShell extends ConsumerStatefulWidget {
   final Widget calendarScreen;
   final UserProfile profile;
 
@@ -42,10 +44,10 @@ class CalendarShell extends StatefulWidget {
        );
 
   @override
-  State<CalendarShell> createState() => _CalendarShellState();
+  ConsumerState<CalendarShell> createState() => _CalendarShellState();
 }
 
-class _CalendarShellState extends State<CalendarShell> {
+class _CalendarShellState extends ConsumerState<CalendarShell> {
   int _currentIndex = 0;
 
   late final List<Widget> _pages = [
@@ -65,6 +67,8 @@ class _CalendarShellState extends State<CalendarShell> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(patientAppointmentRealtimeProvider(widget.profile.id));
+
     return CalendarShellNavigation(
       onOpenSettings: () {
         final settingsIndex = _items.length - 1;

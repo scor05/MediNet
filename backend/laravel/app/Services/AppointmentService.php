@@ -15,7 +15,8 @@ class AppointmentService
         private ScheduleBlockadeRepository $blockadeRepository,
         private NotificationService $notificationService,
         private WaitlistPromotionService $waitlistPromotionService,
-        private AppointmentAvailabilityService $availabilityService
+        private AppointmentAvailabilityService $availabilityService,
+        private AppointmentRealtimeService $realtimeService,
     ) {}
 
     // Se obtienen todas las citas
@@ -48,6 +49,8 @@ class AppointmentService
         if (isset($data['id_patient'])) {
             $this->notifyCreatedAppointment($appointment->id, $data['id_patient']);
         }
+
+        $this->realtimeService->created($appointment);
 
         return $appointment;
     }
@@ -104,6 +107,7 @@ class AppointmentService
                 $oldAppointment,
                 $appointment
             );
+            $this->realtimeService->updated($oldAppointment, $appointment);
 
             return $appointment;
         });
@@ -231,6 +235,10 @@ class AppointmentService
     // Se elimina una cita
     public function delete(int $id)
     {
-        $this->repository->delete($id);
+        DB::transaction(function () use ($id): void {
+            $appointment = $this->repository->findById($id);
+            $this->repository->delete($id);
+            $this->realtimeService->deleted($appointment);
+        });
     }
 }

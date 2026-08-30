@@ -8,6 +8,7 @@
     "require": {
         "php": "^8.3",
         "laravel/framework": "^13.0",
+        "laravel/reverb": "^1.11",
         "laravel/tinker": "^3.0"
     },
     "require-dev": {
@@ -47,6 +48,8 @@
             "@php artisan config:clear --ansi",
             "@php artisan test"
         ],
+        "reverb:start": "@php artisan reverb:start",
+        "queue:work": "@php artisan queue:work --queue=default --sleep=1 --tries=3 --timeout=60",
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"
