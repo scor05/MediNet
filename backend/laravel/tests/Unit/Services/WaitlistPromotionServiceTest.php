@@ -7,6 +7,7 @@ use App\Models\Waitlist;
 use App\Repositories\AppointmentRepository;
 use App\Repositories\WaitlistRepository;
 use App\Services\AppointmentAvailabilityService;
+use App\Services\AppointmentRealtimeService;
 use App\Services\NotificationService;
 use App\Services\UserService;
 use App\Services\WaitlistPromotionService;
@@ -21,6 +22,7 @@ class WaitlistPromotionServiceTest extends TestCase
         $userService = $this->createMock(UserService::class);
         $notificationService = $this->createMock(NotificationService::class);
         $availabilityService = $this->createMock(AppointmentAvailabilityService::class);
+        $realtimeService = $this->createMock(AppointmentRealtimeService::class);
 
         $oldAppointment = $this->appointment([
             'id' => 44,
@@ -92,6 +94,9 @@ class WaitlistPromotionServiceTest extends TestCase
                         && str_contains($message, '10:30')
                 )
             );
+        $realtimeService->expects($this->once())
+            ->method('created')
+            ->with($promotedAppointment);
 
         $result = $this->service(
             $waitlistRepository,
@@ -99,6 +104,7 @@ class WaitlistPromotionServiceTest extends TestCase
             $userService,
             $notificationService,
             $availabilityService,
+            $realtimeService,
         )->promoteIfFreed($oldAppointment, $cancelledAppointment);
 
         $this->assertSame($promotedAppointment, $result);
@@ -173,6 +179,7 @@ class WaitlistPromotionServiceTest extends TestCase
         UserService $userService,
         NotificationService $notificationService,
         AppointmentAvailabilityService $availabilityService,
+        ?AppointmentRealtimeService $realtimeService = null,
     ): WaitlistPromotionService {
         return new WaitlistPromotionService(
             $waitlistRepository,
@@ -180,6 +187,7 @@ class WaitlistPromotionServiceTest extends TestCase
             $userService,
             $notificationService,
             $availabilityService,
+            $realtimeService ?? $this->createStub(AppointmentRealtimeService::class),
         );
     }
 

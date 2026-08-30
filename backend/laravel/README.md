@@ -7,6 +7,32 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## MediNet Realtime Processes
+
+Appointment broadcasting requires both long-running processes below. Run each
+one in a separate terminal after loading the variables from `backend/.env`:
+
+```bash
+cd backend/laravel
+set -a
+source ../.env
+set +a
+composer reverb:start
+```
+
+```bash
+cd backend/laravel
+set -a
+source ../.env
+set +a
+composer queue:work
+```
+
+The queue and cache tables must exist before starting the worker
+(`php artisan migrate`). These commands are suitable when running Laravel
+directly. The root Compose configuration owns both persistent processes when
+using the containerized local environment.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

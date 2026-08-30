@@ -15,6 +15,7 @@ class WaitlistPromotionService
         private UserService $userService,
         private NotificationService $notificationService,
         private AppointmentAvailabilityService $availabilityService,
+        private AppointmentRealtimeService $realtimeService,
     ) {}
 
     public function promoteIfFreed(
@@ -76,8 +77,9 @@ class WaitlistPromotionService
                 .$this->formatDate($context->date)
                 .' a las '
                 .$this->formatTime($context->start_time)
-                .'.'
+                .'.',
         );
+        $this->realtimeService->created($promotedAppointment);
 
         return $promotedAppointment;
     }

@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     libpq-dev \
-    && docker-php-ext-install pdo pdo_pgsql opcache \
+    && docker-php-ext-install pdo pdo_pgsql opcache pcntl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY opcache.ini /usr/local/etc/php/conf.d/opcache.ini

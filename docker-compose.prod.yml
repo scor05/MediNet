@@ -10,8 +10,12 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
-      - backend
-      - frontend
+      backend:
+        condition: service_started
+      frontend:
+        condition: service_started
+      reverb:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:

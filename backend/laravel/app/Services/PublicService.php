@@ -14,6 +14,7 @@ class PublicService
         private AppointmentRepository $appointmentRepository,
         private NotificationService $notificationService,
         private AppointmentAvailabilityService $availabilityService,
+        private AppointmentRealtimeService $realtimeService,
     ) {}
 
     // Se obtienen los doctores con horarios activos
@@ -50,6 +51,7 @@ class PublicService
         $appointment = DB::transaction(function () use ($data) {
             $appointment = $this->repository->createAppointment($data);
             $this->notifyRequestedAppointment($appointment->id);
+            $this->realtimeService->created($appointment);
 
             return $appointment;
         });

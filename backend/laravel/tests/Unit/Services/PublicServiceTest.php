@@ -6,6 +6,7 @@ use App\Exceptions\AppointmentUnavailableException;
 use App\Repositories\AppointmentRepository;
 use App\Repositories\PublicRepository;
 use App\Services\AppointmentAvailabilityService;
+use App\Services\AppointmentRealtimeService;
 use App\Services\NotificationService;
 use App\Services\PublicService;
 use PHPUnit\Framework\TestCase;
@@ -30,6 +31,7 @@ class PublicServiceTest extends TestCase
             $appointmentRepository,
             $notificationService,
             $availabilityService,
+            $this->createStub(AppointmentRealtimeService::class),
         );
 
         $this->expectException(AppointmentUnavailableException::class);
