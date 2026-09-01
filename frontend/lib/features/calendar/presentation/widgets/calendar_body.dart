@@ -51,6 +51,7 @@ class _CalendarBodyState extends ConsumerState<CalendarBody> {
       data: (schedules) {
         return widget.calendarAsync.when(
           skipLoadingOnReload: true,
+          skipError: true,
 
           loading: () => const Center(child: CircularProgressIndicator()),
 
@@ -73,6 +74,27 @@ class _CalendarBodyState extends ConsumerState<CalendarBody> {
 
               if (widget.calendarAsync.isLoading)
                 const LinearProgressIndicator(minHeight: 3),
+
+              if (widget.calendarAsync.hasError)
+                Positioned(
+                  left: 12,
+                  right: 12,
+                  top: 12,
+                  child: Material(
+                    color: Theme.of(context).colorScheme.errorContainer,
+                    borderRadius: BorderRadius.circular(8),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Text(
+                        'No se pudo actualizar el calendario. '
+                        'Los datos anteriores siguen visibles.',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onErrorContainer,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         );

@@ -40,27 +40,30 @@ void main() {
     );
   });
 
-  test('keeps current appointments when realtime refresh fails', () async {
-    final initial = [_appointment(1)];
-    final repository = _PatientCalendarRepository(initial);
-    final container = _container(repository);
-    addTearDown(container.dispose);
+  test(
+    'keeps current appointments and exposes realtime refresh error',
+    () async {
+      final initial = [_appointment(1)];
+      final repository = _PatientCalendarRepository(initial);
+      final container = _container(repository);
+      addTearDown(container.dispose);
 
-    expect(
-      await container.read(patientCalendarNotifierProvider.future),
-      initial,
-    );
+      expect(
+        await container.read(patientCalendarNotifierProvider.future),
+        initial,
+      );
 
-    final refresh = container
-        .read(patientCalendarNotifierProvider.notifier)
-        .refreshAll();
-    repository.refreshCompleter.completeError(Exception('network error'));
-    await refresh;
+      final refresh = container
+          .read(patientCalendarNotifierProvider.notifier)
+          .refreshAll();
+      repository.refreshCompleter.completeError(Exception('network error'));
+      await expectLater(refresh, throwsException);
 
-    final state = container.read(patientCalendarNotifierProvider);
-    expect(state.hasError, isFalse);
-    expect(state.requireValue, initial);
-  });
+      final state = container.read(patientCalendarNotifierProvider);
+      expect(state.hasError, isTrue);
+      expect(state.requireValue, initial);
+    },
+  );
 }
 
 ProviderContainer _container(_PatientCalendarRepository repository) {

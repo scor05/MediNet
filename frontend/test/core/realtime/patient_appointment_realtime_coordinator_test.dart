@@ -46,6 +46,27 @@ void main() {
 
     expect(refreshes, 0);
   });
+
+  test('retries a failed calendar refresh once', () async {
+    final connection = _FakeConnection();
+    var refreshes = 0;
+    final coordinator = PatientAppointmentRealtimeCoordinator(
+      connection: connection,
+      debounceDuration: const Duration(milliseconds: 5),
+      retryDelay: const Duration(milliseconds: 5),
+      onAppointmentChanged: () async {
+        refreshes++;
+        if (refreshes == 1) throw Exception('temporary failure');
+      },
+    );
+
+    await coordinator.start();
+    connection.emitChange();
+    await Future<void>.delayed(const Duration(milliseconds: 30));
+
+    expect(refreshes, 2);
+    await coordinator.dispose();
+  });
 }
 
 class _FakeConnection implements PatientAppointmentRealtimeConnection {

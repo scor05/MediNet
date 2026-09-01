@@ -6,6 +6,7 @@ class PatientAppointmentRealtimeCoordinator {
   final PatientAppointmentRealtimeConnection connection;
   final Future<void> Function() onAppointmentChanged;
   final Duration debounceDuration;
+  final Duration retryDelay;
 
   StreamSubscription<void>? _subscription;
   Timer? _debounceTimer;
@@ -16,6 +17,7 @@ class PatientAppointmentRealtimeCoordinator {
     required this.connection,
     required this.onAppointmentChanged,
     this.debounceDuration = const Duration(milliseconds: 150),
+    this.retryDelay = const Duration(milliseconds: 750),
   });
 
   Future<void> start() async {
@@ -42,7 +44,14 @@ class PatientAppointmentRealtimeCoordinator {
     try {
       await onAppointmentChanged();
     } catch (_) {
-      // Un GET fallido conserva el estado actual y el siguiente evento reintenta.
+      await Future<void>.delayed(retryDelay);
+      if (_disposed) return;
+
+      try {
+        await onAppointmentChanged();
+      } catch (_) {
+        // El calendario conserva los datos anteriores y muestra el error.
+      }
     }
   }
 
