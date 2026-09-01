@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:frontend/config/app_config.dart';
+import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/core/network/api_exception_handler.dart';
 import 'package:frontend/features/appointment/data/models/appointment_model.dart';
 import 'package:frontend/features/appointment/data/models/public_appointment_model.dart';
@@ -113,8 +114,6 @@ class AppointmentRemoteDatasource {
     DateTime? dateFrom,
     DateTime? dateTo,
   }) async {
-    final token = Supabase.instance.client.auth.currentSession?.accessToken;
-
     final queryParams = <String, String>{};
     if (dateFrom != null) {
       queryParams['date_from'] = dateFrom.toIso8601String().substring(0, 10);
@@ -122,21 +121,18 @@ class AppointmentRemoteDatasource {
     if (dateTo != null) {
       queryParams['date_to'] = dateTo.toIso8601String().substring(0, 10);
     }
+    // Each realtime refresh must reach Laravel instead of reusing an
+    // intermediary/browser response for the same week URL.
+    queryParams['_request'] = DateTime.now().microsecondsSinceEpoch.toString();
 
     final uri = Uri.parse(
       '${AppConfig.apiUrl}/calendar/patient',
     ).replace(queryParameters: queryParams.isNotEmpty ? queryParams : null);
 
-    final response = await http
-        .get(
-          uri,
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-        )
-        .timeout(_defaultTimeout);
+    var response = await _getAuthenticated(uri);
+    if (response.statusCode == 401) {
+      response = await _getAuthenticated(uri, refreshSession: true);
+    }
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
@@ -144,6 +140,51 @@ class AppointmentRemoteDatasource {
     } else {
       throw handleApiError(response);
     }
+  }
+
+  Future<http.Response> _getAuthenticated(
+    Uri uri, {
+    bool refreshSession = false,
+  }) async {
+    final auth = Supabase.instance.client.auth;
+    var session = auth.currentSession;
+
+    if (session == null) {
+      throw ApiException(
+        'Tu sesión expiró. Inicia sesión nuevamente.',
+        statusCode: 401,
+      );
+    }
+
+    if (refreshSession || session.isExpired) {
+      try {
+        session = (await auth.refreshSession()).session;
+      } catch (_) {
+        throw ApiException(
+          'No se pudo renovar tu sesión. Inicia sesión nuevamente.',
+          statusCode: 401,
+        );
+      }
+    }
+
+    if (session == null) {
+      throw ApiException(
+        'Tu sesión expiró. Inicia sesión nuevamente.',
+        statusCode: 401,
+      );
+    }
+
+    return http
+        .get(
+          uri,
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ${session.accessToken}',
+            'Cache-Control': 'no-cache',
+          },
+        )
+        .timeout(_defaultTimeout);
   }
 
   // Crea una cita

@@ -68,7 +68,12 @@ class PatientCalendarNotifier extends AsyncNotifier<List<Appointment>> {
         if (!isCurrentWeek) return;
         state = previousData == null
             ? AsyncError(error, stackTrace)
-            : AsyncData(previousData);
+            : AsyncError<List<Appointment>>(
+                error,
+                stackTrace,
+              ).copyWithPrevious(AsyncData(previousData));
+
+        Error.throwWithStackTrace(error, stackTrace);
       },
       loading: () {},
     );
