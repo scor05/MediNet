@@ -6,6 +6,7 @@ import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/calendar/presentation/dialogs/appointment_detail_dialog.dart';
 import 'package:frontend/features/calendar/presentation/providers/patient_calendar_provider.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_body.dart';
+import 'package:frontend/features/calendar/presentation/widgets/calendar_shell.dart';
 import 'package:frontend/features/patient_profile/presentation/pages/patient_profile_screen.dart';
 
 class PatientCalendarScreen extends ConsumerStatefulWidget {
@@ -19,7 +20,9 @@ class PatientCalendarScreen extends ConsumerStatefulWidget {
 class _PatientCalendarScreenState extends ConsumerState<PatientCalendarScreen> {
   Future<void> _logout() async {
     await ref.read(authNotifierProvider.notifier).logout();
+
     if (!mounted) return;
+
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const WelcomeScreen()),
@@ -32,6 +35,10 @@ class _PatientCalendarScreenState extends ConsumerState<PatientCalendarScreen> {
       context,
       MaterialPageRoute(builder: (_) => const PatientProfileScreen()),
     );
+  }
+
+  void _openSettings() {
+    CalendarShellNavigation.maybeOf(context)?.onOpenSettings();
   }
 
   void _openAppointmentDetail(Appointment appointment) {
@@ -56,6 +63,11 @@ class _PatientCalendarScreenState extends ConsumerState<PatientCalendarScreen> {
             icon: const Icon(Icons.person_outline),
             tooltip: 'Mi perfil',
             onPressed: _goToProfile,
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: 'Ajustes',
+            onPressed: _openSettings,
           ),
           IconButton(
             icon: const Icon(Icons.chevron_left),
