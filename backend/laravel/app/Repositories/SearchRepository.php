@@ -70,7 +70,7 @@ class SearchRepository
             ->select(
                 'users.id',
                 'users.name',
-                DB::raw("COALESCE(MIN(specialties.specialty), 'Sin especialidad') as specialty")
+                DB::raw("COALESCE(STRING_AGG(DISTINCT specialties.specialty, ', '), 'Sin especialidad') as specialty")
             )
             ->groupBy('users.id', 'users.name');
     }
