@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/features/admin/presentation/dialogs/edit_admin_privileges_dialog.dart';
+import 'package:frontend/features/admin/presentation/dialogs/edit_client_user_dialog.dart';
 import 'package:frontend/features/admin/presentation/widgets/admin_panel/admin_permission_badge.dart';
 import 'package:frontend/features/client/domain/entities/client_user.dart';
 import 'package:frontend/theme/app_theme.dart';
@@ -10,14 +10,10 @@ class AdminUserCard extends StatelessWidget {
 
   const AdminUserCard({super.key, required this.clientId, required this.user});
 
-  void _openPermissionsDialog(BuildContext context) {
+  void _openEditDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (_) => EditAdminPrivilegesDialog(
-        clientId: clientId,
-        user: user,
-        currentIsAdmin: user.isAdmin,
-      ),
+      builder: (_) => EditClientUserDialog(clientId: clientId, user: user),
     );
   }
 
@@ -47,7 +43,6 @@ class AdminUserCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,14 +77,10 @@ class AdminUserCard extends StatelessWidget {
                 ],
               ),
             ),
-
             IconButton(
-              tooltip: 'Editar permisos',
-              onPressed: () => _openPermissionsDialog(context),
-              icon: const Icon(
-                Icons.admin_panel_settings_outlined,
-                color: AppTheme.accent,
-              ),
+              tooltip: 'Editar rol y especialidades',
+              onPressed: () => _openEditDialog(context),
+              icon: const Icon(Icons.edit_outlined, color: AppTheme.accent),
             ),
           ],
         ),

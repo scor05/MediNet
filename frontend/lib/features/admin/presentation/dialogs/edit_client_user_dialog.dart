@@ -4,6 +4,7 @@ import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/features/admin/presentation/providers/client_users_provider.dart';
 import 'package:frontend/features/admin/presentation/widgets/add_user/admin_selector.dart';
 import 'package:frontend/features/admin/presentation/widgets/add_user/role_dropdown.dart';
+import 'package:frontend/features/admin/presentation/widgets/doctor_specialties_selector.dart';
 import 'package:frontend/features/client/domain/entities/client_user.dart';
 import 'package:frontend/theme/app_theme.dart';
 
@@ -25,12 +26,15 @@ class EditClientUserDialog extends ConsumerStatefulWidget {
 class _EditClientUserDialogState extends ConsumerState<EditClientUserDialog> {
   late String _selectedRole;
   late bool _isAdmin;
+
   bool _saving = false;
 
   @override
   void initState() {
     super.initState();
+
     _selectedRole = _normalizeRole(widget.user.role);
+
     _isAdmin = _selectedRole == 'admin' || widget.user.isAdmin;
   }
 
@@ -39,12 +43,16 @@ class _EditClientUserDialogState extends ConsumerState<EditClientUserDialog> {
 
     setState(() {
       _selectedRole = value;
-      if (value == 'admin') _isAdmin = true;
+
+      if (value == 'admin') {
+        _isAdmin = true;
+      }
     });
   }
 
   Future<void> _submit() async {
     if (_saving) return;
+
     setState(() => _saving = true);
 
     try {
@@ -58,18 +66,22 @@ class _EditClientUserDialogState extends ConsumerState<EditClientUserDialog> {
           );
 
       if (!mounted) return;
+
       Navigator.pop(context);
     } on ApiException catch (e) {
       _showError(e.message);
     } catch (_) {
       _showError('No se pudieron actualizar los roles.');
     } finally {
-      if (mounted) setState(() => _saving = false);
+      if (mounted) {
+        setState(() => _saving = false);
+      }
     }
   }
 
   void _showError(String message) {
     if (!mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), backgroundColor: AppColors.error),
     );
@@ -81,43 +93,57 @@ class _EditClientUserDialogState extends ConsumerState<EditClientUserDialog> {
       title: const Text('Editar roles'),
       content: SizedBox(
         width: 400,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: CircleAvatar(
-                backgroundColor: AppTheme.accent.withValues(alpha: 0.14),
-                child: Text(
-                  widget.user.user.name.isNotEmpty
-                      ? widget.user.user.name[0].toUpperCase()
-                      : '?',
-                  style: const TextStyle(
-                    color: AppTheme.accent,
-                    fontWeight: FontWeight.w700,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: CircleAvatar(
+                  backgroundColor: AppTheme.accent.withValues(alpha: 0.14),
+                  child: Text(
+                    widget.user.user.name.isNotEmpty
+                        ? widget.user.user.name[0].toUpperCase()
+                        : '?',
+                    style: const TextStyle(
+                      color: AppTheme.accent,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
+                title: Text(
+                  widget.user.user.name,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                subtitle: Text(widget.user.user.email),
               ),
-              title: Text(
-                widget.user.user.name,
-                style: const TextStyle(fontWeight: FontWeight.w700),
+
+              const SizedBox(height: 12),
+
+              RoleDropdown(
+                selectedRole: _selectedRole,
+                onChanged: _saving ? (_) {} : _onRoleChanged,
               ),
-              subtitle: Text(widget.user.user.email),
-            ),
-            const SizedBox(height: 12),
-            RoleDropdown(
-              selectedRole: _selectedRole,
-              onChanged: _saving ? (_) {} : _onRoleChanged,
-            ),
-            const SizedBox(height: 16),
-            AdminSelector(
-              selectedRole: _selectedRole,
-              isAdmin: _isAdmin,
-              onAdminChanged: (value) {
-                if (!_saving) setState(() => _isAdmin = value);
-              },
-            ),
-          ],
+
+              if (_selectedRole == 'doctor') ...[
+                const SizedBox(height: 16),
+
+                DoctorSpecialtiesSelector(doctorId: widget.user.user.id),
+              ],
+
+              const SizedBox(height: 16),
+
+              AdminSelector(
+                selectedRole: _selectedRole,
+                isAdmin: _isAdmin,
+                onAdminChanged: (value) {
+                  if (!_saving) {
+                    setState(() => _isAdmin = value);
+                  }
+                },
+              ),
+            ],
+          ),
         ),
       ),
       actions: [
@@ -148,11 +174,14 @@ String _normalizeRole(String role) {
     case 'admin':
     case 'administrador':
       return 'admin';
+
     case 'doctor':
       return 'doctor';
+
     case 'secretary':
     case 'secretaria':
       return 'secretary';
+
     default:
       return 'doctor';
   }
