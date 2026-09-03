@@ -4,7 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:frontend/core/services/firebase_support_service.dart';
 import 'package:frontend/theme/app_theme.dart';
 import 'package:frontend/config/app_config.dart';
-import 'package:frontend/features/auth/presentation/pages/welcome_screen.dart';
+import 'package:frontend/features/auth/presentation/pages/session_gate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() async {
@@ -31,7 +31,7 @@ class MediNetApp extends StatelessWidget {
       title: 'MediNet',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.theme,
-      home: const WelcomeScreen(),
+      home: const SessionGate(),
     );
   }
 }

@@ -5,6 +5,7 @@ import 'package:frontend/features/auth/presentation/navigation/auth_navigation.d
 import 'package:frontend/features/calendar/presentation/widgets/calendar_shell.dart';
 import 'package:frontend/features/search/presentation/pages/search_screen.dart';
 import 'package:frontend/features/waitlist/presentation/pages/patient_waitlist_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   test('patient navigation places waitlist immediately after scheduling', () {
@@ -32,6 +33,30 @@ void main() {
     expect(
       (patientShell.extraItems[1].icon as Icon).icon,
       Icons.hourglass_empty,
+    );
+  });
+
+  test('restored session returns to its only available role', () async {
+    SharedPreferences.setMockInitialValues({});
+
+    const profile = UserProfile(
+      id: 7,
+      name: 'Paciente',
+      email: 'paciente@medinet.lat',
+      phone: '5555-5555',
+      isActive: true,
+      isDoctor: false,
+      isSecretary: false,
+      isSuperadmin: false,
+      adminOf: [],
+    );
+
+    final screen = await AuthNavigation.screenAfterLogin(profile);
+
+    expect(screen, isA<CalendarShell>());
+    expect(
+      (await SharedPreferences.getInstance()).getString('last_role'),
+      'patient',
     );
   });
 }
