@@ -177,6 +177,14 @@ class AppointmentDetailDialog extends ConsumerWidget {
               value: appointment.doctorName,
             ),
 
+            if (appointment.doctorPhone != null &&
+                appointment.doctorPhone!.isNotEmpty)
+              _DetailRow(
+                icon: Icons.phone_outlined,
+                label: 'Tel. Doctor',
+                value: appointment.doctorPhone!,
+              ),
+
             _DetailRow(
               icon: Icons.person_outline,
               label: 'Paciente',
