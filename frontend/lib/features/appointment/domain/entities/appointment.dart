@@ -12,6 +12,7 @@ class Appointment {
   final int updatedBy;
   final int doctorId;
   final String doctorName;
+  final String? doctorPhone;
   final int clinicId;
   final String clinicName;
   final int appointmentDuration;
@@ -33,6 +34,7 @@ class Appointment {
     required this.updatedBy,
     required this.doctorId,
     required this.doctorName,
+    this.doctorPhone,
     required this.clinicId,
     required this.clinicName,
     required this.appointmentDuration,
@@ -53,6 +55,7 @@ class Appointment {
     int? updatedBy,
     int? doctorId,
     String? doctorName,
+    String? doctorPhone,
     int? clinicId,
     String? clinicName,
     int? appointmentDuration,
@@ -72,6 +75,7 @@ class Appointment {
       updatedBy: updatedBy ?? this.updatedBy,
       doctorId: doctorId ?? this.doctorId,
       doctorName: doctorName ?? this.doctorName,
+      doctorPhone: doctorPhone ?? this.doctorPhone,
       clinicId: clinicId ?? this.clinicId,
       clinicName: clinicName ?? this.clinicName,
       appointmentDuration: appointmentDuration ?? this.appointmentDuration,

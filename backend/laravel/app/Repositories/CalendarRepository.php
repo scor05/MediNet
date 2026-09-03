@@ -27,6 +27,7 @@ class CalendarRepository
                 'a.updated_by',
                 'doctor.id    AS doctor_id',
                 'doctor.name  AS doctor_name',
+                'doctor.phone AS doctor_phone',
                 'cl.id        AS clinic_id',
                 'cl.name      AS clinic_name',
                 's.duration   AS appointment_duration',
@@ -212,6 +213,7 @@ class CalendarRepository
                 'sb.end_time',
                 'doctor.id   AS doctor_id',
                 'doctor.name AS doctor_name',
+                'doctor.phone AS doctor_phone',
                 'cl.id       AS clinic_id',
                 'cl.name     AS clinic_name',
             ])
@@ -257,6 +259,7 @@ class CalendarRepository
                 'sb.end_time',
                 'doctor.id   AS doctor_id',
                 'doctor.name AS doctor_name',
+                'doctor.phone AS doctor_phone',
                 'cl.id       AS clinic_id',
                 'cl.name     AS clinic_name',
             ]);

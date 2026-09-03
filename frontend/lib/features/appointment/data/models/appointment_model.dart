@@ -15,6 +15,7 @@ class AppointmentModel extends Appointment {
     required super.updatedBy,
     required super.doctorId,
     required super.doctorName,
+    super.doctorPhone,
     required super.clinicId,
     required super.clinicName,
     required super.appointmentDuration,
@@ -39,6 +40,7 @@ class AppointmentModel extends Appointment {
       updatedBy: json['updated_by'] as int,
       doctorId: json['doctor']['id'] as int,
       doctorName: json['doctor']['name'] as String,
+      doctorPhone: json['doctor']['phone'] as String?,
       clinicId: json['clinic']['id'] as int,
       clinicName: json['clinic']['name'] as String,
       appointmentDuration: json['duration'] as int,
@@ -61,6 +63,7 @@ class AppointmentModel extends Appointment {
       updatedBy: 0,
       doctorId: json['doctor']['id'] as int,
       doctorName: json['doctor']['name'] as String,
+      doctorPhone: json['doctor']['phone'] as String?,
       clinicId: json['clinic']['id'] as int,
       clinicName: json['clinic']['name'] as String,
       appointmentDuration: _calcDuration(

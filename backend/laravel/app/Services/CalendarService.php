@@ -128,6 +128,7 @@ class CalendarService
                 'doctor' => [
                     'id' => $appt->doctor_id,
                     'name' => $appt->doctor_name,
+                    'phone' => $appt->doctor_phone,
                 ],
                 'patient' => [
                     'id' => $appt->id_patient,
@@ -156,6 +157,7 @@ class CalendarService
                 'doctor' => [
                     'id' => $blockade->doctor_id,
                     'name' => $blockade->doctor_name,
+                    'phone' => $blockade->doctor_phone ?? null,
                 ],
                 'clinic' => [
                     'id' => $blockade->clinic_id,
