@@ -9,9 +9,7 @@ use Illuminate\Validation\Rule;
 class AppointmentController extends Controller
 {
     // Se inyecta el servicio
-    public function __construct(private AppointmentService $service)
-    {
-    }
+    public function __construct(private AppointmentService $service) {}
 
     // Se obtienen todas las citas
     public function index()
@@ -31,7 +29,6 @@ class AppointmentController extends Controller
         $request->merge(['created_by' => $request->user()->id]);
         $request->merge(['updated_by' => $request->user()->id]);
 
-
         $validated = $request->validate([
             'id_schedule' => 'required|integer|exists:schedules,id',
             'id_patient' => 'nullable|integer|exists:users,id',
@@ -45,7 +42,7 @@ class AppointmentController extends Controller
                     'rejected',
                     'cancelled',
                     'rescheduled',
-                ])
+                ]),
             ],
             'start_time' => 'required|date_format:H:i',
             'created_by' => 'required|integer|exists:users,id',
@@ -60,7 +57,7 @@ class AppointmentController extends Controller
     // Se actualiza una cita
     public function update(Request $request, int $id)
     {
-        if (!$request->has('updated_by') || !is_numeric($request->input('updated_by'))) {
+        if (! $request->has('updated_by') || ! is_numeric($request->input('updated_by'))) {
             $request->merge(['updated_by' => $request->user()->id]);
         }
 
@@ -76,7 +73,7 @@ class AppointmentController extends Controller
                     'rejected',
                     'cancelled',
                     'rescheduled',
-                ])
+                ]),
             ],
             'start_time' => 'sometimes|date_format:H:i',
             'updated_by' => 'required|integer|exists:users,id',
@@ -85,10 +82,42 @@ class AppointmentController extends Controller
         return response()->json($this->service->update($id, $validated));
     }
 
+    public function checkReschedule(Request $request, int $id)
+    {
+        $validated = $request->validate([
+            'date' => 'required|date_format:Y-m-d',
+            'start_time' => 'required|date_format:H:i',
+        ]);
+
+        $this->service->checkReschedule(
+            $id,
+            $validated['date'],
+            $validated['start_time'],
+        );
+
+        return response()->json(['available' => true]);
+    }
+
+    public function reschedule(Request $request, int $id)
+    {
+        $validated = $request->validate([
+            'date' => 'required|date_format:Y-m-d',
+            'start_time' => 'required|date_format:H:i',
+        ]);
+
+        return response()->json($this->service->reschedule(
+            $id,
+            $validated['date'],
+            $validated['start_time'],
+            $request->user()->id,
+        ));
+    }
+
     // Se elimina una cita
     public function destroy(int $id)
     {
         $this->service->delete($id);
+
         return response()->json(null, 204);
     }
 }

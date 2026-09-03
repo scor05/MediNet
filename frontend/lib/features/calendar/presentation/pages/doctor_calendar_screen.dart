@@ -96,6 +96,8 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
       context: context,
       appointment: appointment,
       onCancelled: ref.read(doctorCalendarNotifierProvider.notifier).refresh,
+      onRescheduled: ref.read(doctorCalendarNotifierProvider.notifier).refresh,
+      canReschedule: true,
     );
   }
 

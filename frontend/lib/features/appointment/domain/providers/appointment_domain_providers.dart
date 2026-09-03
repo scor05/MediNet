@@ -6,6 +6,7 @@ import 'package:frontend/features/appointment/domain/usecases/get_patient_appoin
 import 'package:frontend/features/appointment/domain/usecases/get_public_appointments_usecase.dart';
 import 'package:frontend/features/appointment/domain/usecases/get_secretary_appointments_usecase.dart';
 import 'package:frontend/features/appointment/domain/usecases/get_secretary_requested_appointments_usecase.dart';
+import 'package:frontend/features/appointment/domain/usecases/reschedule_appointment_usecase.dart';
 import 'package:frontend/features/appointment/domain/usecases/update_appointment_status_usecase.dart';
 
 // Provider para el usecase getDoctorAppointments
@@ -42,6 +43,10 @@ final updateAppointmentStatusUsecaseProvider = Provider((ref) {
   return UpdateAppointmentStatusUsecase(
     ref.read(appointmentRepositoryProvider),
   );
+});
+
+final rescheduleAppointmentUsecaseProvider = Provider((ref) {
+  return RescheduleAppointmentUsecase(ref.read(appointmentRepositoryProvider));
 });
 
 // Provider para el usecase getPublicAppointments

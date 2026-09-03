@@ -108,6 +108,10 @@ class _SecretaryCalendarScreenState
       context: context,
       appointment: appointment,
       onCancelled: ref.read(secretaryCalendarNotifierProvider.notifier).refresh,
+      onRescheduled: ref
+          .read(secretaryCalendarNotifierProvider.notifier)
+          .refresh,
+      canReschedule: true,
     );
   }
 

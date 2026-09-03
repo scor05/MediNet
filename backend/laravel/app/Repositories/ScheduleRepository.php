@@ -21,6 +21,19 @@ class ScheduleRepository
         return Schedule::findOrFail($id);
     }
 
+    public function findActiveByDoctorClinicAndDay(
+        int $doctorId,
+        int $clinicId,
+        int $dayOfWeek,
+    ) {
+        return Schedule::where('id_doctor', $doctorId)
+            ->where('id_clinic', $clinicId)
+            ->where('day_of_week', $dayOfWeek)
+            ->where('is_active', true)
+            ->orderBy('start_time')
+            ->get();
+    }
+
     // Se crea un nuevo horario
     public function create($data)
     {
@@ -32,6 +45,7 @@ class ScheduleRepository
     {
         $schedule = Schedule::findOrFail($id);
         $schedule->update($data);
+
         return $schedule;
     }
 
@@ -48,7 +62,7 @@ class ScheduleRepository
         return Schedule::where('id_doctor', $doctorId)
             ->where('day_of_week', $dayOfWeek)
             ->where('is_active', true)
-            ->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))
+            ->when($excludeId, fn ($q) => $q->where('id', '!=', $excludeId))
             ->where(function ($query) use ($startTime, $endTime) {
                 $query->where('start_time', '<', $endTime)
                     ->where('end_time', '>', $startTime);

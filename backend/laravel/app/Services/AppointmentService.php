@@ -79,17 +79,19 @@ class AppointmentService
         $appointment = $this->repository->findById($id);
         $oldAppointment = clone $appointment;
 
-        $idSchedule = $appointment->id_schedule;
         $date = $data['date'] ?? $appointment->date;
         $startTime = $data['start_time'] ?? $appointment->start_time;
 
-        if (
-            array_key_exists('date', $data) ||
-            array_key_exists('start_time', $data) ||
-            (($data['status'] ?? null) === 'accepted')
-        ) {
+        if (array_key_exists('date', $data) || array_key_exists('start_time', $data)) {
+            $schedule = $this->availabilityService->resolveReschedule(
+                $appointment,
+                (string) $date,
+                (string) $startTime,
+            );
+            $data['id_schedule'] = $schedule->id;
+        } elseif (($data['status'] ?? null) === 'accepted') {
             $this->availabilityService->ensureAvailable(
-                $idSchedule,
+                $appointment->id_schedule,
                 $date,
                 $startTime,
                 $id
@@ -115,6 +117,57 @@ class AppointmentService
         return $appointment;
     }
 
+    public function checkReschedule(
+        int $id,
+        string $date,
+        string $startTime,
+    ): void {
+        $appointment = $this->repository->findById($id);
+        $this->availabilityService->resolveReschedule(
+            $appointment,
+            $date,
+            $startTime,
+        );
+    }
+
+    public function reschedule(
+        int $id,
+        string $date,
+        string $startTime,
+        int $updatedBy,
+    ) {
+        return DB::transaction(function () use (
+            $id,
+            $date,
+            $startTime,
+            $updatedBy,
+        ) {
+            $appointment = $this->repository->findById($id);
+            $oldAppointment = clone $appointment;
+            $schedule = $this->availabilityService->resolveReschedule(
+                $appointment,
+                $date,
+                $startTime,
+            );
+
+            $appointment = $this->repository->update($id, [
+                'id_schedule' => $schedule->id,
+                'date' => $date,
+                'start_time' => $startTime,
+                'updated_by' => $updatedBy,
+            ]);
+
+            $this->notifyUpdatedAppointment($oldAppointment, $appointment);
+            $this->waitlistPromotionService->promoteIfFreed(
+                $oldAppointment,
+                $appointment,
+            );
+            $this->realtimeService->updated($oldAppointment, $appointment);
+
+            return $appointment;
+        });
+    }
+
     private function notifyUpdatedAppointment($oldAppointment, $newAppointment)
     {
         $changes = $this->getAppointmentChanges($oldAppointment, $newAppointment);
@@ -135,6 +188,21 @@ class AppointmentService
                 'id_user' => $newAppointment->id_patient,
                 'type' => $type,
                 'message' => $patient_msg,
+                'channel' => 'push',
+            ]);
+        }
+
+        if ($this->wasRescheduled($oldAppointment, $newAppointment)) {
+            $doctorMessage = "La cita con {$ctx->patient_name} fue reprogramada para el "
+                .$this->formatDate($ctx->date)
+                .' a las '
+                .$this->formatTime($ctx->start_time)
+                ." en {$ctx->clinic_name}.";
+
+            $this->notificationService->create([
+                'id_user' => $ctx->doctor_id,
+                'type' => 'reschedule',
+                'message' => $doctorMessage,
                 'channel' => 'push',
             ]);
         }
@@ -186,6 +254,14 @@ class AppointmentService
         }
 
         return $changes;
+    }
+
+    private function wasRescheduled($oldAppointment, $newAppointment): bool
+    {
+        return $oldAppointment->id_schedule !== $newAppointment->id_schedule
+            || (string) $oldAppointment->date !== (string) $newAppointment->date
+            || $this->formatTime($oldAppointment->start_time)
+                !== $this->formatTime($newAppointment->start_time);
     }
 
     private function getNotificationType($oldAppointment, $newAppointment): string

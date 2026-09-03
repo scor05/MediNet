@@ -139,6 +139,52 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
     }
   }
 
+  @override
+  Future<void> checkRescheduleAvailability({
+    required int appointmentId,
+    required DateTime date,
+    required TimeOfDay startTime,
+  }) async {
+    try {
+      await datasource.checkRescheduleAvailability(
+        appointmentId: appointmentId,
+        date: date,
+        startTime: startTime,
+      );
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw ApiException('Sin conexión. Verifica tu internet.');
+    } on TimeoutException {
+      throw ApiException('La solicitud tardó demasiado. Intenta de nuevo.');
+    } catch (_) {
+      throw ApiException('No se pudo validar el nuevo horario.');
+    }
+  }
+
+  @override
+  Future<void> rescheduleAppointment({
+    required int appointmentId,
+    required DateTime date,
+    required TimeOfDay startTime,
+  }) async {
+    try {
+      await datasource.rescheduleAppointment(
+        appointmentId: appointmentId,
+        date: date,
+        startTime: startTime,
+      );
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw ApiException('Sin conexión. Verifica tu internet.');
+    } on TimeoutException {
+      throw ApiException('La solicitud tardó demasiado. Intenta de nuevo.');
+    } catch (_) {
+      throw ApiException('No se pudo reprogramar la cita.');
+    }
+  }
+
   // Obtiene las citas públicas de un doctor o clínica
   @override
   Future<List<Appointment>> getPublicAppointments({

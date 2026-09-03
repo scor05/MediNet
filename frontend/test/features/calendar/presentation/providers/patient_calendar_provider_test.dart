@@ -157,6 +157,24 @@ class _PatientCalendarRepository implements AppointmentRepository {
   }
 
   @override
+  Future<void> checkRescheduleAvailability({
+    required int appointmentId,
+    required DateTime date,
+    required TimeOfDay startTime,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> rescheduleAppointment({
+    required int appointmentId,
+    required DateTime date,
+    required TimeOfDay startTime,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
   Future<void> updateAppointmentStatus({
     required int appointmentId,
     required String status,

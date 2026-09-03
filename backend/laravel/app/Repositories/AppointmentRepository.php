@@ -83,6 +83,7 @@ class AppointmentRepository
                 'appointments.name_patient as patient_name',
                 'appointments.date',
                 'appointments.start_time',
+                'doctor.id as doctor_id',
                 'doctor.name as doctor_name',
                 'clinics.name as clinic_name',
                 'clinics.id_client as client_id',
