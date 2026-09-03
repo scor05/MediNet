@@ -20,9 +20,10 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
-            'phone' => 'nullable|string|max:20',
+            'phone' => ['nullable', 'string', 'max:20', 'regex:/^\+?[\d\s\-().]{7,20}$/'],
         ], [
             'email.unique' => 'Este correo ya está registrado.',
+            'phone.regex' => 'El teléfono ingresado no es válido.',
         ]);
 
         $session = $this->authService->register($validated);
