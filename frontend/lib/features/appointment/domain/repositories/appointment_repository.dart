@@ -41,6 +41,18 @@ abstract class AppointmentRepository {
     required String status,
   });
 
+  Future<void> checkRescheduleAvailability({
+    required int appointmentId,
+    required DateTime date,
+    required TimeOfDay startTime,
+  });
+
+  Future<void> rescheduleAppointment({
+    required int appointmentId,
+    required DateTime date,
+    required TimeOfDay startTime,
+  });
+
   // Obtener citas públicas de un doctor o clínica
   Future<List<Appointment>> getPublicAppointments({
     int? doctorId,

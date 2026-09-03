@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/appointment/domain/providers/appointment_domain_providers.dart';
+import 'package:frontend/features/calendar/presentation/dialogs/reschedule_appointment_dialog.dart';
 import 'package:frontend/theme/calendar_theme.dart';
 
 Future<void> showAppointmentDetailSheet({
   required BuildContext context,
   required Appointment appointment,
   Future<void> Function()? onCancelled,
+  Future<void> Function()? onRescheduled,
+  bool canReschedule = false,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -18,6 +21,8 @@ Future<void> showAppointmentDetailSheet({
     builder: (_) => AppointmentDetailDialog(
       appointment: appointment,
       onCancelled: onCancelled,
+      onRescheduled: onRescheduled,
+      canReschedule: canReschedule,
     ),
   );
 }
@@ -25,11 +30,15 @@ Future<void> showAppointmentDetailSheet({
 class AppointmentDetailDialog extends ConsumerWidget {
   final Appointment appointment;
   final Future<void> Function()? onCancelled;
+  final Future<void> Function()? onRescheduled;
+  final bool canReschedule;
 
   const AppointmentDetailDialog({
     super.key,
     required this.appointment,
     this.onCancelled,
+    this.onRescheduled,
+    this.canReschedule = false,
   });
 
   Color _statusColor() {
@@ -137,6 +146,28 @@ class AppointmentDetailDialog extends ConsumerWidget {
         const SnackBar(content: Text('No se pudo cancelar la cita.')),
       );
     }
+  }
+
+  Future<void> _rescheduleAppointment(BuildContext context) async {
+    final rescheduled = await showRescheduleAppointmentDialog(
+      context: context,
+      appointment: appointment,
+      openedAt: DateTime.now(),
+    );
+
+    if (rescheduled != true) return;
+    try {
+      await onRescheduled?.call();
+    } catch (_) {
+      // La reprogramación ya fue guardada; Reverb reintentará la recarga.
+    }
+
+    if (!context.mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    Navigator.of(context).pop();
+    messenger.showSnackBar(
+      const SnackBar(content: Text('La cita fue reprogramada correctamente.')),
+    );
   }
 
   @override
@@ -257,7 +288,7 @@ class AppointmentDetailDialog extends ConsumerWidget {
 
             const SizedBox(height: 24),
 
-            if (canCancel) ...[
+            if (canCancel)
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
@@ -267,6 +298,21 @@ class AppointmentDetailDialog extends ConsumerWidget {
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.red,
                     side: const BorderSide(color: Colors.red),
+                    minimumSize: const Size.fromHeight(44),
+                  ),
+                ),
+              ),
+
+            if (canCancel) const SizedBox(height: 10),
+
+            if (canCancel && canReschedule) ...[
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => _rescheduleAppointment(context),
+                  icon: const Icon(Icons.autorenew),
+                  label: const Text('Reprogramar'),
+                  style: OutlinedButton.styleFrom(
                     minimumSize: const Size.fromHeight(44),
                   ),
                 ),

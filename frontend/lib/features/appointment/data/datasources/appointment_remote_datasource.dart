@@ -249,6 +249,81 @@ class AppointmentRemoteDatasource {
     }
   }
 
+  Future<void> checkRescheduleAvailability({
+    required int appointmentId,
+    required DateTime date,
+    required TimeOfDay startTime,
+  }) async {
+    final response = await http
+        .post(
+          Uri.parse(
+            '${AppConfig.apiUrl}/appointments/$appointmentId/reschedule/check',
+          ),
+          headers: await _authenticatedJsonHeaders(),
+          body: jsonEncode({
+            'date': date.toIso8601String().substring(0, 10),
+            'start_time': _fmtTime(startTime),
+          }),
+        )
+        .timeout(_defaultTimeout);
+
+    if (response.statusCode != 200) {
+      throw handleApiError(response);
+    }
+  }
+
+  Future<void> rescheduleAppointment({
+    required int appointmentId,
+    required DateTime date,
+    required TimeOfDay startTime,
+  }) async {
+    final response = await http
+        .patch(
+          Uri.parse(
+            '${AppConfig.apiUrl}/appointments/$appointmentId/reschedule',
+          ),
+          headers: await _authenticatedJsonHeaders(),
+          body: jsonEncode({
+            'date': date.toIso8601String().substring(0, 10),
+            'start_time': _fmtTime(startTime),
+          }),
+        )
+        .timeout(_defaultTimeout);
+
+    if (response.statusCode != 200) {
+      throw handleApiError(response);
+    }
+  }
+
+  Future<Map<String, String>> _authenticatedJsonHeaders() async {
+    final auth = Supabase.instance.client.auth;
+    var session = auth.currentSession;
+
+    if (session == null) {
+      throw ApiException(
+        'Tu sesión expiró. Inicia sesión nuevamente.',
+        statusCode: 401,
+      );
+    }
+
+    if (session.isExpired) {
+      session = (await auth.refreshSession()).session;
+    }
+
+    if (session == null) {
+      throw ApiException(
+        'No se pudo renovar tu sesión. Inicia sesión nuevamente.',
+        statusCode: 401,
+      );
+    }
+
+    return {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ${session.accessToken}',
+    };
+  }
+
   // Obtiene las citas de públicas de un doctor o clínica
   Future<List<PublicAppointmentModel>> getPublicAppointments({
     int? doctorId,
