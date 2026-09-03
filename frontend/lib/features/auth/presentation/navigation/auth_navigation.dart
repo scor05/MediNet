@@ -19,36 +19,40 @@ class AuthNavigation {
     required BuildContext context,
     required UserProfile profile,
   }) async {
+    final screen = await screenAfterLogin(profile);
+
+    if (!context.mounted) return;
+    _pushReplacement(context, screen);
+  }
+
+  static Future<Widget> screenAfterLogin(UserProfile profile) async {
+    if (profile.isSuperadmin) {
+      return const SuperadminPanel();
+    }
+
     final roles = profile.roles;
 
     if (roles.length == 1) {
       await DefaultRoleService.setLastRole(roles.first);
-      _pushReplacement(context, screenForRole(roles.first, profile));
-      return;
+      return screenForRole(roles.first, profile);
     }
 
     final defaultRole = await DefaultRoleService.getDefaultRole();
 
-    if (!context.mounted) return;
-
     if (defaultRole != null && roles.contains(defaultRole)) {
       await DefaultRoleService.setLastRole(defaultRole);
-      _pushReplacement(context, screenForRole(defaultRole, profile));
-      return;
+      return screenForRole(defaultRole, profile);
     }
 
     // Sin rol predeterminado: intentar usar el último rol seleccionado.
     final lastRole = await DefaultRoleService.getLastRole();
 
-    if (!context.mounted) return;
-
     if (lastRole != null && roles.contains(lastRole)) {
-      _pushReplacement(context, screenForRole(lastRole, profile));
-      return;
+      return screenForRole(lastRole, profile);
     }
 
     // Primera vez sin preferencia: mostrar pantalla de selección.
-    _pushReplacement(context, RoleSelectionScreen(profile: profile));
+    return RoleSelectionScreen(profile: profile);
   }
 
   static void goAfterRegister({
@@ -75,6 +79,7 @@ class AuthNavigation {
     required UserProfile profile,
   }) async {
     await DefaultRoleService.setLastRole(role);
+    if (!context.mounted) return;
     _pushReplacement(context, screenForRole(role, profile));
   }
 
