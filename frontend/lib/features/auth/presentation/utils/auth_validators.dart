@@ -6,8 +6,12 @@ class AuthValidators {
       return 'Ingresa tu correo';
     }
 
-    if (!value.contains('@')) {
-      return 'Correo inválido';
+    final emailRegex = RegExp(
+      r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$',
+    );
+
+    if (!emailRegex.hasMatch(value.trim())) {
+      return 'Ingresa un correo válido (ej: usuario@dominio.com)';
     }
 
     return null;
@@ -52,6 +56,17 @@ class AuthValidators {
   static String? phone(String? value) {
     if (value == null || value.trim().isEmpty) {
       return 'Ingresa tu teléfono';
+    }
+
+    final phoneRegex = RegExp(r'^\+?[\d\s\-().]{7,20}$');
+
+    if (!phoneRegex.hasMatch(value.trim())) {
+      return 'Ingresa un teléfono válido (ej: +502 1234 5678)';
+    }
+
+    final digitsOnly = value.replaceAll(RegExp(r'\D'), '');
+    if (digitsOnly.length < 7 || digitsOnly.length > 15) {
+      return 'El teléfono debe tener entre 7 y 15 dígitos';
     }
 
     return null;
