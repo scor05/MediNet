@@ -74,8 +74,15 @@ void main() {
     expect(find.text('11/9/2026'), findsOneWidget);
     expect(find.textContaining('Viernes'), findsNothing);
     expect(find.byIcon(Icons.calendar_today_outlined), findsOneWidget);
+    expect(
+      tester.widget<EditableText>(find.byType(EditableText)).readOnly,
+      isTrue,
+    );
 
     await tester.tap(find.text('11/9/2026'));
     expect(taps, 1);
+
+    await tester.tap(find.byIcon(Icons.calendar_today_outlined));
+    expect(taps, 2);
   });
 }

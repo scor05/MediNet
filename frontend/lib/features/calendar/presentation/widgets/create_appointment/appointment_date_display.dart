@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/theme/app_theme.dart';
 
 class AppointmentDateDisplay extends StatelessWidget {
   final DateTime selectedDate;
@@ -13,16 +12,21 @@ class AppointmentDateDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    final formattedDate =
+        '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}';
+
+    return TextFormField(
+      key: ValueKey(formattedDate),
+      initialValue: formattedDate,
+      readOnly: true,
       onTap: onTap,
-      child: InputDecorator(
-        decoration: const InputDecoration(
-          labelText: 'Fecha',
-          suffixIcon: Icon(Icons.calendar_today_outlined),
-        ),
-        child: Text(
-          '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
-          style: AppTextStyles.body,
+      mouseCursor: SystemMouseCursors.click,
+      decoration: InputDecoration(
+        labelText: 'Fecha',
+        suffixIcon: IconButton(
+          tooltip: 'Seleccionar fecha',
+          onPressed: onTap,
+          icon: const Icon(Icons.calendar_today_outlined),
         ),
       ),
     );
