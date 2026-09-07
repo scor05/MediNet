@@ -249,11 +249,22 @@ class _RescheduleAppointmentDialogState
                 lastDate: lastDate,
                 onDateChanged: _selectDate,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 4),
               OutlinedButton.icon(
                 onPressed: _saving ? null : _pickTime,
-                icon: const Icon(Icons.schedule),
+                icon: const Icon(Icons.schedule, size: 32),
                 label: Text(_formatTime(_selectedTime)),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(80),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 20,
+                  ),
+                  textStyle: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
               const SizedBox(height: 12),
               if (_checking) const LinearProgressIndicator(),
