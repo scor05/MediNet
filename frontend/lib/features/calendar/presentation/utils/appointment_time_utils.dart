@@ -10,16 +10,36 @@ const daysFull = [
   'Domingo',
 ];
 
-DateTime nextDayOfWeek({required DateTime weekStart, required int dayOfWeek}) {
-  for (int i = 0; i < 7; i++) {
-    final date = weekStart.add(Duration(days: i));
+DateTime nextScheduleDate({
+  required DateTime weekStart,
+  required DateTime today,
+  required int dayOfWeek,
+}) {
+  final normalizedToday = DateTime(today.year, today.month, today.day);
+  final normalizedWeekStart = DateTime(
+    weekStart.year,
+    weekStart.month,
+    weekStart.day,
+  );
+  final startingDate = normalizedWeekStart.isBefore(normalizedToday)
+      ? normalizedToday
+      : normalizedWeekStart;
+  final targetWeekday = dayOfWeek + 1;
+  final daysUntilTarget = (targetWeekday - startingDate.weekday) % 7;
 
-    if ((date.weekday - 1) == dayOfWeek) {
-      return date;
-    }
-  }
+  return startingDate.add(Duration(days: daysUntilTarget));
+}
 
-  return weekStart;
+bool isSelectableScheduleDate({
+  required DateTime date,
+  required DateTime today,
+  required int dayOfWeek,
+}) {
+  final normalizedDate = DateTime(date.year, date.month, date.day);
+  final normalizedToday = DateTime(today.year, today.month, today.day);
+
+  return !normalizedDate.isBefore(normalizedToday) &&
+      normalizedDate.weekday - 1 == dayOfWeek;
 }
 
 List<String> buildTimeSlots(Schedule schedule) {

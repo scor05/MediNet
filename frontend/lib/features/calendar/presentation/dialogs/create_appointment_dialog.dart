@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/features/calendar/presentation/providers/create_appointment_form_provider.dart';
+import 'package:frontend/features/calendar/presentation/utils/appointment_time_utils.dart';
 import 'package:frontend/features/calendar/presentation/widgets/create_appointment/appointment_date_display.dart';
 import 'package:frontend/features/calendar/presentation/widgets/create_appointment/dialog_handle.dart';
 import 'package:frontend/features/calendar/presentation/widgets/create_appointment/schedule_dropdown.dart';
@@ -112,6 +113,45 @@ class _CreateAppointmentDialogState
     ref
         .read(createAppointmentFormProvider(widget.weekStart).notifier)
         .onDoctorQueryChanged(query);
+  }
+
+  Future<void> _pickDate(CreateAppointmentFormState formState) async {
+    final schedule = formState.selectedSchedule;
+    final selectedDate = formState.selectedDate;
+    if (schedule == null || selectedDate == null) return;
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final lastDate = DateTime(today.year + 2, 12, 31);
+    final initialDate =
+        isSelectableScheduleDate(
+          date: selectedDate,
+          today: today,
+          dayOfWeek: schedule.dayOfWeek,
+        )
+        ? selectedDate
+        : nextScheduleDate(
+            weekStart: today,
+            today: today,
+            dayOfWeek: schedule.dayOfWeek,
+          );
+
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: today,
+      lastDate: lastDate,
+      selectableDayPredicate: (date) => isSelectableScheduleDate(
+        date: date,
+        today: today,
+        dayOfWeek: schedule.dayOfWeek,
+      ),
+    );
+
+    if (picked == null || !mounted) return;
+    ref
+        .read(createAppointmentFormProvider(widget.weekStart).notifier)
+        .selectDate(picked);
   }
 
   Future<void> _submit() async {
@@ -265,7 +305,7 @@ class _CreateAppointmentDialogState
                   formState.selectedSchedule != null)
                 AppointmentDateDisplay(
                   selectedDate: formState.selectedDate!,
-                  selectedSchedule: formState.selectedSchedule!,
+                  onTap: () => _pickDate(formState),
                 ),
 
               const SizedBox(height: 10),
