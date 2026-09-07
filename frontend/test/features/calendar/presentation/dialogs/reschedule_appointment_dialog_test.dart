@@ -134,7 +134,9 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Reprogramar'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Confirmar reprogramación'));
+    final confirmFinder = find.text('Confirmar reprogramación');
+    await tester.ensureVisible(confirmFinder);
+    await tester.tap(confirmFinder);
     await tester.pumpAndSettle();
 
     expect(refreshCalls, 1);
@@ -171,12 +173,14 @@ Future<void> _pumpDialog(
   );
 }
 
+final _futureAppointmentDate = DateTime.now().add(const Duration(days: 7));
+
 final _appt = Appointment(
   id: 20,
   scheduleId: 4,
   patientId: 7,
   patientName: 'Paciente',
-  date: DateTime(2026, 9, 4),
+  date: _futureAppointmentDate,
   startTime: '10:00:00',
   status: 'accepted',
   createdAt: DateTime(2026, 8, 1),

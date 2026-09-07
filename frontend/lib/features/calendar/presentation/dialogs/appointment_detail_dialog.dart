@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/appointment/domain/providers/appointment_domain_providers.dart';
 import 'package:frontend/features/calendar/presentation/dialogs/reschedule_appointment_dialog.dart';
+import 'package:frontend/theme/app_theme.dart';
 import 'package:frontend/theme/calendar_theme.dart';
 
 Future<void> showAppointmentDetailSheet({
@@ -299,6 +300,7 @@ class AppointmentDetailDialog extends ConsumerWidget {
                     foregroundColor: Colors.red,
                     side: const BorderSide(color: Colors.red),
                     minimumSize: const Size.fromHeight(44),
+                    shape: const StadiumBorder(),
                   ),
                 ),
               ),
@@ -313,7 +315,10 @@ class AppointmentDetailDialog extends ConsumerWidget {
                   icon: const Icon(Icons.autorenew),
                   label: const Text('Reprogramar'),
                   style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(color: AppColors.primary),
                     minimumSize: const Size.fromHeight(44),
+                    shape: const StadiumBorder(),
                   ),
                 ),
               ),
@@ -351,7 +356,7 @@ class _DetailRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Icon(icon, size: 22),
 
