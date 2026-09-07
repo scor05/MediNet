@@ -480,8 +480,9 @@ class CreateAppointmentFormNotifier
 
     final firstSchedule = schedules.first;
 
-    final selectedDate = nextDayOfWeek(
+    final selectedDate = nextScheduleDate(
       weekStart: arg,
+      today: DateTime.now(),
       dayOfWeek: firstSchedule.dayOfWeek,
     );
 
@@ -501,8 +502,9 @@ class CreateAppointmentFormNotifier
   void selectSchedule(Schedule? schedule) {
     if (schedule == null) return;
 
-    final selectedDate = nextDayOfWeek(
+    final selectedDate = nextScheduleDate(
       weekStart: arg,
+      today: DateTime.now(),
       dayOfWeek: schedule.dayOfWeek,
     );
 
@@ -519,6 +521,23 @@ class CreateAppointmentFormNotifier
 
   void selectTime(String? time) {
     state = state.copyWith(selectedTime: time, clearError: true);
+  }
+
+  void selectDate(DateTime date) {
+    final schedule = state.selectedSchedule;
+    if (schedule == null ||
+        !isSelectableScheduleDate(
+          date: date,
+          today: DateTime.now(),
+          dayOfWeek: schedule.dayOfWeek,
+        )) {
+      return;
+    }
+
+    state = state.copyWith(
+      selectedDate: DateTime(date.year, date.month, date.day),
+      clearError: true,
+    );
   }
 
   // ---------------------------------------------------------------------------
