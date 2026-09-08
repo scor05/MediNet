@@ -6,18 +6,29 @@ import 'package:frontend/features/admin/presentation/dialogs/add_user_dialog.dar
 import 'package:frontend/features/admin/presentation/providers/client_users_provider.dart';
 import 'package:frontend/features/admin/presentation/widgets/admin_panel/admin_client_header.dart';
 import 'package:frontend/features/admin/presentation/widgets/admin_panel/admin_users_section.dart';
+import 'package:frontend/features/auth/domain/entities/user_profile.dart';
 import 'package:frontend/features/auth/presentation/utils/logout_helper.dart';
+import 'package:frontend/features/calendar/presentation/pages/settings_screen.dart';
 import 'package:frontend/theme/app_theme.dart';
 
-class AdminPanel extends ConsumerWidget {
+class AdminPanel extends ConsumerStatefulWidget {
   final int clientId;
   final String clientName;
+  final UserProfile profile;
 
   const AdminPanel({
     super.key,
     required this.clientId,
     required this.clientName,
+    required this.profile,
   });
+
+  @override
+  ConsumerState<AdminPanel> createState() => _AdminPanelState();
+}
+
+class _AdminPanelState extends ConsumerState<AdminPanel> {
+  bool _showSettings = false;
 
   void _showError(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -29,10 +40,10 @@ class AdminPanel extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (_) => AddUserDialog(
-        clientId: clientId,
+        clientId: widget.clientId,
         onAdd: (userId, role, isAdmin) {
           return ref
-              .read(clientUsersNotifierProvider(clientId).notifier)
+              .read(clientUsersNotifierProvider(widget.clientId).notifier)
               .addUser(userId, role, isAdmin);
         },
         onError: (message) => _showError(context, message),
@@ -41,12 +52,21 @@ class AdminPanel extends ConsumerWidget {
   }
 
   Future<void> _refreshUsers(WidgetRef ref) {
-    return ref.read(clientUsersNotifierProvider(clientId).notifier).refresh();
+    return ref
+        .read(clientUsersNotifierProvider(widget.clientId).notifier)
+        .refresh();
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final usersAsync = ref.watch(clientUsersNotifierProvider(clientId));
+  Widget build(BuildContext context) {
+    if (_showSettings) {
+      return SettingsScreen(
+        profile: widget.profile,
+        onBack: () => setState(() => _showSettings = false),
+      );
+    }
+
+    final usersAsync = ref.watch(clientUsersNotifierProvider(widget.clientId));
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -57,6 +77,16 @@ class AdminPanel extends ConsumerWidget {
           icon: const Icon(Icons.logout),
           onPressed: () => logoutAndGoToWelcome(context: context, ref: ref),
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: IconButton(
+              tooltip: 'Ajustes',
+              icon: const Icon(Icons.settings),
+              onPressed: () => setState(() => _showSettings = true),
+            ),
+          ),
+        ],
       ),
       body: RefreshIndicator(
         color: AppTheme.accent,
@@ -65,7 +95,7 @@ class AdminPanel extends ConsumerWidget {
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
           children: [
             AdminClientHeader(
-              clientName: clientName,
+              clientName: widget.clientName,
               onAddUser: () => _openAddUserDialog(context, ref),
             ),
             const SizedBox(height: 20),
@@ -88,7 +118,7 @@ class AdminPanel extends ConsumerWidget {
                 );
               },
               data: (users) =>
-                  AdminUsersSection(clientId: clientId, users: users),
+                  AdminUsersSection(clientId: widget.clientId, users: users),
             ),
           ],
         ),
