@@ -13,8 +13,9 @@ import 'package:frontend/features/calendar/presentation/widgets/settings/setting
 
 class SettingsScreen extends ConsumerStatefulWidget {
   final UserProfile profile;
+  final VoidCallback? onBack;
 
-  const SettingsScreen({super.key, required this.profile});
+  const SettingsScreen({super.key, required this.profile, this.onBack});
 
   @override
   ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
@@ -160,6 +161,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       appBar: AppBar(
         title: const Text('Ajustes'),
         automaticallyImplyLeading: false,
+        leading: widget.onBack == null
+            ? null
+            : IconButton(
+                tooltip: 'Volver',
+                icon: const Icon(Icons.arrow_back),
+                onPressed: widget.onBack,
+              ),
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
@@ -209,8 +217,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               value: _selectedChannels.contains('whatsapp'),
               onChanged: _savingNotifications
                   ? null
-                  : (value) =>
-                      _onNotificationChannelChanged('whatsapp', value),
+                  : (value) => _onNotificationChannelChanged('whatsapp', value),
             ),
             SwitchListTile(
               title: const Text('Email'),

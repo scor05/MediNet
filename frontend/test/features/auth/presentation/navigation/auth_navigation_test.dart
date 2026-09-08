@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:frontend/features/admin/presentation/pages/admin_panel.dart';
+import 'package:frontend/features/auth/domain/entities/admin_of.dart';
 import 'package:frontend/features/auth/domain/entities/user_profile.dart';
 import 'package:frontend/features/auth/presentation/navigation/auth_navigation.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_shell.dart';
@@ -57,6 +59,31 @@ void main() {
     expect(
       (await SharedPreferences.getInstance()).getString('last_role'),
       'patient',
+    );
+  });
+
+  test('administrator destination retains the profile for settings', () {
+    const profile = UserProfile(
+      id: 9,
+      name: 'Administrador',
+      email: 'admin@medinet.lat',
+      phone: '5555-9999',
+      isActive: true,
+      isDoctor: true,
+      isSecretary: false,
+      isSuperadmin: false,
+      adminOf: [AdminOf(clientId: 4, clientName: 'Clínica Central')],
+    );
+
+    final screen = AuthNavigation.screenForRole('admin', profile);
+
+    expect(screen, isA<AdminPanel>());
+    final adminPanel = screen as AdminPanel;
+    expect(adminPanel.clientId, 4);
+    expect(adminPanel.profile, same(profile));
+    expect(
+      adminPanel.profile.roles,
+      containsAll(['patient', 'doctor', 'admin']),
     );
   });
 }

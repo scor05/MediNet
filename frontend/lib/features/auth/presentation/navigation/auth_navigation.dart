@@ -131,6 +131,7 @@ class AuthNavigation {
         return AdminPanel(
           clientId: organization.clientId,
           clientName: organization.clientName,
+          profile: profile,
         );
 
       default:
