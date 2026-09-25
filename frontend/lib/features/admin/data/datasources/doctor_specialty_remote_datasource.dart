@@ -70,6 +70,23 @@ class DoctorSpecialtyRemoteDatasource {
     }
   }
 
+  Future<Specialty> createSpecialty(String name) async {
+    final response = await http
+        .post(
+          Uri.parse('${AppConfig.apiUrl}/specialties'),
+          headers: _headers(),
+          body: jsonEncode({'specialty': name}),
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode == 201) {
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      return Specialty.fromJson(data);
+    }
+
+    throw handleApiError(response);
+  }
+
   Future<void> deleteDoctorSpecialty({
     required int doctorId,
     required int specialtyId,

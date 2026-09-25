@@ -142,4 +142,31 @@ class DoctorSpecialtiesNotifier
       return false;
     }
   }
+
+  Future<Specialty?> createSpecialty(String name) async {
+    if (state.saving) return null;
+
+    state = state.copyWith(saving: true, clearError: true);
+
+    try {
+      final created = await ref
+          .read(doctorSpecialtyRemoteDatasourceProvider)
+          .createSpecialty(name);
+
+      await load();
+
+      state = state.copyWith(saving: false, clearError: true);
+
+      return created;
+    } catch (e) {
+      state = state.copyWith(
+        saving: false,
+        error: e is ApiException
+            ? e.message
+            : 'No se pudo crear la especialidad.',
+      );
+
+      return null;
+    }
+  }
 }
