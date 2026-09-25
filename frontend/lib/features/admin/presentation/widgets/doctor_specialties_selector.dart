@@ -73,6 +73,76 @@ class DoctorSpecialtiesSelector extends ConsumerWidget {
         .addSpecialty(selected.id);
   }
 
+  Future<void> _showCreateDialog(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final controller = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    final name = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Crear especialidad'),
+          content: SizedBox(
+            width: 350,
+            child: Form(
+              key: formKey,
+              child: TextFormField(
+                controller: controller,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  hintText: 'Nombre de la especialidad',
+                ),
+                textCapitalization: TextCapitalization.words,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Ingresa el nombre de la especialidad.';
+                  }
+                  return null;
+                },
+                onFieldSubmitted: (value) {
+                  if (formKey.currentState?.validate() ?? false) {
+                    Navigator.pop(dialogContext, value.trim());
+                  }
+                },
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (formKey.currentState?.validate() ?? false) {
+                  Navigator.pop(dialogContext, controller.text.trim());
+                }
+              },
+              child: const Text('Crear'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (name == null || name.isEmpty) return;
+
+    final created = await ref
+        .read(doctorSpecialtiesProvider(doctorId).notifier)
+        .createSpecialty(name);
+
+    if (created != null && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Especialidad "${created.name}" creada exitosamente.'),
+        ),
+      );
+    }
+  }
+
   Future<void> _confirmDelete(
     BuildContext context,
     WidgetRef ref,
@@ -172,6 +242,20 @@ class DoctorSpecialtiesSelector extends ConsumerWidget {
             style: const TextStyle(color: AppColors.error, fontSize: 13),
           ),
         ],
+
+        const SizedBox(height: 8),
+        TextButton.icon(
+          onPressed: state.loading || state.saving
+              ? null
+              : () => _showCreateDialog(context, ref),
+          icon: const Icon(Icons.add_circle_outline, size: 18),
+          label: const Text('Crear especialidad'),
+          style: TextButton.styleFrom(
+            foregroundColor: AppColors.secondary,
+            textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          ),
+        ),
       ],
     );
   }
