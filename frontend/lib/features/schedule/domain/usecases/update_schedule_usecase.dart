@@ -2,27 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:frontend/features/schedule/domain/entities/schedule.dart';
 import 'package:frontend/features/schedule/domain/repositories/schedule_repository.dart';
 
-class CreateScheduleUsecase {
+class UpdateScheduleUsecase {
   final ScheduleRepository repository;
 
-  CreateScheduleUsecase(this.repository);
+  UpdateScheduleUsecase(this.repository);
 
-  // Crea un horario
   Future<Schedule> call({
-    int? doctorId,
+    required int id,
     required int clinicId,
-    required int dayOfWeek,
     required TimeOfDay startTime,
     required TimeOfDay endTime,
     required int duration,
-  }) async {
-    return await repository.createSchedule(
-      doctorId: doctorId,
-      clinicId: clinicId,
-      dayOfWeek: dayOfWeek,
-      startTime: startTime,
-      endTime: endTime,
-      duration: duration,
-    );
-  }
+  }) => repository.updateSchedule(
+    id: id,
+    clinicId: clinicId,
+    startTime: startTime,
+    endTime: endTime,
+    duration: duration,
+  );
 }

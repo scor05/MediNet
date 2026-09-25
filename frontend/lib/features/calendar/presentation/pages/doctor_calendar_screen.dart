@@ -4,12 +4,15 @@ import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/auth/presentation/utils/logout_helper.dart';
 import 'package:frontend/features/auth/domain/entities/user_profile.dart';
 import 'package:frontend/features/calendar/presentation/dialogs/appointment_detail_dialog.dart';
+import 'package:frontend/features/calendar/presentation/dialogs/secretary_calendar_item_dialogs.dart';
+import 'package:frontend/features/calendar/presentation/models/secretary_calendar_item.dart';
 import 'package:frontend/features/calendar/presentation/providers/doctor_calendar_provider.dart';
 import 'package:frontend/features/calendar/presentation/utils/calendar_dialog_helpers.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_app_bar.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_body.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_fab_menu.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_shell.dart';
+import 'package:frontend/features/schedule/domain/entities/schedule.dart';
 
 class DoctorCalendarScreen extends ConsumerStatefulWidget {
   final UserProfile profile;
@@ -101,6 +104,26 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
     );
   }
 
+  Future<void> _openScheduleDetail(Schedule schedule) async {
+    final weekStart = ref.read(doctorWeekStartProvider);
+    final datedItem = SecretaryCalendarItem.fromSchedule(
+      schedule.copyWith(doctorName: widget.profile.name),
+      weekStart.add(Duration(days: schedule.dayOfWeek)),
+    );
+    await showSecretaryBackgroundItemDetails(
+      context: context,
+      item: datedItem,
+      onEditSchedule: () => showEditScheduleSheet(
+        context: context,
+        schedule: schedule,
+        forSecretary: false,
+      ),
+      onDeleteSchedule: () => ref
+          .read(doctorCalendarNotifierProvider.notifier)
+          .deleteSchedule(schedule.id),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final calendarAsync = ref.watch(doctorCalendarNotifierProvider);
@@ -135,6 +158,7 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
             showSchedules: true,
             onAppointmentTap: _openAppointmentDetail,
             onBlockadeTap: _onBlockadeTap,
+            onScheduleTap: _openScheduleDetail,
           ),
           if (_fabOpen)
             GestureDetector(

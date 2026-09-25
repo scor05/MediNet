@@ -12,6 +12,20 @@ class ClinicRepository
         return Clinic::all();
     }
 
+    // Clínicas de las organizaciones en las que el usuario está activo.
+    public function findForUser(int $userId)
+    {
+        return Clinic::query()
+            ->select('clinics.*')
+            ->join('client_users', 'client_users.id_client', '=', 'clinics.id_client')
+            ->where('client_users.id_user', $userId)
+            ->where('client_users.is_active', true)
+            ->where('clinics.is_active', true)
+            ->distinct()
+            ->orderBy('clinics.name')
+            ->get();
+    }
+
     // Se obtienen todas las clínicas de un cliente
     public function findByClient(int $clientId)
     {
@@ -35,6 +49,7 @@ class ClinicRepository
     {
         $clinic = Clinic::findOrFail($id);
         $clinic->update($data);
+
         return $clinic;
     }
 

@@ -2,11 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/features/calendar/presentation/providers/doctor_calendar_provider.dart';
+import 'package:frontend/features/calendar/presentation/providers/secretary_calendar_provider.dart';
 import 'package:frontend/features/clinic/domain/entities/clinic.dart';
 import 'package:frontend/features/clinic/domain/providers/clinic_domain_providers.dart';
+import 'package:frontend/features/search/presentation/providers/search_form_provider.dart';
+import 'package:frontend/features/search/presentation/widgets/search_input_field.dart';
+import 'package:frontend/features/user/domain/entities/doctor_search_result.dart';
 
 class CreateScheduleDialog extends ConsumerStatefulWidget {
-  const CreateScheduleDialog({super.key});
+  final bool forSecretary;
+
+  const CreateScheduleDialog({super.key, this.forSecretary = false});
 
   @override
   ConsumerState<CreateScheduleDialog> createState() =>
@@ -15,6 +21,7 @@ class CreateScheduleDialog extends ConsumerStatefulWidget {
 
 class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
   final _formKey = GlobalKey<FormState>();
+  final _doctorCtrl = TextEditingController();
   List<Clinic> _clinics = [];
   int? _selectedClinic;
   int _dayOfWeek = 0;
@@ -45,8 +52,26 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
 
   @override
   void dispose() {
+    _doctorCtrl.dispose();
     _durationCtrl.dispose();
     super.dispose();
+  }
+
+  void _selectDoctor(DoctorSearchResult doctor) {
+    _doctorCtrl.value = TextEditingValue(
+      text: doctor.name,
+      selection: TextSelection.collapsed(offset: doctor.name.length),
+    );
+    ref.read(searchFormNotifierProvider.notifier).selectDoctor(doctor);
+    setState(() => _error = null);
+  }
+
+  void _clearDoctor() {
+    _doctorCtrl.clear();
+    final notifier = ref.read(searchFormNotifierProvider.notifier);
+    notifier.clearDoctor();
+    notifier.showDoctorSuggestions();
+    setState(() => _error = null);
   }
 
   Future<void> _fetchClinics() async {
@@ -105,6 +130,12 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final selectedDoctor = ref.read(searchFormNotifierProvider).selectedDoctor;
+    if (widget.forSecretary && selectedDoctor == null) {
+      setState(() => _error = 'Selecciona un doctor.');
+      return;
+    }
+
     if (_selectedClinic == null) {
       setState(() => _error = 'Selecciona una clínica.');
       return;
@@ -123,15 +154,28 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
     });
 
     try {
-      await ref
-          .read(doctorCalendarNotifierProvider.notifier)
-          .createSchedule(
-            clinicId: _selectedClinic!,
-            dayOfWeek: _dayOfWeek,
-            startTime: _startTime,
-            endTime: _endTime,
-            duration: int.parse(_durationCtrl.text.trim()),
-          );
+      if (widget.forSecretary) {
+        await ref
+            .read(secretaryCalendarNotifierProvider.notifier)
+            .createSchedule(
+              doctorId: selectedDoctor!.id,
+              clinicId: _selectedClinic!,
+              dayOfWeek: _dayOfWeek,
+              startTime: _startTime,
+              endTime: _endTime,
+              duration: int.parse(_durationCtrl.text.trim()),
+            );
+      } else {
+        await ref
+            .read(doctorCalendarNotifierProvider.notifier)
+            .createSchedule(
+              clinicId: _selectedClinic!,
+              dayOfWeek: _dayOfWeek,
+              startTime: _startTime,
+              endTime: _endTime,
+              duration: int.parse(_durationCtrl.text.trim()),
+            );
+      }
 
       if (!mounted) return;
 
@@ -157,7 +201,13 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    final searchState = ref.watch(searchFormNotifierProvider);
+    final searchNotifier = ref.read(searchFormNotifierProvider.notifier);
+    final canSubmit =
+        !_saving &&
+        (!widget.forSecretary || searchState.selectedDoctor != null);
+
+    return SingleChildScrollView(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
         left: 16,
@@ -186,6 +236,24 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 16),
+
+            if (widget.forSecretary) ...[
+              SearchInputField<DoctorSearchResult>(
+                controller: _doctorCtrl,
+                label: 'Doctor',
+                hintText: 'Nombre o especialidad del doctor',
+                loading: searchState.loadingDoctors,
+                selectedItem: searchState.selectedDoctor,
+                results: searchState.doctorResults,
+                titleBuilder: (doctor) => doctor.name,
+                subtitleBuilder: (doctor) => doctor.specialty,
+                onChanged: searchNotifier.onDoctorQueryChanged,
+                onSelected: _selectDoctor,
+                onClear: _clearDoctor,
+                onEmptyFocus: searchNotifier.showDoctorSuggestions,
+              ),
+              const SizedBox(height: 10),
+            ],
 
             if (_loadingClinics)
               const Center(child: CircularProgressIndicator())
@@ -285,6 +353,14 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
                 const SizedBox(height: 12),
                 Text(_error!, style: const TextStyle(color: Colors.red)),
               ],
+
+              if (widget.forSecretary && searchState.error != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  searchState.error!,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ],
             ],
 
             const SizedBox(height: 20),
@@ -292,7 +368,7 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed: _saving ? null : _submit,
+                onPressed: canSubmit ? _submit : null,
                 child: _saving
                     ? const SizedBox(
                         height: 18,

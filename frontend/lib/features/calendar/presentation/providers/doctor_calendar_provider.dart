@@ -106,6 +106,30 @@ class DoctorCalendarNotifier extends AsyncNotifier<List<Appointment>> {
     return newSchedule;
   }
 
+  Future<void> updateSchedule({
+    required int id,
+    required int clinicId,
+    required TimeOfDay startTime,
+    required TimeOfDay endTime,
+    required int duration,
+  }) async {
+    await ref
+        .read(updateScheduleUsecaseProvider)
+        .call(
+          id: id,
+          clinicId: clinicId,
+          startTime: startTime,
+          endTime: endTime,
+          duration: duration,
+        );
+    ref.invalidate(doctorSchedulesProvider);
+  }
+
+  Future<void> deleteSchedule(int id) async {
+    await ref.read(deleteScheduleUsecaseProvider).call(id);
+    ref.invalidate(doctorSchedulesProvider);
+  }
+
   Future<ScheduleBlockade> createBlockade({
     required int scheduleId,
     required DateTime date,

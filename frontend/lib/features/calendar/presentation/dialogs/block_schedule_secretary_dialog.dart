@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
-import 'package:frontend/features/calendar/domain/usecases/get_public_doctors_usecase.dart';
 import 'package:frontend/features/calendar/domain/providers/public_calendar_domain_providers.dart';
 import 'package:frontend/features/calendar/presentation/providers/secretary_calendar_provider.dart';
+import 'package:frontend/features/search/presentation/widgets/search_input_field.dart';
 import 'package:frontend/features/schedule/domain/entities/schedule.dart';
 import 'package:frontend/features/user/domain/entities/user.dart';
 
@@ -18,7 +18,9 @@ class BlockScheduleSecretaryDialog extends ConsumerStatefulWidget {
 class _BlockScheduleSecretaryDialogState
     extends ConsumerState<BlockScheduleSecretaryDialog> {
   // Doctors
+  final _doctorCtrl = TextEditingController();
   List<User> _doctors = [];
+  List<User> _doctorResults = [];
   User? _selectedDoctor;
   bool _loadingDoctors = true;
 
@@ -42,16 +44,24 @@ class _BlockScheduleSecretaryDialogState
     _fetchDoctors();
   }
 
+  @override
+  void dispose() {
+    _doctorCtrl.dispose();
+    super.dispose();
+  }
+
   Future<void> _fetchDoctors() async {
     setState(() {
       _loadingDoctors = true;
       _error = null;
     });
     try {
-      final doctors =
-          await ref.read(getPublicDoctorsUsecaseProvider).call();
+      final doctors = await ref.read(getPublicDoctorsUsecaseProvider).call();
       if (!mounted) return;
-      setState(() => _doctors = doctors);
+      setState(() {
+        _doctors = doctors;
+        _doctorResults = doctors;
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -82,18 +92,56 @@ class _BlockScheduleSecretaryDialogState
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error =
-            e is ApiException ? e.message : 'Error al cargar horarios.';
+        _error = e is ApiException ? e.message : 'Error al cargar horarios.';
       });
     } finally {
       if (mounted) setState(() => _loadingSchedules = false);
     }
   }
 
+  void _onDoctorQueryChanged(String query) {
+    final cleanQuery = query.trim().toLowerCase();
+    setState(() {
+      _selectedDoctor = null;
+      _allSchedules = [];
+      _schedulesForDay = [];
+      _selectedSchedule = null;
+      _selectedDate = null;
+      _loadingSchedules = false;
+      _error = null;
+      _doctorResults = cleanQuery.isEmpty
+          ? _doctors
+          : _doctors
+                .where(
+                  (doctor) =>
+                      doctor.name.toLowerCase().contains(cleanQuery) ||
+                      doctor.email.toLowerCase().contains(cleanQuery),
+                )
+                .toList();
+    });
+  }
+
+  void _selectDoctor(User doctor) {
+    _doctorCtrl.value = TextEditingValue(
+      text: doctor.name,
+      selection: TextSelection.collapsed(offset: doctor.name.length),
+    );
+    _onDoctorChanged(doctor);
+  }
+
+  void _clearDoctor() {
+    _doctorCtrl.clear();
+    _onDoctorQueryChanged('');
+  }
+
+  void _showDoctorSuggestions() {
+    if (_selectedDoctor != null) return;
+    setState(() => _doctorResults = _doctors);
+  }
+
   void _onDateChanged(DateTime date) {
     final dow = date.weekday - 1;
-    final filtered =
-        _allSchedules.where((s) => s.dayOfWeek == dow).toList();
+    final filtered = _allSchedules.where((s) => s.dayOfWeek == dow).toList();
     setState(() {
       _selectedDate = date;
       _schedulesForDay = filtered;
@@ -206,7 +254,9 @@ class _BlockScheduleSecretaryDialogState
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    final canSubmit = !_saving && _selectedDoctor != null;
+
+    return SingleChildScrollView(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
         left: 16,
@@ -237,16 +287,19 @@ class _BlockScheduleSecretaryDialogState
           if (_loadingDoctors)
             const Center(child: CircularProgressIndicator())
           else ...[
-            // Doctor selector
-            DropdownButtonFormField<User>(
-              value: _selectedDoctor,
-              decoration: const InputDecoration(labelText: 'Doctor'),
-              items: _doctors
-                  .map(
-                    (d) => DropdownMenuItem(value: d, child: Text(d.name)),
-                  )
-                  .toList(),
-              onChanged: _onDoctorChanged,
+            SearchInputField<User>(
+              controller: _doctorCtrl,
+              label: 'Doctor',
+              hintText: 'Nombre o correo del doctor',
+              loading: _loadingDoctors,
+              selectedItem: _selectedDoctor,
+              results: _doctorResults,
+              titleBuilder: (doctor) => doctor.name,
+              subtitleBuilder: (doctor) => doctor.email,
+              onChanged: _onDoctorQueryChanged,
+              onSelected: _selectDoctor,
+              onClear: _clearDoctor,
+              onEmptyFocus: _showDoctorSuggestions,
             ),
             const SizedBox(height: 10),
 
@@ -279,7 +332,7 @@ class _BlockScheduleSecretaryDialogState
               // Schedule selector (multiple clinics same day)
               if (_selectedDate != null && _schedulesForDay.length > 1) ...[
                 DropdownButtonFormField<Schedule>(
-                  value: _selectedSchedule,
+                  initialValue: _selectedSchedule,
                   decoration: const InputDecoration(
                     labelText: 'Horario / Clínica',
                   ),
@@ -348,7 +401,7 @@ class _BlockScheduleSecretaryDialogState
           SizedBox(
             width: double.infinity,
             child: FilledButton(
-              onPressed: _saving ? null : _submit,
+              onPressed: canSubmit ? _submit : null,
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.red.shade700,
               ),

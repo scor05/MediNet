@@ -44,9 +44,25 @@ class ScheduleRepositoryImpl implements ScheduleRepository {
     }
   }
 
+  @override
+  Future<List<Schedule>> getSecretarySchedules() async {
+    try {
+      return await datasource.getSecretarySchedules();
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw ApiException('Sin conexión. Verifica tu internet.');
+    } on TimeoutException {
+      throw ApiException('La solicitud tardó demasiado. Intenta de nuevo.');
+    } catch (_) {
+      throw ApiException('Error inesperado. Intenta de nuevo.');
+    }
+  }
+
   // Se crea un horario
   @override
   Future<Schedule> createSchedule({
+    int? doctorId,
     required int clinicId,
     required int dayOfWeek,
     required TimeOfDay startTime,
@@ -55,6 +71,7 @@ class ScheduleRepositoryImpl implements ScheduleRepository {
   }) async {
     try {
       return await datasource.createSchedule(
+        doctorId: doctorId,
         clinicId: clinicId,
         dayOfWeek: dayOfWeek,
         startTime: startTime,
@@ -68,6 +85,48 @@ class ScheduleRepositoryImpl implements ScheduleRepository {
     } on TimeoutException {
       throw ApiException('La solicitud tardó demasiado. Intenta de nuevo.');
     } catch (e) {
+      throw ApiException('Error inesperado. Intenta de nuevo.');
+    }
+  }
+
+  @override
+  Future<Schedule> updateSchedule({
+    required int id,
+    required int clinicId,
+    required TimeOfDay startTime,
+    required TimeOfDay endTime,
+    required int duration,
+  }) async {
+    try {
+      return await datasource.updateSchedule(
+        id: id,
+        clinicId: clinicId,
+        startTime: startTime,
+        endTime: endTime,
+        duration: duration,
+      );
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw ApiException('Sin conexión. Verifica tu internet.');
+    } on TimeoutException {
+      throw ApiException('La solicitud tardó demasiado. Intenta de nuevo.');
+    } catch (_) {
+      throw ApiException('Error inesperado. Intenta de nuevo.');
+    }
+  }
+
+  @override
+  Future<void> deleteSchedule(int id) async {
+    try {
+      await datasource.deleteSchedule(id);
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw ApiException('Sin conexión. Verifica tu internet.');
+    } on TimeoutException {
+      throw ApiException('La solicitud tardó demasiado. Intenta de nuevo.');
+    } catch (_) {
       throw ApiException('Error inesperado. Intenta de nuevo.');
     }
   }

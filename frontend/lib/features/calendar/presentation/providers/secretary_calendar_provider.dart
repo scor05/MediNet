@@ -70,30 +70,37 @@ class SecretaryCalendarNotifier extends AsyncNotifier<List<Appointment>> {
     required TimeOfDay startTime,
     required TimeOfDay endTime,
   }) async {
-    final blockade = await ref.read(createScheduleBlockadeUsecaseProvider).call(
+    final blockade = await ref
+        .read(createScheduleBlockadeUsecaseProvider)
+        .call(
           scheduleId: scheduleId,
           date: date,
           startTime: startTime,
           endTime: endTime,
         );
-    addAppointment(Appointment(
-      id: blockade.id,
-      scheduleId: blockade.idSchedule,
-      patientName: '',
-      date: DateTime.parse(blockade.date),
-      startTime: blockade.startTime,
-      status: 'blockade',
-      createdAt: DateTime.now(),
-      createdBy: 0,
-      updatedAt: DateTime.now(),
-      updatedBy: 0,
-      doctorId: 0,
-      doctorName: '',
-      clinicId: 0,
-      clinicName: '',
-      appointmentDuration: _calcDuration(blockade.startTime, blockade.endTime),
-      type: 'blockade',
-    ));
+    addAppointment(
+      Appointment(
+        id: blockade.id,
+        scheduleId: blockade.idSchedule,
+        patientName: '',
+        date: DateTime.parse(blockade.date),
+        startTime: blockade.startTime,
+        status: 'blockade',
+        createdAt: DateTime.now(),
+        createdBy: 0,
+        updatedAt: DateTime.now(),
+        updatedBy: 0,
+        doctorId: 0,
+        doctorName: '',
+        clinicId: 0,
+        clinicName: '',
+        appointmentDuration: _calcDuration(
+          blockade.startTime,
+          blockade.endTime,
+        ),
+        type: 'blockade',
+      ),
+    );
     refresh();
     return blockade;
   }
@@ -115,6 +122,7 @@ class SecretaryCalendarNotifier extends AsyncNotifier<List<Appointment>> {
   }
 
   Future<Schedule> createSchedule({
+    required int doctorId,
     required int clinicId,
     required int dayOfWeek,
     required TimeOfDay startTime,
@@ -124,6 +132,7 @@ class SecretaryCalendarNotifier extends AsyncNotifier<List<Appointment>> {
     final newSchedule = await ref
         .read(createScheduleUsecaseProvider)
         .call(
+          doctorId: doctorId,
           clinicId: clinicId,
           dayOfWeek: dayOfWeek,
           startTime: startTime,
@@ -132,6 +141,30 @@ class SecretaryCalendarNotifier extends AsyncNotifier<List<Appointment>> {
         );
     await refresh();
     return newSchedule;
+  }
+
+  Future<void> updateSchedule({
+    required int id,
+    required int clinicId,
+    required TimeOfDay startTime,
+    required TimeOfDay endTime,
+    required int duration,
+  }) async {
+    await ref
+        .read(updateScheduleUsecaseProvider)
+        .call(
+          id: id,
+          clinicId: clinicId,
+          startTime: startTime,
+          endTime: endTime,
+          duration: duration,
+        );
+    ref.invalidate(secretarySchedulesNotifierProvider);
+  }
+
+  Future<void> deleteSchedule(int id) async {
+    await ref.read(deleteScheduleUsecaseProvider).call(id);
+    ref.invalidate(secretarySchedulesNotifierProvider);
   }
 }
 
@@ -149,4 +182,23 @@ final secretaryWeekStartProvider = StateProvider<DateTime>((ref) {
 final secretaryCalendarNotifierProvider =
     AsyncNotifierProvider<SecretaryCalendarNotifier, List<Appointment>>(
       SecretaryCalendarNotifier.new,
+    );
+
+class SecretarySchedulesNotifier extends AsyncNotifier<List<Schedule>> {
+  @override
+  Future<List<Schedule>> build() {
+    return ref.read(getSecretarySchedulesUsecaseProvider).call();
+  }
+
+  Future<void> refresh() async {
+    state = const AsyncLoading<List<Schedule>>().copyWithPrevious(state);
+    state = await AsyncValue.guard(
+      () => ref.read(getSecretarySchedulesUsecaseProvider).call(),
+    );
+  }
+}
+
+final secretarySchedulesNotifierProvider =
+    AsyncNotifierProvider<SecretarySchedulesNotifier, List<Schedule>>(
+      SecretarySchedulesNotifier.new,
     );

@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ScheduleController;
 
 Route::prefix('schedules')->group(function () {
+    Route::get('/secretary', [ScheduleController::class, 'indexForSecretary']);
     Route::get('/doctor/{doctorId}', [ScheduleController::class, 'indexByDoctor']);
     Route::get('/{id}', [ScheduleController::class, 'show']);
     Route::post('/', [ScheduleController::class, 'store']);
