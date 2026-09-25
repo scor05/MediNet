@@ -7,14 +7,17 @@ use App\Repositories\ClinicRepository;
 class ClinicService
 {
     // Se inyecta el repositorio
-    public function __construct(private ClinicRepository $repository)
-    {
-    }
+    public function __construct(private ClinicRepository $repository) {}
 
     // Se obtienen todas las clínicas
     public function getAll()
     {
         return $this->repository->findAll();
+    }
+
+    public function getForUser(int $userId)
+    {
+        return $this->repository->findForUser($userId);
     }
 
     // Se obtienen todas las clínicas de un cliente

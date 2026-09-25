@@ -3,6 +3,9 @@ import 'package:frontend/features/schedule/data/providers/schedule_data_provider
 import 'package:frontend/features/schedule/domain/usecases/create_schedule_usecase.dart';
 import 'package:frontend/features/schedule/domain/usecases/get_doctor_schedules_usecase.dart';
 import 'package:frontend/features/schedule/domain/usecases/get_schedules_by_doctor_id_usecase.dart';
+import 'package:frontend/features/schedule/domain/usecases/get_secretary_schedules_usecase.dart';
+import 'package:frontend/features/schedule/domain/usecases/update_schedule_usecase.dart';
+import 'package:frontend/features/schedule/domain/usecases/delete_schedule_usecase.dart';
 
 // Provider para el usecase createSchedule
 final createScheduleUsecaseProvider = Provider((ref) {
@@ -17,4 +20,16 @@ final getDoctorSchedulesUsecaseProvider = Provider((ref) {
 // Provider para el usecase getSchedulesByDoctorId
 final getSchedulesByDoctorIdUsecaseProvider = Provider((ref) {
   return GetSchedulesByDoctorIdUsecase(ref.read(scheduleRepositoryProvider));
+});
+
+final getSecretarySchedulesUsecaseProvider = Provider((ref) {
+  return GetSecretarySchedulesUsecase(ref.read(scheduleRepositoryProvider));
+});
+
+final updateScheduleUsecaseProvider = Provider((ref) {
+  return UpdateScheduleUsecase(ref.read(scheduleRepositoryProvider));
+});
+
+final deleteScheduleUsecaseProvider = Provider((ref) {
+  return DeleteScheduleUsecase(ref.read(scheduleRepositoryProvider));
 });

@@ -16,6 +16,7 @@ class DayColumn extends StatelessWidget {
   final double hourHeight;
   final void Function(Appointment)? onBlockadeTap;
   final void Function(Appointment)? onAppointmentTap;
+  final void Function(Schedule)? onScheduleTap;
 
   const DayColumn({
     super.key,
@@ -29,6 +30,7 @@ class DayColumn extends StatelessWidget {
     required this.hourHeight,
     this.onAppointmentTap,
     this.onBlockadeTap,
+    this.onScheduleTap,
   });
 
   double _topFromTime(String time) {
@@ -99,24 +101,35 @@ class DayColumn extends StatelessWidget {
               left: 0,
               right: 0,
               height: height,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.12),
-                  border: Border(
-                    left: BorderSide(color: color.withOpacity(0.6), width: 3),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: onScheduleTap == null
+                      ? null
+                      : () => onScheduleTap!(schedule),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.12),
+                      border: Border(
+                        left: BorderSide(
+                          color: color.withOpacity(0.6),
+                          width: 3,
+                        ),
+                      ),
+                    ),
+                    padding: const EdgeInsets.only(left: 6, top: 4),
+                    child: Text(
+                      schedule.clinicName,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: textColor,
+                        height: 1.2,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-                padding: const EdgeInsets.only(left: 6, top: 4),
-                child: Text(
-                  schedule.clinicName,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: textColor,
-                    height: 1.2,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             );

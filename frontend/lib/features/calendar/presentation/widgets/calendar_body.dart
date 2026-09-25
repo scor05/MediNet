@@ -16,6 +16,7 @@ class CalendarBody extends ConsumerStatefulWidget {
   final bool showSchedules;
   final void Function(Appointment)? onAppointmentTap;
   final void Function(Appointment)? onBlockadeTap;
+  final void Function(Schedule)? onScheduleTap;
 
   const CalendarBody({
     super.key,
@@ -27,6 +28,7 @@ class CalendarBody extends ConsumerStatefulWidget {
     this.showSchedules = false,
     this.onAppointmentTap,
     this.onBlockadeTap,
+    this.onScheduleTap,
   });
 
   @override
@@ -70,6 +72,7 @@ class _CalendarBodyState extends ConsumerState<CalendarBody> {
                 showPatient: widget.showPatient,
                 onAppointmentTap: widget.onAppointmentTap,
                 onBlockadeTap: widget.onBlockadeTap,
+                onScheduleTap: widget.onScheduleTap,
               ),
 
               if (widget.calendarAsync.isLoading)

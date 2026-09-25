@@ -192,7 +192,7 @@ class MediNetPatientUser(HttpUser):
             name="/api/calendar/public",
         )
 
-    """
+    """ 
     # una cita por cada paciente simulado
     @task(1)
     def create_appointment(self):
@@ -226,5 +226,5 @@ class MediNetPatientUser(HttpUser):
                 response.failure("Selected slot became unavailable")
             else:
                 response.failure(f"Appointment returned HTTP {response.status_code}")
+    """
 
-        """

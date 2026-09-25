@@ -9,6 +9,7 @@ class CreateScheduleUsecase {
 
   // Crea un horario
   Future<Schedule> call({
+    int? doctorId,
     required int clinicId,
     required int dayOfWeek,
     required TimeOfDay startTime,
@@ -16,6 +17,7 @@ class CreateScheduleUsecase {
     required int duration,
   }) async {
     return await repository.createSchedule(
+      doctorId: doctorId,
       clinicId: clinicId,
       dayOfWeek: dayOfWeek,
       startTime: startTime,

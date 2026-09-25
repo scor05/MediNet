@@ -52,8 +52,30 @@ class ScheduleRemoteDatasource {
     }
   }
 
+  Future<List<ScheduleModel>> getSecretarySchedules() async {
+    final token = Supabase.instance.client.auth.currentSession?.accessToken;
+
+    final response = await http
+        .get(
+          Uri.parse('${AppConfig.apiUrl}/schedules/secretary'),
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((e) => ScheduleModel.fromJson(e)).toList();
+    }
+
+    throw handleApiError(response);
+  }
+
   // Se crea un horario
   Future<ScheduleModel> createSchedule({
+    int? doctorId,
     required int clinicId,
     required int dayOfWeek,
     required TimeOfDay startTime,
@@ -71,6 +93,7 @@ class ScheduleRemoteDatasource {
             'Authorization': 'Bearer $token',
           },
           body: jsonEncode({
+            'id_doctor': ?doctorId,
             'id_clinic': clinicId,
             'day_of_week': dayOfWeek,
             'start_time': _fmtTime(startTime),
@@ -86,6 +109,52 @@ class ScheduleRemoteDatasource {
     } else {
       throw handleApiError(response);
     }
+  }
+
+  Future<ScheduleModel> updateSchedule({
+    required int id,
+    required int clinicId,
+    required TimeOfDay startTime,
+    required TimeOfDay endTime,
+    required int duration,
+  }) async {
+    final token = Supabase.instance.client.auth.currentSession?.accessToken;
+    final response = await http
+        .put(
+          Uri.parse('${AppConfig.apiUrl}/schedules/$id'),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode({
+            'id_clinic': clinicId,
+            'start_time': _fmtTime(startTime),
+            'end_time': _fmtTime(endTime),
+            'duration': duration,
+          }),
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode == 200) {
+      return ScheduleModel.fromJson(jsonDecode(response.body));
+    }
+    throw handleApiError(response);
+  }
+
+  Future<void> deleteSchedule(int id) async {
+    final token = Supabase.instance.client.auth.currentSession?.accessToken;
+    final response = await http
+        .delete(
+          Uri.parse('${AppConfig.apiUrl}/schedules/$id'),
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode != 204) throw handleApiError(response);
   }
 }
 
