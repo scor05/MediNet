@@ -89,6 +89,13 @@ class AuthNavigation {
         return CalendarShell(
           calendarScreen: DoctorCalendarScreen(profile: profile),
           profile: profile,
+          extraPages: const [DoctorRequestedAppointmentsScreen()],
+          extraItems: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.assignment_outlined),
+              label: 'Solicitadas',
+            ),
+          ],
         );
 
       case 'secretary':

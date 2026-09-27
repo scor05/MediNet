@@ -4,11 +4,15 @@ import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/calendar/presentation/providers/secretary_calendar_provider.dart';
 import 'package:frontend/features/calendar/presentation/providers/secretary_requested_appointments_provider.dart';
+import 'package:frontend/features/calendar/presentation/providers/doctor_calendar_provider.dart';
+import 'package:frontend/features/calendar/presentation/providers/doctor_requested_appointments_provider.dart';
 import 'package:frontend/features/user/presentation/dialogs/patient_info_dialog.dart';
 import 'package:frontend/theme/app_theme.dart';
 
-class SecretaryRequestedAppointmentsScreen extends ConsumerWidget {
-  const SecretaryRequestedAppointmentsScreen({super.key});
+class RequestedAppointmentsScreen extends ConsumerWidget {
+  final bool forDoctor;
+
+  const RequestedAppointmentsScreen({super.key, required this.forDoctor});
 
   String _fmtDate(DateTime date) {
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
@@ -21,10 +25,17 @@ class SecretaryRequestedAppointmentsScreen extends ConsumerWidget {
     required String status,
   }) async {
     try {
-      await ref
-          .read(secretaryRequestedAppointmentsNotifierProvider.notifier)
-          .updateStatus(appointmentId: appointment.id, status: status);
-      ref.read(secretaryCalendarNotifierProvider.notifier).refresh();
+      if (forDoctor) {
+        await ref
+            .read(doctorRequestedAppointmentsNotifierProvider.notifier)
+            .updateStatus(appointmentId: appointment.id, status: status);
+        ref.read(doctorCalendarNotifierProvider.notifier).refresh();
+      } else {
+        await ref
+            .read(secretaryRequestedAppointmentsNotifierProvider.notifier)
+            .updateStatus(appointmentId: appointment.id, status: status);
+        ref.read(secretaryCalendarNotifierProvider.notifier).refresh();
+      }
 
       if (!context.mounted) return;
 
@@ -46,9 +57,9 @@ class SecretaryRequestedAppointmentsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final requestedAsync = ref.watch(
-      secretaryRequestedAppointmentsNotifierProvider,
-    );
+    final requestedAsync = forDoctor
+        ? ref.watch(doctorRequestedAppointmentsNotifierProvider)
+        : ref.watch(secretaryRequestedAppointmentsNotifierProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -64,20 +75,34 @@ class SecretaryRequestedAppointmentsScreen extends ConsumerWidget {
               Text(e is ApiException ? e.message : 'Error inesperado.'),
               const SizedBox(height: 12),
               ElevatedButton(
-                onPressed: ref
-                    .read(
-                      secretaryRequestedAppointmentsNotifierProvider.notifier,
-                    )
-                    .refresh,
+                onPressed: forDoctor
+                    ? ref
+                          .read(
+                            doctorRequestedAppointmentsNotifierProvider
+                                .notifier,
+                          )
+                          .refresh
+                    : ref
+                          .read(
+                            secretaryRequestedAppointmentsNotifierProvider
+                                .notifier,
+                          )
+                          .refresh,
                 child: const Text('Reintentar'),
               ),
             ],
           ),
         ),
         data: (appointments) => RefreshIndicator(
-          onRefresh: ref
-              .read(secretaryRequestedAppointmentsNotifierProvider.notifier)
-              .refresh,
+          onRefresh: forDoctor
+              ? ref
+                    .read(doctorRequestedAppointmentsNotifierProvider.notifier)
+                    .refresh
+              : ref
+                    .read(
+                      secretaryRequestedAppointmentsNotifierProvider.notifier,
+                    )
+                    .refresh,
           child: appointments.isEmpty
               ? ListView(
                   children: const [
@@ -115,6 +140,15 @@ class SecretaryRequestedAppointmentsScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+class SecretaryRequestedAppointmentsScreen extends RequestedAppointmentsScreen {
+  const SecretaryRequestedAppointmentsScreen({super.key})
+    : super(forDoctor: false);
+}
+
+class DoctorRequestedAppointmentsScreen extends RequestedAppointmentsScreen {
+  const DoctorRequestedAppointmentsScreen({super.key}) : super(forDoctor: true);
 }
 
 class _RequestedAppointmentCard extends StatelessWidget {
