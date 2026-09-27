@@ -13,6 +13,7 @@ import 'package:frontend/features/calendar/presentation/widgets/calendar_body.da
 import 'package:frontend/features/calendar/presentation/widgets/calendar_fab_menu.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_shell.dart';
 import 'package:frontend/features/schedule/domain/entities/schedule.dart';
+import 'package:frontend/features/user/domain/entities/doctor_search_result.dart';
 
 class DoctorCalendarScreen extends ConsumerStatefulWidget {
   final UserProfile profile;
@@ -40,7 +41,15 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
 
     final weekStart = ref.read(doctorWeekStartProvider);
 
-    await showCreateAppointmentSheet(context: context, weekStart: weekStart);
+    await showCreateAppointmentSheet(
+      context: context,
+      weekStart: weekStart,
+      fixedDoctor: DoctorSearchResult(
+        id: widget.profile.id,
+        name: widget.profile.name,
+        specialty: '',
+      ),
+    );
 
     // El notifier ya actualizó el estado en createAppointment()
   }

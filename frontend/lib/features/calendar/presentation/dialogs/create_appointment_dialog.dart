@@ -13,8 +13,13 @@ import 'package:frontend/features/user/domain/entities/user.dart';
 
 class CreateAppointmentDialog extends ConsumerStatefulWidget {
   final DateTime weekStart;
+  final DoctorSearchResult? fixedDoctor;
 
-  const CreateAppointmentDialog({super.key, required this.weekStart});
+  const CreateAppointmentDialog({
+    super.key,
+    required this.weekStart,
+    this.fixedDoctor,
+  });
 
   @override
   ConsumerState<CreateAppointmentDialog> createState() =>
@@ -28,6 +33,18 @@ class _CreateAppointmentDialogState
   final _doctorCtrl = TextEditingController();
   final _clinicCtrl = TextEditingController();
   final _patientCtrl = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    final fixedDoctor = widget.fixedDoctor;
+    if (fixedDoctor != null) {
+      _doctorCtrl.text = fixedDoctor.name;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _selectDoctor(fixedDoctor);
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -227,20 +244,27 @@ class _CreateAppointmentDialogState
 
             const SizedBox(height: 16),
 
-            SearchInputField<DoctorSearchResult>(
-              controller: _doctorCtrl,
-              label: 'Doctor',
-              hintText: 'Nombre o especialidad del doctor',
-              loading: formState.loadingDoctors,
-              selectedItem: formState.selectedDoctor,
-              results: formState.doctorResults,
-              titleBuilder: (doctor) => doctor.name,
-              subtitleBuilder: (doctor) => doctor.specialty,
-              onChanged: _onDoctorChanged,
-              onSelected: _selectDoctor,
-              onClear: _clearDoctor,
-              onEmptyFocus: formNotifier.showDoctorSuggestions,
-            ),
+            if (widget.fixedDoctor != null)
+              TextFormField(
+                controller: _doctorCtrl,
+                enabled: false,
+                decoration: const InputDecoration(labelText: 'Doctor'),
+              )
+            else
+              SearchInputField<DoctorSearchResult>(
+                controller: _doctorCtrl,
+                label: 'Doctor',
+                hintText: 'Nombre o especialidad del doctor',
+                loading: formState.loadingDoctors,
+                selectedItem: formState.selectedDoctor,
+                results: formState.doctorResults,
+                titleBuilder: (doctor) => doctor.name,
+                subtitleBuilder: (doctor) => doctor.specialty,
+                onChanged: _onDoctorChanged,
+                onSelected: _selectDoctor,
+                onClear: _clearDoctor,
+                onEmptyFocus: formNotifier.showDoctorSuggestions,
+              ),
 
             if (formState.selectedDoctor != null) ...[
               const SizedBox(height: 10),
