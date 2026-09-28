@@ -73,6 +73,7 @@ class _PublicCalendarScreenState extends ConsumerState<PublicCalendarScreen> {
     final allAppointmentsAsync = ref.watch(publicCalendarNotifierProvider);
     final filters = ref.watch(publicCalendarFilterProvider);
     final weekStart = ref.watch(publicWeekStartProvider);
+    final schedulesAsync = ref.watch(publicSchedulesProvider);
 
     return Column(
       children: [
@@ -137,10 +138,12 @@ class _PublicCalendarScreenState extends ConsumerState<PublicCalendarScreen> {
               );
             },
             data: (appointments) {
+              final schedules = schedulesAsync.valueOrNull ?? const [];
+
               return WeekView(
                 weekStart: weekStart,
                 appointments: appointments,
-                schedules: const [],
+                schedules: schedules,
                 compact: true,
                 onAppointmentTap: _openAppointmentDetail,
               );
@@ -151,3 +154,4 @@ class _PublicCalendarScreenState extends ConsumerState<PublicCalendarScreen> {
     );
   }
 }
+
