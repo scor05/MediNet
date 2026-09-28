@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/utils/time_format.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/features/waitlist/domain/entities/waitlist.dart';
@@ -118,6 +119,27 @@ class _WaitlistCard extends ConsumerWidget {
                 'Hora: ${_fmtTargetTime(targetStartTime)}',
                 style: _metadataStyle,
               ),
+            if (waitlist.backupAppointmentId != null) ...[
+              const Divider(height: 20),
+              Text(
+                'Cita de respaldo: ${_backupStatus(waitlist.backupStatus)}',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              if (waitlist.backupDate case final backupDate?)
+                Text(
+                  'Fecha: ${_fmtTargetDate(backupDate)}',
+                  style: _metadataStyle,
+                ),
+              if (waitlist.backupStartTime case final backupStartTime?)
+                Text(
+                  'Hora: ${_fmtTargetTime(backupStartTime)}',
+                  style: _metadataStyle,
+                ),
+            ],
             Text(
               'Registrado: ${_fmtDateTime(waitlist.createdAt)}',
               style: _metadataStyle,
@@ -188,8 +210,15 @@ class _WaitlistCard extends ConsumerWidget {
   }
 
   String _fmtTargetTime(String value) {
-    return value.length >= 5 ? value.substring(0, 5) : value;
+    return formatTime24(value);
   }
+
+  String _backupStatus(String? status) => switch (status) {
+    'backup_pending' => 'Pendiente de aprobación',
+    'backup_accepted' => 'Aceptada',
+    'backup_cancelled' => 'Cancelada',
+    _ => status ?? 'Sin información',
+  };
 }
 
 class _StatusBadge extends StatelessWidget {

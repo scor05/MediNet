@@ -5,11 +5,41 @@ import 'package:frontend/features/auth/domain/entities/admin_of.dart';
 import 'package:frontend/features/auth/domain/entities/user_profile.dart';
 import 'package:frontend/features/auth/presentation/navigation/auth_navigation.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_shell.dart';
+import 'package:frontend/features/calendar/presentation/pages/secretary_requested_appointments_screen.dart';
 import 'package:frontend/features/search/presentation/pages/search_screen.dart';
 import 'package:frontend/features/waitlist/presentation/pages/patient_waitlist_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  test('doctor navigation includes their requested appointments page', () {
+    const profile = UserProfile(
+      id: 3,
+      name: 'Doctor',
+      email: 'doctor@medinet.lat',
+      phone: '5555-3333',
+      isActive: true,
+      isDoctor: true,
+      isSecretary: false,
+      isSuperadmin: false,
+      adminOf: [],
+    );
+
+    final shell = AuthNavigation.screenForRole('doctor', profile);
+
+    expect(shell, isA<CalendarShell>());
+    final doctorShell = shell as CalendarShell;
+    expect(doctorShell.extraPages, hasLength(1));
+    expect(
+      doctorShell.extraPages.single,
+      isA<DoctorRequestedAppointmentsScreen>(),
+    );
+    expect(doctorShell.extraItems.single.label, 'Solicitadas');
+    expect(
+      (doctorShell.extraItems.single.icon as Icon).icon,
+      Icons.assignment_outlined,
+    );
+  });
+
   test('patient navigation places waitlist immediately after scheduling', () {
     const profile = UserProfile(
       id: 7,

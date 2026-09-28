@@ -165,6 +165,32 @@ void main() {
       expect(model.patientId, isNull);
       expect(model.patientName, equals(''));
     });
+
+    test('parsea la fecha y hora de la cita original de un respaldo', () {
+      final json = {
+        'id': 101,
+        'schedule_id': 21,
+        'patient': {'id': 5, 'name': 'Juan Pérez'},
+        'date': '2025-09-17',
+        'start_time': '14:00:00',
+        'status': 'backup_pending',
+        'created_at': '2025-09-02T08:00:00.000Z',
+        'created_by': 5,
+        'updated_at': '2025-09-02T08:00:00.000Z',
+        'updated_by': 5,
+        'doctor': {'id': 3, 'name': 'Dr. Ramírez'},
+        'clinic': {'id': 2, 'name': 'Clínica Sur'},
+        'duration': 45,
+        'backup_target_date': '2025-09-16',
+        'backup_target_start_time': '11:30:00',
+      };
+
+      final model = AppointmentModel.fromJson(json);
+
+      expect(model.isBackup, isTrue);
+      expect(model.backupTargetDate, DateTime(2025, 9, 16));
+      expect(model.backupTargetStartTime, '11:30:00');
+    });
   });
 
   test('fromCreation conserva el id del paciente vinculado', () {

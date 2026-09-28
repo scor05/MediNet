@@ -12,7 +12,8 @@ import 'package:frontend/features/schedule_blockade/domain/providers/schedule_bl
 -------------------------------------- Notifier -----------------------------------------
 */
 
-class DoctorCalendarNotifier extends AsyncNotifier<List<Appointment>> {
+class DoctorCalendarNotifier
+    extends AutoDisposeAsyncNotifier<List<Appointment>> {
   final _cache = <String, List<Appointment>>{};
 
   @override
@@ -193,17 +194,22 @@ class DoctorCalendarNotifier extends AsyncNotifier<List<Appointment>> {
 */
 
 // Provider del inicio de la semana
-final doctorWeekStartProvider = StateProvider<DateTime>((ref) {
+final doctorWeekStartProvider = StateProvider.autoDispose<DateTime>((ref) {
   final now = DateTime.now();
   return now.subtract(Duration(days: now.weekday - 1));
 });
 
 // Provider del notifier
 final doctorCalendarNotifierProvider =
-    AsyncNotifierProvider<DoctorCalendarNotifier, List<Appointment>>(
+    AsyncNotifierProvider.autoDispose<
+      DoctorCalendarNotifier,
+      List<Appointment>
+    >(
       DoctorCalendarNotifier.new,
     );
 
-final doctorSchedulesProvider = FutureProvider<List<Schedule>>((ref) async {
-  return ref.read(getDoctorSchedulesUsecaseProvider).call();
-});
+final doctorSchedulesProvider = FutureProvider.autoDispose<List<Schedule>>(
+  (ref) async {
+    return ref.read(getDoctorSchedulesUsecaseProvider).call();
+  },
+);

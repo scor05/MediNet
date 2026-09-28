@@ -42,6 +42,8 @@ class PublicService
             $data['id_schedule'],
             $data['date'],
             $data['start_time'],
+            null,
+            $data['id_patient'],
         );
 
         $data['status'] = 'requested';

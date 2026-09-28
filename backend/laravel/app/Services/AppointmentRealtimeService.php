@@ -2,40 +2,122 @@
 
 namespace App\Services;
 
-use App\Events\PatientAppointmentChanged;
+use App\Events\AppointmentChanged;
 use App\Models\Appointment;
+use App\Repositories\AppointmentRepository;
 use Illuminate\Contracts\Events\Dispatcher;
 
 class AppointmentRealtimeService
 {
-    public function __construct(private Dispatcher $events) {}
+    public function __construct(
+        private Dispatcher $events,
+        private AppointmentRepository $appointments,
+    ) {}
 
     public function created(Appointment $appointment): void
     {
-        $this->dispatch($appointment->id_patient, $appointment->id, 'created');
+        $this->dispatchFor($appointment, 'created');
     }
 
-    public function updated(Appointment $oldAppointment, Appointment $newAppointment): void
-    {
-        $oldPatientId = $this->patientId($oldAppointment->id_patient);
-        $newPatientId = $this->patientId($newAppointment->id_patient);
+    public function updated(
+        Appointment $oldAppointment,
+        Appointment $newAppointment,
+    ): void {
+        $oldPatientId = $this->id($oldAppointment->id_patient);
+        $newPatientId = $this->id($newAppointment->id_patient);
+        $oldAudience = $this->audience($oldAppointment);
+        $newAudience = $this->audience($newAppointment);
 
         if ($oldPatientId !== null && $oldPatientId !== $newPatientId) {
-            $this->dispatch($oldPatientId, $newAppointment->id, 'unlinked');
+            $this->dispatch(
+                appointmentId: (int) $newAppointment->id,
+                change: 'unlinked',
+                patientId: $oldPatientId,
+            );
         }
 
-        if ($newPatientId !== null) {
-            $change = $oldPatientId !== $newPatientId
-                ? 'linked'
-                : $this->changeType($oldAppointment, $newAppointment);
-
-            $this->dispatch($newPatientId, $newAppointment->id, $change);
+        if ($this->staffAudienceChanged($oldAudience, $newAudience)) {
+            $this->dispatch(
+                appointmentId: (int) $newAppointment->id,
+                change: 'unlinked',
+                doctorId: $oldAudience?->doctor_id,
+                clientId: $oldAudience?->client_id,
+            );
         }
+
+        $change = $oldPatientId !== $newPatientId
+            ? 'linked'
+            : $this->changeType($oldAppointment, $newAppointment);
+
+        $this->dispatch(
+            appointmentId: (int) $newAppointment->id,
+            change: $change,
+            patientId: $newPatientId,
+            doctorId: $newAudience?->doctor_id,
+            clientId: $newAudience?->client_id,
+        );
     }
 
     public function deleted(Appointment $appointment): void
     {
-        $this->dispatch($appointment->id_patient, $appointment->id, 'deleted');
+        $this->dispatchFor($appointment, 'deleted');
+    }
+
+    private function dispatchFor(Appointment $appointment, string $change): void
+    {
+        if ($appointment->id === null) {
+            return;
+        }
+
+        $audience = $this->audience($appointment);
+        $this->dispatch(
+            appointmentId: (int) $appointment->id,
+            change: $change,
+            patientId: $this->id($appointment->id_patient),
+            doctorId: $audience?->doctor_id,
+            clientId: $audience?->client_id,
+        );
+    }
+
+    private function dispatch(
+        int $appointmentId,
+        string $change,
+        mixed $patientId = null,
+        mixed $doctorId = null,
+        mixed $clientId = null,
+    ): void {
+        $patientId = $this->id($patientId);
+        $doctorId = $this->id($doctorId);
+        $clientId = $this->id($clientId);
+
+        if ($patientId === null && $doctorId === null && $clientId === null) {
+            return;
+        }
+
+        $this->events->dispatch(new AppointmentChanged(
+            appointmentId: $appointmentId,
+            change: $change,
+            patientId: $patientId,
+            doctorId: $doctorId,
+            clientId: $clientId,
+        ));
+    }
+
+    private function audience(Appointment $appointment): ?object
+    {
+        if ($appointment->id_schedule === null) {
+            return null;
+        }
+
+        return $this->appointments->findRealtimeAudienceBySchedule(
+            (int) $appointment->id_schedule,
+        );
+    }
+
+    private function staffAudienceChanged(?object $old, ?object $new): bool
+    {
+        return $this->id($old?->doctor_id) !== $this->id($new?->doctor_id)
+            || $this->id($old?->client_id) !== $this->id($new?->client_id);
     }
 
     private function changeType(
@@ -58,22 +140,7 @@ class AppointmentRealtimeService
         return 'updated';
     }
 
-    private function dispatch(mixed $patientId, mixed $appointmentId, string $change): void
-    {
-        $patientId = $this->patientId($patientId);
-
-        if ($patientId === null || $appointmentId === null) {
-            return;
-        }
-
-        $this->events->dispatch(new PatientAppointmentChanged(
-            patientId: $patientId,
-            appointmentId: (int) $appointmentId,
-            change: $change,
-        ));
-    }
-
-    private function patientId(mixed $value): ?int
+    private function id(mixed $value): ?int
     {
         return $value === null ? null : (int) $value;
     }

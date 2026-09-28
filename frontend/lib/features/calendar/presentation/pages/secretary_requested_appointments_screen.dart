@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/utils/time_format.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/calendar/presentation/providers/secretary_calendar_provider.dart';
 import 'package:frontend/features/calendar/presentation/providers/secretary_requested_appointments_provider.dart';
+import 'package:frontend/features/calendar/presentation/providers/doctor_calendar_provider.dart';
+import 'package:frontend/features/calendar/presentation/providers/doctor_requested_appointments_provider.dart';
 import 'package:frontend/features/user/presentation/dialogs/patient_info_dialog.dart';
 import 'package:frontend/theme/app_theme.dart';
 
-class SecretaryRequestedAppointmentsScreen extends ConsumerWidget {
-  const SecretaryRequestedAppointmentsScreen({super.key});
+class RequestedAppointmentsScreen extends ConsumerWidget {
+  final bool forDoctor;
+
+  const RequestedAppointmentsScreen({super.key, required this.forDoctor});
 
   String _fmtDate(DateTime date) {
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
@@ -21,10 +26,17 @@ class SecretaryRequestedAppointmentsScreen extends ConsumerWidget {
     required String status,
   }) async {
     try {
-      await ref
-          .read(secretaryRequestedAppointmentsNotifierProvider.notifier)
-          .updateStatus(appointmentId: appointment.id, status: status);
-      ref.read(secretaryCalendarNotifierProvider.notifier).refresh();
+      if (forDoctor) {
+        await ref
+            .read(doctorRequestedAppointmentsNotifierProvider.notifier)
+            .updateStatus(appointmentId: appointment.id, status: status);
+        ref.read(doctorCalendarNotifierProvider.notifier).refresh();
+      } else {
+        await ref
+            .read(secretaryRequestedAppointmentsNotifierProvider.notifier)
+            .updateStatus(appointmentId: appointment.id, status: status);
+        ref.read(secretaryCalendarNotifierProvider.notifier).refresh();
+      }
 
       if (!context.mounted) return;
 
@@ -46,9 +58,9 @@ class SecretaryRequestedAppointmentsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final requestedAsync = ref.watch(
-      secretaryRequestedAppointmentsNotifierProvider,
-    );
+    final requestedAsync = forDoctor
+        ? ref.watch(doctorRequestedAppointmentsNotifierProvider)
+        : ref.watch(secretaryRequestedAppointmentsNotifierProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -64,20 +76,34 @@ class SecretaryRequestedAppointmentsScreen extends ConsumerWidget {
               Text(e is ApiException ? e.message : 'Error inesperado.'),
               const SizedBox(height: 12),
               ElevatedButton(
-                onPressed: ref
-                    .read(
-                      secretaryRequestedAppointmentsNotifierProvider.notifier,
-                    )
-                    .refresh,
+                onPressed: forDoctor
+                    ? ref
+                          .read(
+                            doctorRequestedAppointmentsNotifierProvider
+                                .notifier,
+                          )
+                          .refresh
+                    : ref
+                          .read(
+                            secretaryRequestedAppointmentsNotifierProvider
+                                .notifier,
+                          )
+                          .refresh,
                 child: const Text('Reintentar'),
               ),
             ],
           ),
         ),
         data: (appointments) => RefreshIndicator(
-          onRefresh: ref
-              .read(secretaryRequestedAppointmentsNotifierProvider.notifier)
-              .refresh,
+          onRefresh: forDoctor
+              ? ref
+                    .read(doctorRequestedAppointmentsNotifierProvider.notifier)
+                    .refresh
+              : ref
+                    .read(
+                      secretaryRequestedAppointmentsNotifierProvider.notifier,
+                    )
+                    .refresh,
           child: appointments.isEmpty
               ? ListView(
                   children: const [
@@ -117,6 +143,15 @@ class SecretaryRequestedAppointmentsScreen extends ConsumerWidget {
   }
 }
 
+class SecretaryRequestedAppointmentsScreen extends RequestedAppointmentsScreen {
+  const SecretaryRequestedAppointmentsScreen({super.key})
+    : super(forDoctor: false);
+}
+
+class DoctorRequestedAppointmentsScreen extends RequestedAppointmentsScreen {
+  const DoctorRequestedAppointmentsScreen({super.key}) : super(forDoctor: true);
+}
+
 class _RequestedAppointmentCard extends StatelessWidget {
   final Appointment appointment;
   final String dateLabel;
@@ -137,6 +172,7 @@ class _RequestedAppointmentCard extends StatelessWidget {
       'cancelled' => 'Cancelada',
       'rescheduled' => 'Reprogramada',
       'requested' => 'Solicitada',
+      'backup_pending' => 'Pendiente',
       _ => appointment.status,
     };
   }
@@ -175,6 +211,28 @@ class _RequestedAppointmentCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (appointment.status == 'backup_pending') ...[
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: Colors.blue.shade200),
+                ),
+                child: Text(
+                  'Cita de Respaldo',
+                  style: TextStyle(
+                    color: Colors.blue.shade900,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+            ],
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -216,13 +274,41 @@ class _RequestedAppointmentCard extends StatelessWidget {
             const SizedBox(height: 8),
             _AppointmentDetailRow(
               icon: Icons.calendar_today_outlined,
-              label: '$dateLabel - ${appointment.startTime}',
+              label: '$dateLabel - ${formatTime24(appointment.startTime)}',
             ),
             const SizedBox(height: 8),
             _AppointmentDetailRow(
               icon: Icons.location_on_outlined,
               label: appointment.clinicName,
             ),
+            if (appointment.isBackup &&
+                appointment.backupTargetDate != null &&
+                appointment.backupTargetStartTime != null) ...[
+              const Divider(height: 20),
+              const Text(
+                'Cita original',
+                style: TextStyle(
+                  color: AppTheme.textSecondary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Fecha: ${_formatDate(appointment.backupTargetDate!)}',
+                style: const TextStyle(
+                  color: AppTheme.textSecondary,
+                  fontSize: 12,
+                ),
+              ),
+              Text(
+                'Hora: ${formatTime24(appointment.backupTargetStartTime!)}',
+                style: const TextStyle(
+                  color: AppTheme.textSecondary,
+                  fontSize: 12,
+                ),
+              ),
+            ],
             const SizedBox(height: 14),
             Row(
               mainAxisSize: MainAxisSize.min,
@@ -263,6 +349,13 @@ class _RequestedAppointmentCard extends StatelessWidget {
       ),
     );
   }
+
+  String _formatDate(DateTime date) {
+    final day = date.day.toString().padLeft(2, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    return '$day/$month/${date.year}';
+  }
+
 }
 
 class _AppointmentActionButton extends StatelessWidget {

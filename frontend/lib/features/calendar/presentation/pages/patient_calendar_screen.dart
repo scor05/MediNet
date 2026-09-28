@@ -13,7 +13,9 @@ import 'package:frontend/features/patient_profile/presentation/pages/patient_pro
 import 'package:frontend/theme/app_theme.dart';
 
 class PatientCalendarScreen extends ConsumerStatefulWidget {
-  const PatientCalendarScreen({super.key});
+  final int patientId;
+
+  const PatientCalendarScreen({super.key, required this.patientId});
 
   @override
   ConsumerState<PatientCalendarScreen> createState() =>
@@ -48,7 +50,9 @@ class _PatientCalendarScreenState extends ConsumerState<PatientCalendarScreen> {
     showAppointmentDetailSheet(
       context: context,
       appointment: appointment,
-      onCancelled: ref.read(patientCalendarNotifierProvider.notifier).refresh,
+      onCancelled: ref
+          .read(patientCalendarNotifierProvider(widget.patientId).notifier)
+          .refresh,
     );
   }
 
@@ -97,7 +101,9 @@ class _PatientCalendarScreenState extends ConsumerState<PatientCalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final calendarAsync = ref.watch(patientCalendarNotifierProvider);
+    final calendarAsync = ref.watch(
+      patientCalendarNotifierProvider(widget.patientId),
+    );
     final weekStart = ref.watch(patientWeekStartProvider);
     final filters = ref.watch(patientCalendarFilterProvider);
 
@@ -164,7 +170,9 @@ class _PatientCalendarScreenState extends ConsumerState<PatientCalendarScreen> {
       body: CalendarBody(
         calendarAsync: filteredAsync,
         weekStart: weekStart,
-        onRetry: ref.read(patientCalendarNotifierProvider.notifier).refresh,
+        onRetry: ref
+            .read(patientCalendarNotifierProvider(widget.patientId).notifier)
+            .refresh,
         showDoctor: true,
         onAppointmentTap: _openAppointmentDetail,
       ),

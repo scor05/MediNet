@@ -7,12 +7,15 @@ import 'package:frontend/features/appointment/domain/providers/appointment_domai
 -------------------------------------- Notifier -----------------------------------------
 */
 
-class PatientCalendarNotifier extends AsyncNotifier<List<Appointment>> {
+class PatientCalendarNotifier
+    extends FamilyAsyncNotifier<List<Appointment>, int> {
   final _cache = <String, List<Appointment>>{};
   int _refreshToken = 0;
+  late int _patientId;
 
   @override
-  FutureOr<List<Appointment>> build() {
+  FutureOr<List<Appointment>> build(int patientId) {
+    _patientId = patientId;
     final weekStart = ref.watch(patientWeekStartProvider);
     final key = weekStart.toIso8601String();
     if (_cache.containsKey(key)) return _cache[key]!;
@@ -22,13 +25,20 @@ class PatientCalendarNotifier extends AsyncNotifier<List<Appointment>> {
     });
   }
 
-  Future<List<Appointment>> _fetch(DateTime weekStart) {
-    return ref
+  Future<List<Appointment>> _fetch(DateTime weekStart) async {
+    final appointments = await ref
         .read(getPatientAppointmentsUsecaseProvider)
         .call(
           dateFrom: weekStart,
           dateTo: weekStart.add(const Duration(days: 6)),
         );
+
+    // Laravel applies the same restriction using the authenticated user. Keep
+    // this client-side guard as well so stale/cached staff responses can never
+    // be rendered after changing to the patient role.
+    return appointments
+        .where((appointment) => appointment.patientId == _patientId)
+        .toList(growable: false);
   }
 
   Future<void> refresh() async {
@@ -92,6 +102,8 @@ final patientWeekStartProvider = StateProvider<DateTime>((ref) {
 
 // Provider del notifier
 final patientCalendarNotifierProvider =
-    AsyncNotifierProvider<PatientCalendarNotifier, List<Appointment>>(
-      PatientCalendarNotifier.new,
-    );
+    AsyncNotifierProvider.family<
+      PatientCalendarNotifier,
+      List<Appointment>,
+      int
+    >(PatientCalendarNotifier.new);

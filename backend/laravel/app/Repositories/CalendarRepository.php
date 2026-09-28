@@ -14,6 +14,18 @@ class CalendarRepository
             ->join('clinics AS cl', 'cl.id', '=', 's.id_clinic')
             ->join('users AS doctor', 'doctor.id', '=', 's.id_doctor')
             ->leftJoin('users AS patient', 'patient.id', '=', 'a.id_patient')
+            ->leftJoin(
+                'waitlists AS backup_waitlist',
+                'backup_waitlist.id_backup_appointment',
+                '=',
+                'a.id'
+            )
+            ->leftJoin(
+                'appointments AS backup_target',
+                'backup_target.id',
+                '=',
+                'backup_waitlist.id_target_appointment'
+            )
             ->select([
                 'a.id',
                 'a.id_schedule',
@@ -31,6 +43,8 @@ class CalendarRepository
                 'cl.id        AS clinic_id',
                 'cl.name      AS clinic_name',
                 's.duration   AS appointment_duration',
+                'backup_target.date AS backup_target_date',
+                'backup_target.start_time AS backup_target_start_time',
                 DB::raw('COALESCE(patient.name, a.name_patient) AS patient_name'),
             ]);
     }
@@ -92,7 +106,11 @@ class CalendarRepository
         }
 
         if ($status !== null) {
-            $query->where('a.status', $status);
+            if ($status === 'pending') {
+                $query->whereIn('a.status', ['requested', 'backup_pending']);
+            } else {
+                $query->where('a.status', $status);
+            }
         }
 
         $this->applyCommonFilters($query, $clinicId, $dateFrom, $dateTo);
@@ -111,7 +129,13 @@ class CalendarRepository
         $query = $this->baseQuery()
             ->where('a.id_patient', $patientId)
             // El paciente solo ve citas aceptadas o solicitadas
-            ->whereIn('a.status', ['accepted', 'requested']);
+            ->whereIn('a.status', [
+                'accepted',
+                'requested',
+                'rescheduled',
+                'backup_pending',
+                'backup_accepted',
+            ]);
 
         // Filtro por doctor
         if ($doctorId !== null) {
@@ -132,7 +156,13 @@ class CalendarRepository
         ?string $dateTo,
     ): array {
         $query = $this->baseQuery()
-            ->whereIn('a.status', ['accepted', 'requested']);
+            ->whereIn('a.status', [
+                'accepted',
+                'requested',
+                'rescheduled',
+                'backup_pending',
+                'backup_accepted',
+            ]);
 
         if ($doctorId !== null) {
             $query->where('s.id_doctor', $doctorId);

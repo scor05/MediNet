@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/utils/time_format.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/features/waitlist/domain/providers/waitlist_domain_providers.dart';
 import 'package:frontend/features/waitlist/presentation/providers/waitlist_provider.dart';
 
 /// Diálogo de confirmación para unirse a la lista de espera.
-/// Retorna `true` si el registro fue exitoso.
+/// Retorna el registro creado si la operación fue exitosa.
 class JoinWaitlistDialog extends ConsumerStatefulWidget {
   final int scheduleId;
   final String doctorName;
@@ -37,7 +38,7 @@ class _JoinWaitlistDialogState extends ConsumerState<JoinWaitlistDialog> {
     });
 
     try {
-      await ref
+      final waitlist = await ref
           .read(createWaitlistUsecaseProvider)
           .call(
             scheduleId: widget.scheduleId,
@@ -48,7 +49,7 @@ class _JoinWaitlistDialogState extends ConsumerState<JoinWaitlistDialog> {
       ref.invalidate(patientWaitlistNotifierProvider);
 
       if (!mounted) return;
-      Navigator.of(context).pop(true);
+      Navigator.of(context).pop(waitlist);
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -88,7 +89,7 @@ class _JoinWaitlistDialogState extends ConsumerState<JoinWaitlistDialog> {
             '${widget.date.year}',
           ),
           const SizedBox(height: 6),
-          _buildInfoRow(Icons.access_time, widget.startTime),
+          _buildInfoRow(Icons.access_time, formatTime24(widget.startTime)),
           if (_error != null) ...[
             const SizedBox(height: 12),
             Text(

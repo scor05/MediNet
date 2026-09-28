@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/utils/time_format.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/appointment/domain/providers/appointment_domain_providers.dart';
 import 'package:frontend/features/calendar/presentation/dialogs/reschedule_appointment_dialog.dart';
 import 'package:frontend/theme/app_theme.dart';
-import 'package:frontend/theme/calendar_theme.dart';
 
 Future<void> showAppointmentDetailSheet({
   required BuildContext context,
@@ -12,6 +12,7 @@ Future<void> showAppointmentDetailSheet({
   Future<void> Function()? onCancelled,
   Future<void> Function()? onRescheduled,
   bool canReschedule = false,
+  bool showBackupTargetDetails = false,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -24,6 +25,7 @@ Future<void> showAppointmentDetailSheet({
       onCancelled: onCancelled,
       onRescheduled: onRescheduled,
       canReschedule: canReschedule,
+      showBackupTargetDetails: showBackupTargetDetails,
     ),
   );
 }
@@ -33,6 +35,7 @@ class AppointmentDetailDialog extends ConsumerWidget {
   final Future<void> Function()? onCancelled;
   final Future<void> Function()? onRescheduled;
   final bool canReschedule;
+  final bool showBackupTargetDetails;
 
   const AppointmentDetailDialog({
     super.key,
@@ -40,14 +43,16 @@ class AppointmentDetailDialog extends ConsumerWidget {
     this.onCancelled,
     this.onRescheduled,
     this.canReschedule = false,
+    this.showBackupTargetDetails = false,
   });
 
   Color _statusColor() {
     return switch (appointment.status) {
-      'accepted' => CalendarColors.appointmentAccepted,
-      'requested' => CalendarColors.appointmentRequested,
-      'cancelled' => CalendarColors.appointmentCancelled,
-      _ => CalendarColors.appointmentUnknown,
+      'accepted' || 'backup_accepted' => AppColors.success,
+      'requested' || 'backup_pending' => AppColors.warning,
+      'rejected' || 'cancelled' || 'backup_cancelled' => AppColors.error,
+      'rescheduled' => AppColors.secondary,
+      _ => AppColors.textSecondary,
     };
   }
 
@@ -55,7 +60,12 @@ class AppointmentDetailDialog extends ConsumerWidget {
     return switch (appointment.status) {
       'accepted' => 'Aceptada',
       'requested' => 'Solicitada',
+      'rejected' => 'Rechazada',
       'cancelled' => 'Cancelada',
+      'rescheduled' => 'Reprogramada',
+      'backup_pending' => 'Respaldo pendiente',
+      'backup_accepted' => 'Respaldo aceptado',
+      'backup_cancelled' => 'Respaldo cancelado',
       _ => appointment.status,
     };
   }
@@ -65,41 +75,6 @@ class AppointmentDetailDialog extends ConsumerWidget {
     final month = date.month.toString().padLeft(2, '0');
 
     return '$day/$month/${date.year}';
-  }
-
-  String _formatTime(String time) {
-    final parts = time.split(':');
-
-    final hour = int.parse(parts[0]);
-    final minute = parts[1];
-
-    if (hour == 0) return '12:$minute AM';
-    if (hour < 12) return '$hour:$minute AM';
-    if (hour == 12) return '12:$minute PM';
-
-    return '${hour - 12}:$minute PM';
-  }
-
-  String _calculateEndTime(String startTime, int durationMinutes) {
-    final parts = startTime.split(':');
-
-    final hour = int.parse(parts[0]);
-    final minute = int.parse(parts[1]);
-    final second = parts.length > 2 ? int.parse(parts[2]) : 0;
-
-    final endDateTime = DateTime(
-      2026,
-      1,
-      1,
-      hour,
-      minute,
-      second,
-    ).add(Duration(minutes: durationMinutes));
-
-    final formatted =
-        '${endDateTime.hour}:${endDateTime.minute.toString().padLeft(2, '0')}';
-
-    return _formatTime(formatted);
   }
 
   Future<void> _cancelAppointment(BuildContext context, WidgetRef ref) async {
@@ -173,8 +148,12 @@ class AppointmentDetailDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final canCancel =
-        appointment.status == 'accepted' || appointment.status == 'requested';
+    final canCancel = [
+      'accepted',
+      'requested',
+      'backup_accepted',
+      'backup_pending',
+    ].contains(appointment.status);
 
     return SafeArea(
       child: Padding(
@@ -239,9 +218,25 @@ class AppointmentDetailDialog extends ConsumerWidget {
               icon: Icons.schedule,
               label: 'Horario',
               value:
-                  '${_formatTime(appointment.startTime)} - '
-                  '${_calculateEndTime(appointment.startTime, appointment.appointmentDuration)}',
+                  '${formatTime24(appointment.startTime)} - '
+                  '${calculateEndTime24(appointment.startTime, appointment.appointmentDuration)}',
             ),
+
+            if (showBackupTargetDetails &&
+                appointment.isBackup &&
+                appointment.backupTargetDate != null &&
+                appointment.backupTargetStartTime != null) ...[
+              _DetailRow(
+                icon: Icons.event_note_outlined,
+                label: 'Fecha de Cita Respaldada',
+                value: _formatDate(appointment.backupTargetDate!),
+              ),
+              _DetailRow(
+                icon: Icons.access_time_outlined,
+                label: 'Hora de Cita Respaldada',
+                value: formatTime24(appointment.backupTargetStartTime!),
+              ),
+            ],
 
             _DetailRow(
               icon: Icons.timer_outlined,
@@ -270,6 +265,7 @@ class AppointmentDetailDialog extends ConsumerWidget {
                   child: Row(
                     children: [
                       Container(
+                        key: const Key('appointment-status-dot'),
                         width: 10,
                         height: 10,
                         decoration: BoxDecoration(

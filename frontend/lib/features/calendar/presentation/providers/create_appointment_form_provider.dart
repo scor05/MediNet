@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
-import 'package:frontend/features/calendar/presentation/providers/doctor_calendar_provider.dart';
+import 'package:frontend/features/appointment/domain/providers/appointment_domain_providers.dart';
 import 'package:frontend/features/calendar/presentation/utils/appointment_time_utils.dart';
 import 'package:frontend/features/clinic/domain/entities/clinic_search_result.dart';
 import 'package:frontend/features/schedule/domain/entities/schedule.dart';
@@ -674,15 +674,14 @@ class CreateAppointmentFormNotifier
       );
 
       final created = await ref
-          .read(doctorCalendarNotifierProvider.notifier)
-          .createAppointment(
+          .read(createAppointmentUsecaseProvider)
+          .call(
             scheduleId: selectedSchedule.id,
             date: selectedDate,
             startTime: startTime,
             patientName: patientName.trim(),
             patientId: state.selectedPatient?.id,
             status: 'accepted',
-            duration: selectedSchedule.duration,
           );
 
       state = state.copyWith(saving: false);

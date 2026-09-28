@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/utils/time_format.dart';
 import 'package:frontend/features/calendar/presentation/utils/appointment_time_utils.dart';
 import 'package:frontend/features/schedule/domain/entities/schedule.dart';
 
@@ -24,7 +25,8 @@ class ScheduleDropdown extends StatelessWidget {
             (schedule) => DropdownMenuItem(
               value: schedule,
               child: Text(
-                '${daysFull[schedule.dayOfWeek]} - ${schedule.clinicName} (${schedule.startTime}–${schedule.endTime})',
+                '${daysFull[schedule.dayOfWeek]} - ${schedule.clinicName} '
+                '(${formatTime24(schedule.startTime)}–${formatTime24(schedule.endTime)})',
                 overflow: TextOverflow.ellipsis,
               ),
             ),

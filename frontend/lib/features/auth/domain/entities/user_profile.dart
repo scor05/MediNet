@@ -10,6 +10,7 @@ class UserProfile {
   final bool isSecretary;
   final bool isSuperadmin;
   final List<AdminOf> adminOf;
+  final List<int> secretaryClientIds;
 
   const UserProfile({
     required this.id,
@@ -21,6 +22,7 @@ class UserProfile {
     required this.isSecretary,
     required this.isSuperadmin,
     required this.adminOf,
+    this.secretaryClientIds = const [],
   });
 
   // Devuelve los roles disponibles del usuario

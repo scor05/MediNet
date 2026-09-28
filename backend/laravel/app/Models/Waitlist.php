@@ -13,7 +13,13 @@ class Waitlist extends Model
         'id_patient',
         'id_target_appointment',
         'id_fallback_appointment',
+        'id_backup_appointment',
+        'backup_declined_at',
         'status',
+    ];
+
+    protected $casts = [
+        'backup_declined_at' => 'datetime',
     ];
 
     public function patient()
@@ -37,6 +43,14 @@ class Waitlist extends Model
         return $this->belongsTo(
             Appointment::class,
             'id_fallback_appointment'
+        );
+    }
+
+    public function backupAppointment()
+    {
+        return $this->belongsTo(
+            Appointment::class,
+            'id_backup_appointment'
         );
     }
 }

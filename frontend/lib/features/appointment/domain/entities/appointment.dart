@@ -17,8 +17,11 @@ class Appointment {
   final String clinicName;
   final int appointmentDuration;
   final String? type;
+  final DateTime? backupTargetDate;
+  final String? backupTargetStartTime;
 
   bool get isBlockade => type == 'blockade';
+  bool get isBackup => status.startsWith('backup_');
 
   const Appointment({
     required this.id,
@@ -39,6 +42,8 @@ class Appointment {
     required this.clinicName,
     required this.appointmentDuration,
     this.type,
+    this.backupTargetDate,
+    this.backupTargetStartTime,
   });
 
   Appointment copyWith({
@@ -60,6 +65,8 @@ class Appointment {
     String? clinicName,
     int? appointmentDuration,
     String? type,
+    DateTime? backupTargetDate,
+    String? backupTargetStartTime,
   }) {
     return Appointment(
       id: id ?? this.id,
@@ -80,6 +87,9 @@ class Appointment {
       clinicName: clinicName ?? this.clinicName,
       appointmentDuration: appointmentDuration ?? this.appointmentDuration,
       type: type ?? this.type,
+      backupTargetDate: backupTargetDate ?? this.backupTargetDate,
+      backupTargetStartTime:
+          backupTargetStartTime ?? this.backupTargetStartTime,
     );
   }
 }

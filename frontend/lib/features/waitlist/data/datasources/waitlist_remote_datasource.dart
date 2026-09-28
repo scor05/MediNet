@@ -68,6 +68,48 @@ class WaitlistRemoteDatasource {
     }
   }
 
+  Future<void> createBackupAppointment({
+    required int waitlistId,
+    required int scheduleId,
+    required DateTime date,
+    required String startTime,
+  }) async {
+    final token = Supabase.instance.client.auth.currentSession?.accessToken;
+    final response = await http
+        .post(
+          Uri.parse('${AppConfig.apiUrl}/waitlists/$waitlistId/backup'),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode({
+            'id_schedule': scheduleId,
+            'date': date.toIso8601String().substring(0, 10),
+            'start_time': startTime.substring(0, 5),
+          }),
+        )
+        .timeout(_defaultTimeout);
+
+    if (response.statusCode != 201) throw handleApiError(response);
+  }
+
+  Future<void> declineBackupAppointment(int waitlistId) async {
+    final token = Supabase.instance.client.auth.currentSession?.accessToken;
+    final response = await http
+        .post(
+          Uri.parse('${AppConfig.apiUrl}/waitlists/$waitlistId/backup/decline'),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        )
+        .timeout(_defaultTimeout);
+
+    if (response.statusCode != 200) throw handleApiError(response);
+  }
+
   // Cancela un waitlist (actualiza status a 'cancelled')
   Future<void> cancelWaitlist(int waitlistId) async {
     final token = Supabase.instance.client.auth.currentSession?.accessToken;

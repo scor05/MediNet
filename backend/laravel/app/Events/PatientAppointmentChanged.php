@@ -9,6 +9,10 @@ use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
+/**
+ * Backward compatibility for broadcast jobs queued before staff realtime was
+ * introduced. New mutations dispatch AppointmentChanged instead.
+ */
 class PatientAppointmentChanged implements ShouldBroadcast, ShouldDispatchAfterCommit
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;

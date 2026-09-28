@@ -4,6 +4,7 @@ import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/calendar/presentation/models/secretary_calendar_item.dart';
 import 'package:frontend/features/calendar/presentation/widgets/secretary_calendar_view.dart';
 import 'package:frontend/features/schedule/domain/entities/schedule.dart';
+import 'package:frontend/theme/calendar_theme.dart';
 
 void main() {
   final appointment = Appointment(
@@ -127,6 +128,49 @@ void main() {
     expect(first.left, isNot(second.left));
     expect(first.width, lessThan(120));
     expect(second.width, lessThan(120));
+  });
+
+  testWidgets('adds gutters only at the outer edges of each day block', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1800, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final simultaneous = appointment.copyWith(
+      id: 2,
+      patientName: 'Luis Gómez',
+      doctorId: 8,
+      doctorName: 'Dra. López',
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SecretaryCalendarView(
+            weekStart: DateTime(2026, 9, 21),
+            appointments: [appointment, simultaneous],
+            schedules: const [],
+            doctorColors: const {7: Colors.blue, 8: Colors.purple},
+            onItemsTap: (_) {},
+          ),
+        ),
+      ),
+    );
+
+    final day = tester.getRect(
+      find.byKey(const ValueKey('secretary-day-column-0')),
+    );
+    final first = tester.getRect(
+      find.byKey(const ValueKey('secretary-calendar-appointment-1')),
+    );
+    final second = tester.getRect(
+      find.byKey(const ValueKey('secretary-calendar-appointment-2')),
+    );
+    final leftItem = first.left < second.left ? first : second;
+    final rightItem = first.left < second.left ? second : first;
+
+    expect(leftItem.left - day.left, CalendarSizes.calendarItemDayEdgeInset);
+    expect(day.right - rightItem.right, CalendarSizes.calendarItemDayEdgeInset);
+    expect(rightItem.left - leftItem.right, 2);
   });
 
   testWidgets('keeps readable text sizes when three schedules collide', (

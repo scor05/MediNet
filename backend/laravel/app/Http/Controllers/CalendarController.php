@@ -9,9 +9,7 @@ use Illuminate\Validation\Rule;
 class CalendarController extends Controller
 {
     // Se inyecta el servicio
-    public function __construct(protected CalendarService $calendarService)
-    {
-    }
+    public function __construct(protected CalendarService $calendarService) {}
 
     // Se obtienen todas las citas de un doctor, con posibilidad de filtrarlas
     public function doctor(Request $request)
@@ -32,6 +30,7 @@ class CalendarController extends Controller
             dateFrom: $request->input('date_from'),
             dateTo: $request->input('date_to'),
         );
+
         return response()->json($appointments);
     }
 
@@ -51,6 +50,10 @@ class CalendarController extends Controller
                     'rejected',
                     'cancelled',
                     'rescheduled',
+                    'pending',
+                    'backup_pending',
+                    'backup_accepted',
+                    'backup_cancelled',
                 ]),
             ],
         ]);
@@ -88,6 +91,7 @@ class CalendarController extends Controller
             dateFrom: $request->input('date_from'),
             dateTo: $request->input('date_to'),
         );
+
         return response()->json($appointments);
     }
 

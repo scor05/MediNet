@@ -2,16 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:dart_pusher_channels/dart_pusher_channels.dart';
+import 'package:frontend/core/realtime/realtime_connection.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-abstract interface class PatientAppointmentRealtimeConnection {
-  Stream<void> get changes;
-
-  Future<void> connect();
-
-  Future<void> dispose();
-}
+abstract interface class PatientAppointmentRealtimeConnection
+    implements RealtimeConnection {}
 
 class ReverbPatientAppointmentConnection
     implements PatientAppointmentRealtimeConnection {
@@ -29,6 +25,7 @@ class ReverbPatientAppointmentConnection
   PusherChannelsClient? _client;
   StreamSubscription<void>? _connectionSubscription;
   StreamSubscription<ChannelReadEvent>? _eventSubscription;
+  StreamSubscription<ChannelReadEvent>? _waitlistEventSubscription;
   Timer? _reconnectTimer;
   bool _started = false;
   bool _disposed = false;
@@ -85,6 +82,9 @@ class ReverbPatientAppointmentConnection
     _eventSubscription = channel.bind('appointment.changed').listen((_) {
       if (!_changes.isClosed) _changes.add(null);
     });
+    _waitlistEventSubscription = channel.bind('waitlist.changed').listen((_) {
+      if (!_changes.isClosed) _changes.add(null);
+    });
 
     await client.connect();
   }
@@ -103,6 +103,7 @@ class ReverbPatientAppointmentConnection
     _disposed = true;
     _reconnectTimer?.cancel();
     await _eventSubscription?.cancel();
+    await _waitlistEventSubscription?.cancel();
     await _connectionSubscription?.cancel();
 
     final client = _client;

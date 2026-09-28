@@ -13,6 +13,7 @@ import 'package:frontend/features/calendar/presentation/widgets/calendar_body.da
 import 'package:frontend/features/calendar/presentation/widgets/calendar_fab_menu.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_shell.dart';
 import 'package:frontend/features/schedule/domain/entities/schedule.dart';
+import 'package:frontend/features/user/domain/entities/doctor_search_result.dart';
 
 class DoctorCalendarScreen extends ConsumerStatefulWidget {
   final UserProfile profile;
@@ -40,9 +41,19 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
 
     final weekStart = ref.read(doctorWeekStartProvider);
 
-    await showCreateAppointmentSheet(context: context, weekStart: weekStart);
+    final created = await showCreateAppointmentSheet(
+      context: context,
+      weekStart: weekStart,
+      fixedDoctor: DoctorSearchResult(
+        id: widget.profile.id,
+        name: widget.profile.name,
+        specialty: '',
+      ),
+    );
 
-    // El notifier ya actualizó el estado en createAppointment()
+    if (created != null) {
+      await ref.read(doctorCalendarNotifierProvider.notifier).refresh();
+    }
   }
 
   Future<void> _openCreateSchedule() async {
@@ -101,6 +112,7 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
       onCancelled: ref.read(doctorCalendarNotifierProvider.notifier).refresh,
       onRescheduled: ref.read(doctorCalendarNotifierProvider.notifier).refresh,
       canReschedule: true,
+      showBackupTargetDetails: true,
     );
   }
 
@@ -127,6 +139,13 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
   @override
   Widget build(BuildContext context) {
     final calendarAsync = ref.watch(doctorCalendarNotifierProvider);
+    final visibleCalendarAsync = calendarAsync.whenData(
+      (items) => items
+          .where(
+            (item) => item.isBlockade || item.doctorId == widget.profile.id,
+          )
+          .toList(),
+    );
     final weekStart = ref.watch(doctorWeekStartProvider);
 
     return Scaffold(
@@ -151,11 +170,12 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
       body: Stack(
         children: [
           CalendarBody(
-            calendarAsync: calendarAsync,
+            calendarAsync: visibleCalendarAsync,
             weekStart: weekStart,
             onRetry: ref.read(doctorCalendarNotifierProvider.notifier).refresh,
             showPatient: true,
             showSchedules: true,
+            splitOverlappingAppointments: true,
             onAppointmentTap: _openAppointmentDetail,
             onBlockadeTap: _onBlockadeTap,
             onScheduleTap: _openScheduleDetail,

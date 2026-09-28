@@ -12,6 +12,7 @@ class UserProfileModel extends UserProfile {
     required super.isSecretary,
     required super.isSuperadmin,
     required super.adminOf,
+    super.secretaryClientIds,
   });
 
   factory UserProfileModel.fromJson(Map<String, dynamic> json) {
@@ -24,6 +25,9 @@ class UserProfileModel extends UserProfile {
       isDoctor: json['is_doctor'] == true,
       isSecretary: json['is_secretary'] == true,
       isSuperadmin: json['superadmin'] == true,
+      secretaryClientIds: (json['secretary_client_ids'] as List<dynamic>? ?? [])
+          .map((id) => id as int)
+          .toList(),
 
       adminOf: (json['admin_of'] as List<dynamic>? ?? [])
           .map((e) => AdminOfModel.fromJson(e as Map<String, dynamic>))
