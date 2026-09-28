@@ -41,7 +41,7 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
 
     final weekStart = ref.read(doctorWeekStartProvider);
 
-    await showCreateAppointmentSheet(
+    final created = await showCreateAppointmentSheet(
       context: context,
       weekStart: weekStart,
       fixedDoctor: DoctorSearchResult(
@@ -51,7 +51,9 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
       ),
     );
 
-    // El notifier ya actualizó el estado en createAppointment()
+    if (created != null) {
+      await ref.read(doctorCalendarNotifierProvider.notifier).refresh();
+    }
   }
 
   Future<void> _openCreateSchedule() async {
@@ -137,6 +139,13 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
   @override
   Widget build(BuildContext context) {
     final calendarAsync = ref.watch(doctorCalendarNotifierProvider);
+    final visibleCalendarAsync = calendarAsync.whenData(
+      (items) => items
+          .where(
+            (item) => item.isBlockade || item.doctorId == widget.profile.id,
+          )
+          .toList(),
+    );
     final weekStart = ref.watch(doctorWeekStartProvider);
 
     return Scaffold(
@@ -161,7 +170,7 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
       body: Stack(
         children: [
           CalendarBody(
-            calendarAsync: calendarAsync,
+            calendarAsync: visibleCalendarAsync,
             weekStart: weekStart,
             onRetry: ref.read(doctorCalendarNotifierProvider.notifier).refresh,
             showPatient: true,
