@@ -40,6 +40,7 @@ class WaitlistPromotionService
                 (string) $oldAppointment->date,
                 $this->formatTime($oldAppointment->start_time),
                 $oldAppointment->id,
+                (int) $waitlist->id_patient,
             );
         } catch (AppointmentUnavailableException) {
             return null;

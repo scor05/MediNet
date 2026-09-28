@@ -69,6 +69,58 @@ class AppointmentRepository
         return $query->get();
     }
 
+    public function findActiveByDoctorAndDate(
+        int $doctorId,
+        string $date,
+        ?int $ignoreAppointmentId = null,
+    ) {
+        $query = Appointment::query()
+            ->join('schedules', 'schedules.id', '=', 'appointments.id_schedule')
+            ->where('schedules.id_doctor', $doctorId)
+            ->where('appointments.date', $date)
+            ->whereIn('appointments.status', [
+                'requested', 'accepted', 'rescheduled',
+                'backup_pending', 'backup_accepted',
+            ])
+            ->select([
+                'appointments.id',
+                'appointments.start_time',
+                'schedules.duration',
+            ]);
+
+        if ($ignoreAppointmentId !== null) {
+            $query->where('appointments.id', '!=', $ignoreAppointmentId);
+        }
+
+        return $query->get();
+    }
+
+    public function findActiveByPatientAndDate(
+        int $patientId,
+        string $date,
+        ?int $ignoreAppointmentId = null,
+    ) {
+        $query = Appointment::query()
+            ->join('schedules', 'schedules.id', '=', 'appointments.id_schedule')
+            ->where('appointments.id_patient', $patientId)
+            ->where('appointments.date', $date)
+            ->whereIn('appointments.status', [
+                'requested', 'accepted', 'rescheduled',
+                'backup_pending', 'backup_accepted',
+            ])
+            ->select([
+                'appointments.id',
+                'appointments.start_time',
+                'schedules.duration',
+            ]);
+
+        if ($ignoreAppointmentId !== null) {
+            $query->where('appointments.id', '!=', $ignoreAppointmentId);
+        }
+
+        return $query->get();
+    }
+
     public function findOccupyingSlot(int $scheduleId, string $date, string $startTime): ?Appointment
     {
         return Appointment::where('id_schedule', $scheduleId)
