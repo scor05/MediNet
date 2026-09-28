@@ -119,7 +119,7 @@ void main() {
     expect(find.text('Fecha de Cita Respaldada'), findsOneWidget);
     expect(find.text('06/10/2026'), findsOneWidget);
     expect(find.text('Hora de Cita Respaldada'), findsOneWidget);
-    expect(find.text('9:30 AM'), findsOneWidget);
+    expect(find.text('09:30'), findsOneWidget);
   });
 
   testWidgets('keeps backup target details hidden unless explicitly enabled', (

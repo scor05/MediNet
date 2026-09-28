@@ -48,7 +48,7 @@ void main() {
 
     expect(find.text('Cita original'), findsOneWidget);
     expect(find.text('Fecha: 04/10/2026'), findsOneWidget);
-    expect(find.text('Hora: 9:30 AM'), findsOneWidget);
+    expect(find.text('Hora: 09:30'), findsOneWidget);
   });
 }
 

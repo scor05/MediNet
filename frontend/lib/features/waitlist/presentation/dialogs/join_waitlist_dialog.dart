@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/utils/time_format.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/features/waitlist/domain/providers/waitlist_domain_providers.dart';
@@ -88,7 +89,7 @@ class _JoinWaitlistDialogState extends ConsumerState<JoinWaitlistDialog> {
             '${widget.date.year}',
           ),
           const SizedBox(height: 6),
-          _buildInfoRow(Icons.access_time, widget.startTime),
+          _buildInfoRow(Icons.access_time, formatTime24(widget.startTime)),
           if (_error != null) ...[
             const SizedBox(height: 12),
             Text(

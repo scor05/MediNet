@@ -16,10 +16,7 @@ class TimeColumn extends StatelessWidget {
   });
 
   String _formatHour(int hour) {
-    if (hour == 0) return '12 AM';
-    if (hour < 12) return '$hour AM';
-    if (hour == 12) return '12 PM';
-    return '${hour - 12} PM';
+    return '${hour.toString().padLeft(2, '0')}:00';
   }
 
   @override
