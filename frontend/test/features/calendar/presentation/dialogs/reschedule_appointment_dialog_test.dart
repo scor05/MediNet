@@ -92,6 +92,57 @@ void main() {
     expect(find.byIcon(Icons.autorenew), findsNothing);
   });
 
+  testWidgets('shows the original slot for backup details when enabled', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(900, 1100));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final backup = _appt.copyWith(
+      status: 'backup_pending',
+      backupTargetDate: DateTime(2026, 10, 6),
+      backupTargetStartTime: '09:30:00',
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: AppointmentDetailDialog(
+              appointment: backup,
+              showBackupTargetDetails: true,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Fecha de Cita Respaldada'), findsOneWidget);
+    expect(find.text('06/10/2026'), findsOneWidget);
+    expect(find.text('Hora de Cita Respaldada'), findsOneWidget);
+    expect(find.text('9:30 AM'), findsOneWidget);
+  });
+
+  testWidgets('keeps backup target details hidden unless explicitly enabled', (
+    tester,
+  ) async {
+    final backup = _appt.copyWith(
+      status: 'backup_pending',
+      backupTargetDate: DateTime(2026, 10, 6),
+      backupTargetStartTime: '09:30:00',
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(body: AppointmentDetailDialog(appointment: backup)),
+        ),
+      ),
+    );
+
+    expect(find.text('Fecha de Cita Respaldada'), findsNothing);
+    expect(find.text('Hora de Cita Respaldada'), findsNothing);
+  });
+
   testWidgets('shows availability error and keeps confirmation disabled', (
     tester,
   ) async {

@@ -4,6 +4,7 @@ import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/calendar/presentation/models/secretary_calendar_item.dart';
 import 'package:frontend/features/calendar/presentation/widgets/secretary_calendar_view.dart';
 import 'package:frontend/features/schedule/domain/entities/schedule.dart';
+import 'package:frontend/theme/calendar_theme.dart';
 
 void main() {
   final appointment = Appointment(
@@ -167,8 +168,8 @@ void main() {
     final leftItem = first.left < second.left ? first : second;
     final rightItem = first.left < second.left ? second : first;
 
-    expect(leftItem.left - day.left, 4);
-    expect(day.right - rightItem.right, 4);
+    expect(leftItem.left - day.left, CalendarSizes.calendarItemDayEdgeInset);
+    expect(day.right - rightItem.right, CalendarSizes.calendarItemDayEdgeInset);
     expect(rightItem.left - leftItem.right, 2);
   });
 

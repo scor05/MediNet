@@ -86,6 +86,7 @@ class _SecretaryCalendarScreenState
           .read(secretaryCalendarNotifierProvider.notifier)
           .refresh,
       canReschedule: true,
+      showBackupTargetDetails: true,
     );
   }
 
