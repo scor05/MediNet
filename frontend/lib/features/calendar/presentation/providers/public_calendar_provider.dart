@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/appointment/domain/providers/appointment_domain_providers.dart';
+import 'package:frontend/features/schedule/domain/entities/schedule.dart';
+import 'package:frontend/features/schedule/domain/providers/schedule_domain_providers.dart';
 
 class PublicCalendarFilters {
   final int? doctorId;
@@ -120,3 +122,26 @@ final publicCalendarFilterProvider =
       PublicCalendarFilterNotifier,
       PublicCalendarFilters
     >(PublicCalendarFilterNotifier.new);
+
+/// Loads schedules for the filtered doctor in the public calendar.
+/// Returns empty list when no doctor filter is active.
+final publicSchedulesProvider =
+    FutureProvider.autoDispose<List<Schedule>>((ref) async {
+      final filters = ref.watch(publicCalendarFilterProvider);
+
+      if (filters.doctorId == null) return const [];
+
+      final schedules = await ref
+          .read(getSchedulesByDoctorIdUsecaseProvider)
+          .call(filters.doctorId!);
+
+      // If a clinic filter is active, only show schedules for that clinic
+      if (filters.clinicId != null) {
+        return schedules
+            .where((s) => s.clinicId == filters.clinicId)
+            .toList();
+      }
+
+      return schedules;
+    });
+
