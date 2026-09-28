@@ -6,6 +6,7 @@ use App\Models\Appointment;
 use App\Models\Waitlist;
 use App\Repositories\AppointmentRepository;
 use App\Repositories\WaitlistRepository;
+use App\Services\WaitlistRealtimeService;
 use App\Services\WaitlistService;
 use PHPUnit\Framework\TestCase;
 
@@ -42,6 +43,7 @@ class WaitlistServiceTest extends TestCase
         $result = (new WaitlistService(
             $waitlistRepository,
             $appointmentRepository,
+            $this->createStub(WaitlistRealtimeService::class),
         ))->join([
             'id_patient' => 19,
             'id_schedule' => 8,

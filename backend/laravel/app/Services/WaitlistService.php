@@ -18,6 +18,7 @@ class WaitlistService
     public function __construct(
         private WaitlistRepository $repository,
         private AppointmentRepository $appointmentRepository,
+        private WaitlistRealtimeService $realtimeService,
     ) {}
 
     public function getAll()
@@ -62,12 +63,16 @@ class WaitlistService
 
         if ($duplicate !== null) {
             if ($duplicate->status === 'cancelled') {
-                return $this->repository->update($duplicate->id, [
+                $oldWaitlist = clone $duplicate;
+                $waitlist = $this->repository->update($duplicate->id, [
                     'id_fallback_appointment' => null,
                     'id_backup_appointment' => null,
                     'backup_declined_at' => null,
                     'status' => 'waiting',
                 ]);
+                $this->realtimeService->updated($oldWaitlist, $waitlist);
+
+                return $waitlist;
             }
 
             throw ValidationException::withMessages([
@@ -75,13 +80,16 @@ class WaitlistService
             ]);
         }
 
-        return $this->repository->create([
+        $waitlist = $this->repository->create([
             ...$data,
             'id_fallback_appointment' => $data['id_fallback_appointment'] ?? null,
             'id_backup_appointment' => null,
             'backup_declined_at' => null,
             'status' => 'waiting',
         ]);
+        $this->realtimeService->created($waitlist);
+
+        return $waitlist;
     }
 
     public function create(array $data)
@@ -95,12 +103,33 @@ class WaitlistService
             $this->validateStatus($data['status']);
         }
 
-        return $this->repository->update($id, $data);
+        $oldWaitlist = $this->repository->findById($id);
+        if ($oldWaitlist === null) {
+            return null;
+        }
+
+        $waitlist = $this->repository->update($id, $data);
+        if ($waitlist === null) {
+            return null;
+        }
+        $this->realtimeService->updated(clone $oldWaitlist, $waitlist);
+
+        return $waitlist;
     }
 
     public function leave(int $id): bool
     {
-        return $this->repository->delete($id);
+        $waitlist = $this->repository->findById($id);
+        if ($waitlist === null) {
+            return false;
+        }
+
+        $deleted = $this->repository->delete($id);
+        if ($deleted) {
+            $this->realtimeService->deleted($waitlist);
+        }
+
+        return $deleted;
     }
 
     public function delete(int $id): bool

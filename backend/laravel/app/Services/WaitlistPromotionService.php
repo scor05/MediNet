@@ -16,6 +16,7 @@ class WaitlistPromotionService
         private NotificationService $notificationService,
         private AppointmentAvailabilityService $availabilityService,
         private AppointmentRealtimeService $realtimeService,
+        private WaitlistRealtimeService $waitlistRealtimeService,
     ) {}
 
     public function promoteIfFreed(
@@ -58,10 +59,12 @@ class WaitlistPromotionService
             'updated_by' => $actorId,
         ]);
 
-        $this->waitlistRepository->update($waitlist->id, [
+        $oldWaitlist = clone $waitlist;
+        $waitlist = $this->waitlistRepository->update($waitlist->id, [
             'id_fallback_appointment' => $promotedAppointment->id,
             'status' => 'fulfilled',
         ]);
+        $this->waitlistRealtimeService->updated($oldWaitlist, $waitlist);
 
         if ($waitlist->id_backup_appointment !== null) {
             $backup = $this->appointmentRepository->findById(

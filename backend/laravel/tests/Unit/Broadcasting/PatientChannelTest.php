@@ -12,6 +12,7 @@ class PatientChannelTest extends TestCase
     {
         $user = new User;
         $user->id = 13;
+        $user->is_active = true;
         $channel = new PatientChannel;
 
         $this->assertTrue($channel->join($user, 13));

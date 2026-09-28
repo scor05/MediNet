@@ -2,16 +2,16 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/core/realtime/patient_appointment_realtime_connection.dart';
-import 'package:frontend/core/realtime/patient_appointment_realtime_coordinator.dart';
+import 'package:frontend/core/realtime/realtime_coordinator.dart';
 
 void main() {
   test('coalesces appointment events and disposes the connection', () async {
     final connection = _FakeConnection();
     var refreshes = 0;
-    final coordinator = PatientAppointmentRealtimeCoordinator(
+    final coordinator = RealtimeCoordinator(
       connection: connection,
       debounceDuration: const Duration(milliseconds: 10),
-      onAppointmentChanged: () async {
+      onChanged: () async {
         refreshes++;
       },
     );
@@ -31,10 +31,10 @@ void main() {
   test('does not refresh after disposal', () async {
     final connection = _FakeConnection();
     var refreshes = 0;
-    final coordinator = PatientAppointmentRealtimeCoordinator(
+    final coordinator = RealtimeCoordinator(
       connection: connection,
       debounceDuration: const Duration(milliseconds: 10),
-      onAppointmentChanged: () async {
+      onChanged: () async {
         refreshes++;
       },
     );
@@ -50,11 +50,11 @@ void main() {
   test('retries a failed calendar refresh once', () async {
     final connection = _FakeConnection();
     var refreshes = 0;
-    final coordinator = PatientAppointmentRealtimeCoordinator(
+    final coordinator = RealtimeCoordinator(
       connection: connection,
       debounceDuration: const Duration(milliseconds: 5),
       retryDelay: const Duration(milliseconds: 5),
-      onAppointmentChanged: () async {
+      onChanged: () async {
         refreshes++;
         if (refreshes == 1) throw Exception('temporary failure');
       },

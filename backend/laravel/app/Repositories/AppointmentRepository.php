@@ -128,6 +128,18 @@ class AppointmentRepository
             ->first();
     }
 
+    public function findRealtimeAudienceBySchedule(int $scheduleId): ?object
+    {
+        return DB::table('schedules')
+            ->join('clinics', 'clinics.id', '=', 'schedules.id_clinic')
+            ->where('schedules.id', $scheduleId)
+            ->select([
+                'schedules.id_doctor as doctor_id',
+                'clinics.id_client as client_id',
+            ])
+            ->first();
+    }
+
     // Retorna las secretarias activas de un cliente
     public function findSecretariesByClient(int $clientId)
     {

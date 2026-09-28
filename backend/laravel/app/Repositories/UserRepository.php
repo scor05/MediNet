@@ -86,6 +86,12 @@ class UserRepository
 
         $isSecretary = $activeMemberships->contains('role_name', 'secretary');
 
+        $secretaryClientIds = $activeMemberships
+            ->where('role_name', 'secretary')
+            ->pluck('client_id')
+            ->unique()
+            ->values();
+
         $adminOf = $activeMemberships
             ->where('is_admin', true)
             ->map(function ($membership) {
@@ -107,6 +113,7 @@ class UserRepository
             'is_active' => $user->is_active,
             'is_doctor' => $isDoctor,
             'is_secretary' => $isSecretary,
+            'secretary_client_ids' => $secretaryClientIds,
             'admin_of' => $adminOf,
             'superadmin' => $superadmin,
         ];

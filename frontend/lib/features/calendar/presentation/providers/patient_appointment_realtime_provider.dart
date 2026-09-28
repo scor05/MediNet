@@ -3,8 +3,9 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/config/app_config.dart';
 import 'package:frontend/core/realtime/patient_appointment_realtime_connection.dart';
-import 'package:frontend/core/realtime/patient_appointment_realtime_coordinator.dart';
+import 'package:frontend/core/realtime/realtime_coordinator.dart';
 import 'package:frontend/features/calendar/presentation/providers/patient_calendar_provider.dart';
+import 'package:frontend/features/waitlist/presentation/providers/waitlist_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 typedef PatientAppointmentRealtimeConnectionFactory =
@@ -28,10 +29,16 @@ final patientAppointmentRealtimeProvider = Provider.autoDispose
       final connectionFactory = ref.watch(
         patientAppointmentRealtimeConnectionFactoryProvider,
       );
-      final coordinator = PatientAppointmentRealtimeCoordinator(
+      final coordinator = RealtimeCoordinator(
         connection: connectionFactory(patientId),
-        onAppointmentChanged: () =>
-            ref.read(patientCalendarNotifierProvider.notifier).refreshAll(),
+        onChanged: () async {
+          await Future.wait([
+            ref
+                .read(patientCalendarNotifierProvider(patientId).notifier)
+                .refreshAll(),
+            ref.read(patientWaitlistNotifierProvider.notifier).refresh(),
+          ]);
+        },
       );
 
       unawaited(coordinator.start());
