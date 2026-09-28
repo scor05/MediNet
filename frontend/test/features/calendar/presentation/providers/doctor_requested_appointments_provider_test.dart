@@ -4,7 +4,7 @@ import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/appointment/domain/providers/appointment_domain_providers.dart';
 import 'package:frontend/features/appointment/domain/repositories/appointment_repository.dart';
 import 'package:frontend/features/appointment/domain/usecases/get_doctor_appointments_usecase.dart';
-import 'package:frontend/features/appointment/domain/usecases/update_appointment_status_usecase.dart';
+import 'package:frontend/features/appointment/domain/usecases/decide_appointment_usecase.dart';
 import 'package:frontend/features/calendar/presentation/providers/doctor_requested_appointments_provider.dart';
 
 void main() {
@@ -21,8 +21,8 @@ void main() {
           getDoctorAppointmentsUsecaseProvider.overrideWithValue(
             GetDoctorAppointmentsUsecase(repository),
           ),
-          updateAppointmentStatusUsecaseProvider.overrideWithValue(
-            UpdateAppointmentStatusUsecase(repository),
+          decideAppointmentUsecaseProvider.overrideWithValue(
+            DecideAppointmentUsecase(repository),
           ),
         ],
       );
@@ -96,5 +96,14 @@ class _AppointmentRepository extends Fake implements AppointmentRepository {
   }) async {
     updatedAppointmentId = appointmentId;
     updatedStatus = status;
+  }
+
+  @override
+  Future<void> decideAppointment({
+    required int appointmentId,
+    required String decision,
+  }) async {
+    updatedAppointmentId = appointmentId;
+    updatedStatus = decision == 'accept' ? 'accepted' : 'rejected';
   }
 }

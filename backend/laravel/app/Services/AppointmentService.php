@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Repositories\AppointmentRepository;
 use App\Repositories\ScheduleBlockadeRepository;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class AppointmentService
 {
@@ -82,6 +83,29 @@ class AppointmentService
         $date = $data['date'] ?? $appointment->date;
         $startTime = $data['start_time'] ?? $appointment->start_time;
 
+        if (
+            ($data['status'] ?? null) === 'cancelled'
+            && in_array($appointment->status, [
+                'backup_pending',
+                'backup_accepted',
+            ], true)
+        ) {
+            $data['status'] = 'backup_cancelled';
+        }
+
+        if (
+            str_starts_with((string) $appointment->status, 'backup_')
+            && array_key_exists('status', $data)
+            && ! $this->isValidBackupTransition(
+                (string) $appointment->status,
+                (string) $data['status'],
+            )
+        ) {
+            throw ValidationException::withMessages([
+                'status' => ['La transición de la cita de respaldo no es válida.'],
+            ]);
+        }
+
         if (array_key_exists('date', $data) || array_key_exists('start_time', $data)) {
             $schedule = $this->availabilityService->resolveReschedule(
                 $appointment,
@@ -89,7 +113,10 @@ class AppointmentService
                 (string) $startTime,
             );
             $data['id_schedule'] = $schedule->id;
-        } elseif (($data['status'] ?? null) === 'accepted') {
+        } elseif (in_array(($data['status'] ?? null), [
+            'accepted',
+            'backup_accepted',
+        ], true)) {
             $this->availabilityService->ensureAvailable(
                 $appointment->id_schedule,
                 $date,
@@ -115,6 +142,46 @@ class AppointmentService
         });
 
         return $appointment;
+    }
+
+    public function decide(int $id, string $decision, int $actorId)
+    {
+        return DB::transaction(function () use ($id, $decision, $actorId) {
+            $appointment = $this->repository->findByIdForUpdate($id);
+            if (! $this->repository->canDecide($id, $actorId)) {
+                throw ValidationException::withMessages([
+                    'appointment' => ['No tienes permiso para decidir sobre esta cita.'],
+                ]);
+            }
+
+            $status = match ($appointment->status) {
+                'requested' => $decision === 'accept' ? 'accepted' : 'rejected',
+                'backup_pending' => $decision === 'accept'
+                    ? 'backup_accepted'
+                    : 'backup_cancelled',
+                default => throw ValidationException::withMessages([
+                    'appointment' => ['Esta solicitud ya fue procesada.'],
+                ]),
+            };
+
+            return $this->update($id, [
+                'status' => $status,
+                'updated_by' => $actorId,
+            ]);
+        });
+    }
+
+    private function isValidBackupTransition(string $from, string $to): bool
+    {
+        return match ($from) {
+            'backup_pending' => in_array($to, [
+                'backup_accepted',
+                'backup_cancelled',
+            ], true),
+            'backup_accepted' => $to === 'backup_cancelled',
+            'backup_cancelled' => $to === 'backup_cancelled',
+            default => false,
+        };
     }
 
     public function checkReschedule(
@@ -272,6 +339,8 @@ class AppointmentService
                 'rejected' => 'rejection',
                 'cancelled' => 'cancellation',
                 'rescheduled' => 'reschedule',
+                'backup_accepted' => 'acceptance',
+                'backup_cancelled' => 'cancellation',
                 default => 'reminder',
             };
         }
@@ -304,6 +373,9 @@ class AppointmentService
             'rejected' => 'Rechazada',
             'cancelled' => 'Cancelada',
             'rescheduled' => 'Recalendarizada',
+            'backup_pending' => 'Respaldo pendiente',
+            'backup_accepted' => 'Respaldo aceptado',
+            'backup_cancelled' => 'Respaldo cancelado',
             default => $status,
         };
     }

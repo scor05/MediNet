@@ -20,6 +20,9 @@ class AppointmentCard extends StatelessWidget {
     return switch (appointment.status) {
       'accepted' => CalendarColors.appointmentAccepted,
       'requested' => CalendarColors.appointmentRequested,
+      'backup_pending' => CalendarColors.appointmentRequested,
+      'backup_accepted' => CalendarColors.appointmentAccepted,
+      'backup_cancelled' => CalendarColors.appointmentCancelled,
       'cancelled' => CalendarColors.appointmentCancelled,
       _ => CalendarColors.appointmentUnknown,
     };

@@ -140,6 +140,27 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
   }
 
   @override
+  Future<void> decideAppointment({
+    required int appointmentId,
+    required String decision,
+  }) async {
+    try {
+      await datasource.decideAppointment(
+        appointmentId: appointmentId,
+        decision: decision,
+      );
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw ApiException('Sin conexión. Verifica tu internet.');
+    } on TimeoutException {
+      throw ApiException('La solicitud tardó demasiado. Intenta de nuevo.');
+    } catch (_) {
+      throw ApiException('Error inesperado. Intenta de nuevo.');
+    }
+  }
+
+  @override
   Future<void> checkRescheduleAvailability({
     required int appointmentId,
     required DateTime date,

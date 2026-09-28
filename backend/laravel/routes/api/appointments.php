@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('appointments')->group(function () {
     Route::get('/', [AppointmentController::class, 'index']);
     Route::post('/{id}/reschedule/check', [AppointmentController::class, 'checkReschedule']);
+    Route::post('/{id}/decision', [AppointmentController::class, 'decide']);
     Route::patch('/{id}/reschedule', [AppointmentController::class, 'reschedule']);
     Route::get('/{id}', [AppointmentController::class, 'show']);
     Route::post('/', [AppointmentController::class, 'store']);

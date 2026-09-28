@@ -82,6 +82,19 @@ class AppointmentController extends Controller
         return response()->json($this->service->update($id, $validated));
     }
 
+    public function decide(Request $request, int $id)
+    {
+        $validated = $request->validate([
+            'decision' => ['required', Rule::in(['accept', 'reject'])],
+        ]);
+
+        return response()->json($this->service->decide(
+            $id,
+            $validated['decision'],
+            $request->user()->id,
+        ));
+    }
+
     public function checkReschedule(Request $request, int $id)
     {
         $validated = $request->validate([

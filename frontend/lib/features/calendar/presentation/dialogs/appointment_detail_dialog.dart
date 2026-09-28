@@ -4,7 +4,6 @@ import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/appointment/domain/providers/appointment_domain_providers.dart';
 import 'package:frontend/features/calendar/presentation/dialogs/reschedule_appointment_dialog.dart';
 import 'package:frontend/theme/app_theme.dart';
-import 'package:frontend/theme/calendar_theme.dart';
 
 Future<void> showAppointmentDetailSheet({
   required BuildContext context,
@@ -44,10 +43,11 @@ class AppointmentDetailDialog extends ConsumerWidget {
 
   Color _statusColor() {
     return switch (appointment.status) {
-      'accepted' => CalendarColors.appointmentAccepted,
-      'requested' => CalendarColors.appointmentRequested,
-      'cancelled' => CalendarColors.appointmentCancelled,
-      _ => CalendarColors.appointmentUnknown,
+      'accepted' || 'backup_accepted' => AppColors.success,
+      'requested' || 'backup_pending' => AppColors.warning,
+      'rejected' || 'cancelled' || 'backup_cancelled' => AppColors.error,
+      'rescheduled' => AppColors.secondary,
+      _ => AppColors.textSecondary,
     };
   }
 
@@ -55,7 +55,12 @@ class AppointmentDetailDialog extends ConsumerWidget {
     return switch (appointment.status) {
       'accepted' => 'Aceptada',
       'requested' => 'Solicitada',
+      'rejected' => 'Rechazada',
       'cancelled' => 'Cancelada',
+      'rescheduled' => 'Reprogramada',
+      'backup_pending' => 'Respaldo pendiente',
+      'backup_accepted' => 'Respaldo aceptado',
+      'backup_cancelled' => 'Respaldo cancelado',
       _ => appointment.status,
     };
   }
@@ -173,8 +178,12 @@ class AppointmentDetailDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final canCancel =
-        appointment.status == 'accepted' || appointment.status == 'requested';
+    final canCancel = [
+      'accepted',
+      'requested',
+      'backup_accepted',
+      'backup_pending',
+    ].contains(appointment.status);
 
     return SafeArea(
       child: Padding(
@@ -270,6 +279,7 @@ class AppointmentDetailDialog extends ConsumerWidget {
                   child: Row(
                     children: [
                       Container(
+                        key: const Key('appointment-status-dot'),
                         width: 10,
                         height: 10,
                         decoration: BoxDecoration(

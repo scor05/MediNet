@@ -31,6 +31,15 @@ class WaitlistRepositoryTest extends TestCase
 
         $db->shouldReceive('table')->once()->with('waitlists')->andReturn($query);
         $query->shouldReceive('join')->times(4)->andReturnSelf();
+        $query->shouldReceive('leftJoin')
+            ->once()
+            ->with(
+                'appointments AS backup',
+                'backup.id',
+                '=',
+                'waitlists.id_backup_appointment'
+            )
+            ->andReturnSelf();
         $query->shouldReceive('where')
             ->once()
             ->with('waitlists.id_patient', 7)
@@ -43,6 +52,9 @@ class WaitlistRepositoryTest extends TestCase
                 'clinics.name AS clinic_name',
                 'target.date AS target_date',
                 'target.start_time AS target_start_time',
+                'backup.date AS backup_date',
+                'backup.start_time AS backup_start_time',
+                'backup.status AS backup_status',
             ])
             ->andReturnSelf();
         $query->shouldReceive('orderByDesc')

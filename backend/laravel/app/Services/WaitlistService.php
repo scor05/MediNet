@@ -64,6 +64,8 @@ class WaitlistService
             if ($duplicate->status === 'cancelled') {
                 return $this->repository->update($duplicate->id, [
                     'id_fallback_appointment' => null,
+                    'id_backup_appointment' => null,
+                    'backup_declined_at' => null,
                     'status' => 'waiting',
                 ]);
             }
@@ -76,6 +78,8 @@ class WaitlistService
         return $this->repository->create([
             ...$data,
             'id_fallback_appointment' => $data['id_fallback_appointment'] ?? null,
+            'id_backup_appointment' => null,
+            'backup_declined_at' => null,
             'status' => 'waiting',
         ]);
     }

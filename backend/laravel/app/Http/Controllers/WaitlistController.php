@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\BackupAppointmentService;
 use App\Services\WaitlistService;
 use Illuminate\Http\Request;
 
@@ -10,9 +11,37 @@ class WaitlistController extends Controller
     protected WaitlistService $service;
 
     public function __construct(
-        WaitlistService $service
+        WaitlistService $service,
+        private BackupAppointmentService $backupService,
     ) {
         $this->service = $service;
+    }
+
+    public function storeBackup(Request $request, int $id)
+    {
+        $data = $request->validate([
+            'id_schedule' => 'required|integer|exists:schedules,id',
+            'date' => 'required|date_format:Y-m-d',
+            'start_time' => 'required|date_format:H:i',
+        ]);
+
+        $appointment = $this->backupService->create(
+            $id,
+            $request->user()->id,
+            $data,
+        );
+
+        return response()->json(['data' => $appointment], 201);
+    }
+
+    public function declineBackup(Request $request, int $id)
+    {
+        $waitlist = $this->backupService->decline(
+            $id,
+            $request->user()->id,
+        );
+
+        return response()->json(['data' => $waitlist]);
     }
 
     public function index()
@@ -96,8 +125,12 @@ class WaitlistController extends Controller
             ],
         ]);
 
-        $waitlist =
-            $this->service->update($id, $data);
+        $waitlist = ($data['status'] ?? null) === 'cancelled'
+            ? $this->backupService->cancelWaitlist(
+                (int) $id,
+                $request->user()->id,
+            )
+            : $this->service->update($id, $data);
 
         if (! $waitlist) {
             return response()->json([
