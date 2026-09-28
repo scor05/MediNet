@@ -53,6 +53,7 @@ class BackupAppointmentService
                 $target,
                 $data['date'],
                 $data['start_time'],
+                $patientId,
             );
 
             if ((int) $schedule->id !== (int) $data['id_schedule']) {

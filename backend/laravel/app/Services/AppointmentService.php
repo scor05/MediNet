@@ -38,7 +38,9 @@ class AppointmentService
         $this->availabilityService->ensureAvailable(
             $data['id_schedule'],
             $data['date'],
-            $data['start_time']
+            $data['start_time'],
+            null,
+            $data['id_patient'] ?? null,
         );
 
         if (isset($data['id_patient'])) {
@@ -121,7 +123,10 @@ class AppointmentService
                 $appointment->id_schedule,
                 $date,
                 $startTime,
-                $id
+                $id,
+                $appointment->id_patient === null
+                    ? null
+                    : (int) $appointment->id_patient,
             );
         }
 

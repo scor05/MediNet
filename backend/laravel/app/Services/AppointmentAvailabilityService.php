@@ -22,6 +22,7 @@ class AppointmentAvailabilityService
         string $date,
         string $startTime,
         ?int $ignoreAppointmentId = null,
+        ?int $patientId = null,
     ): void {
         $schedule = $this->scheduleRepository->findById($scheduleId);
         $start = $this->timeToMinutes($startTime);
@@ -42,15 +43,33 @@ class AppointmentAvailabilityService
             }
         }
 
-        $appointments = $this->appointmentRepository->findActiveByScheduleAndDate(
-            $scheduleId,
+        $appointments = $this->appointmentRepository->findActiveByDoctorAndDate(
+            (int) $schedule->id_doctor,
             $date,
             $ignoreAppointmentId,
         );
 
         foreach ($appointments as $appointment) {
             $appointmentStart = $this->timeToMinutes($appointment->start_time);
-            $appointmentEnd = $appointmentStart + (int) $schedule->duration;
+            $appointmentEnd = $appointmentStart + (int) $appointment->duration;
+
+            if ($this->overlaps($start, $end, $appointmentStart, $appointmentEnd)) {
+                throw new AppointmentUnavailableException(
+                    AppointmentUnavailableException::OCCUPIED
+                );
+            }
+        }
+
+        if ($patientId === null) {
+            return;
+        }
+
+        $patientAppointments = $this->appointmentRepository
+            ->findActiveByPatientAndDate($patientId, $date, $ignoreAppointmentId);
+
+        foreach ($patientAppointments as $appointment) {
+            $appointmentStart = $this->timeToMinutes($appointment->start_time);
+            $appointmentEnd = $appointmentStart + (int) $appointment->duration;
 
             if ($this->overlaps($start, $end, $appointmentStart, $appointmentEnd)) {
                 throw new AppointmentUnavailableException(
@@ -127,6 +146,9 @@ class AppointmentAvailabilityService
                 $date,
                 $startTime,
                 (int) $appointment->id,
+                $appointment->id_patient === null
+                    ? null
+                    : (int) $appointment->id_patient,
             );
 
             return $schedule;
@@ -141,6 +163,7 @@ class AppointmentAvailabilityService
         object $targetAppointment,
         string $date,
         string $startTime,
+        ?int $patientId = null,
     ): object {
         $requested = CarbonImmutable::createFromFormat(
             'Y-m-d H:i',
@@ -188,7 +211,13 @@ class AppointmentAvailabilityService
             }
 
             $this->scheduleRepository->lockById((int) $schedule->id);
-            $this->ensureAvailable((int) $schedule->id, $date, $startTime);
+            $this->ensureAvailable(
+                (int) $schedule->id,
+                $date,
+                $startTime,
+                null,
+                $patientId,
+            );
 
             return $schedule;
         }
