@@ -17,8 +17,10 @@ class ClientFilterBar extends StatelessWidget {
     return Container(
       color: AppTheme.background,
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-      child: Row(
-        children: [
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
           ClientFilterChip(
             label: 'Todos',
             selected: currentFilter == null,
@@ -36,7 +38,8 @@ class ClientFilterBar extends StatelessWidget {
             selected: currentFilter == false,
             onTap: () => onChanged(false),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }

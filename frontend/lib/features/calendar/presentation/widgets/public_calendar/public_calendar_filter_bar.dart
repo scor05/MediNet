@@ -54,30 +54,45 @@ class PublicCalendarFilterBar extends StatelessWidget {
 
     if (!showDoctorFilter && !showClinicFilter) return const SizedBox.shrink();
 
+    final doctorFilter = PublicCalendarDropdown(
+      label: 'Doctor',
+      value: filters.doctorId,
+      allLabel: 'Todos',
+      options: doctorOptions,
+      onChanged: onDoctorChanged,
+    );
+    final clinicFilter = PublicCalendarDropdown(
+      label: 'Clínica',
+      value: filters.clinicId,
+      allLabel: 'Todas',
+      options: clinicOptions,
+      onChanged: onClinicChanged,
+    );
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-      child: Row(
-        children: [
-          Expanded(
-            child: PublicCalendarDropdown(
-              label: 'Doctor',
-              value: filters.doctorId,
-              allLabel: 'Todos',
-              options: doctorOptions,
-              onChanged: onDoctorChanged,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: PublicCalendarDropdown(
-              label: 'Clínica',
-              value: filters.clinicId,
-              allLabel: 'Todas',
-              options: clinicOptions,
-              onChanged: onClinicChanged,
-            ),
-          ),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth < 520) {
+            return Column(
+              children: [
+                if (showDoctorFilter) doctorFilter,
+                if (showDoctorFilter && showClinicFilter)
+                  const SizedBox(height: 10),
+                if (showClinicFilter) clinicFilter,
+              ],
+            );
+          }
+
+          return Row(
+            children: [
+              if (showDoctorFilter) Expanded(child: doctorFilter),
+              if (showDoctorFilter && showClinicFilter)
+                const SizedBox(width: 12),
+              if (showClinicFilter) Expanded(child: clinicFilter),
+            ],
+          );
+        },
       ),
     );
   }

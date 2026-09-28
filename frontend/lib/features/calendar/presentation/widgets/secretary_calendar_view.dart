@@ -32,57 +32,87 @@ class SecretaryCalendarView extends StatelessWidget {
   Widget build(BuildContext context) {
     final days = List.generate(7, (i) => weekStart.add(Duration(days: i)));
 
-    return Column(
-      children: [
-        WeekHeader(days: days, timeColumnWidth: timeColumnWidth),
-        Divider(height: 1, thickness: 1, color: Theme.of(context).dividerColor),
-        Expanded(
-          child: SingleChildScrollView(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final contentWidth = constraints.maxWidth < 800
+            ? 800.0
+            : constraints.maxWidth;
+        final contentHeight = constraints.hasBoundedHeight
+            ? constraints.maxHeight
+            : 600.0;
+
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: SizedBox(
+            width: contentWidth,
+            height: contentHeight,
+            child: Column(
               children: [
-                const TimeColumn(
-                  startHour: startHour,
-                  endHour: endHour,
-                  hourHeight: hourHeight,
-                  width: timeColumnWidth,
+                WeekHeader(days: days, timeColumnWidth: timeColumnWidth),
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: Theme.of(context).dividerColor,
                 ),
                 Expanded(
-                  child: SizedBox(
-                    height: (endHour - startHour) * hourHeight,
+                  child: SingleChildScrollView(
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: List.generate(7, (index) {
-                        final day = days[index];
-                        final dayAppointments = appointments
-                            .where((item) => _sameDay(item.date, day))
-                            .map(SecretaryCalendarItem.fromAppointment)
-                            .toList();
-                        final daySchedules = schedules
-                            .where((item) => item.dayOfWeek == index)
-                            .map(
-                              (item) =>
-                                  SecretaryCalendarItem.fromSchedule(item, day),
-                            )
-                            .toList();
+                      children: [
+                        const TimeColumn(
+                          startHour: startHour,
+                          endHour: endHour,
+                          hourHeight: hourHeight,
+                          width: timeColumnWidth,
+                        ),
+                        Expanded(
+                          child: SizedBox(
+                            height: (endHour - startHour) * hourHeight,
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: List.generate(7, (index) {
+                                final day = days[index];
+                                final dayAppointments = appointments
+                                    .where((item) => _sameDay(item.date, day))
+                                    .map(
+                                      SecretaryCalendarItem.fromAppointment,
+                                    )
+                                    .toList();
+                                final daySchedules = schedules
+                                    .where((item) => item.dayOfWeek == index)
+                                    .map(
+                                      (item) =>
+                                          SecretaryCalendarItem.fromSchedule(
+                                            item,
+                                            day,
+                                          ),
+                                    )
+                                    .toList();
 
-                        return Expanded(
-                          child: _SecretaryDayColumn(
-                            dayIndex: index,
-                            items: [...daySchedules, ...dayAppointments],
-                            doctorColors: doctorColors,
-                            onItemsTap: onItemsTap,
+                                return Expanded(
+                                  child: _SecretaryDayColumn(
+                                    dayIndex: index,
+                                    items: [
+                                      ...daySchedules,
+                                      ...dayAppointments,
+                                    ],
+                                    doctorColors: doctorColors,
+                                    onItemsTap: onItemsTap,
+                                  ),
+                                );
+                              }),
+                            ),
                           ),
-                        );
-                      }),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ],
             ),
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 

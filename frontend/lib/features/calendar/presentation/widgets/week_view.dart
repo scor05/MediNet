@@ -40,42 +40,66 @@ class WeekView extends StatelessWidget {
     final double timeColumnWidth = compact ? 48 : 100;
     final days = List.generate(7, (i) => weekStart.add(Duration(days: i)));
 
-    return Column(
-      children: [
-        WeekHeader(days: days, timeColumnWidth: timeColumnWidth),
-        Divider(height: 1, thickness: 1, color: Theme.of(context).dividerColor),
-        Expanded(
-          child: SingleChildScrollView(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final minimumWidth = compact ? 720.0 : 800.0;
+        final contentWidth = constraints.maxWidth < minimumWidth
+            ? minimumWidth
+            : constraints.maxWidth;
+        final contentHeight = constraints.hasBoundedHeight
+            ? constraints.maxHeight
+            : 600.0;
+
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: SizedBox(
+            width: contentWidth,
+            height: contentHeight,
+            child: Column(
               children: [
-                TimeColumn(
-                  startHour: startHour,
-                  endHour: endHour,
-                  hourHeight: hourHeight,
-                  width: timeColumnWidth,
+                WeekHeader(days: days, timeColumnWidth: timeColumnWidth),
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: Theme.of(context).dividerColor,
                 ),
                 Expanded(
-                  child: WeekGrid(
-                    days: days,
-                    appointments: appointments,
-                    schedules: schedules,
-                    showDoctor: showDoctor,
-                    showPatient: showPatient,
-                    splitOverlappingAppointments: splitOverlappingAppointments,
-                    startHour: startHour,
-                    endHour: endHour,
-                    hourHeight: hourHeight,
-                    onAppointmentTap: onAppointmentTap,
-                    onBlockadeTap: onBlockadeTap,
-                    onScheduleTap: onScheduleTap,
+                  child: SingleChildScrollView(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TimeColumn(
+                          startHour: startHour,
+                          endHour: endHour,
+                          hourHeight: hourHeight,
+                          width: timeColumnWidth,
+                        ),
+                        Expanded(
+                          child: WeekGrid(
+                            days: days,
+                            appointments: appointments,
+                            schedules: schedules,
+                            showDoctor: showDoctor,
+                            showPatient: showPatient,
+                            splitOverlappingAppointments:
+                                splitOverlappingAppointments,
+                            startHour: startHour,
+                            endHour: endHour,
+                            hourHeight: hourHeight,
+                            onAppointmentTap: onAppointmentTap,
+                            onBlockadeTap: onBlockadeTap,
+                            onScheduleTap: onScheduleTap,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 }
