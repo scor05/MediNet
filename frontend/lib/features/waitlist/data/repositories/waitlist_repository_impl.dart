@@ -53,6 +53,46 @@ class WaitlistRepositoryImpl implements WaitlistRepository {
   }
 
   @override
+  Future<void> createBackupAppointment({
+    required int waitlistId,
+    required int scheduleId,
+    required DateTime date,
+    required String startTime,
+  }) async {
+    try {
+      await datasource.createBackupAppointment(
+        waitlistId: waitlistId,
+        scheduleId: scheduleId,
+        date: date,
+        startTime: startTime,
+      );
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw ApiException('Sin conexión. Verifica tu internet.');
+    } on TimeoutException {
+      throw ApiException('La solicitud tardó demasiado. Intenta de nuevo.');
+    } catch (_) {
+      throw ApiException('Error inesperado. Intenta de nuevo.');
+    }
+  }
+
+  @override
+  Future<void> declineBackupAppointment({required int waitlistId}) async {
+    try {
+      await datasource.declineBackupAppointment(waitlistId);
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw ApiException('Sin conexión. Verifica tu internet.');
+    } on TimeoutException {
+      throw ApiException('La solicitud tardó demasiado. Intenta de nuevo.');
+    } catch (_) {
+      throw ApiException('Error inesperado. Intenta de nuevo.');
+    }
+  }
+
+  @override
   Future<void> cancelWaitlist({required int waitlistId}) async {
     try {
       await datasource.cancelWaitlist(waitlistId);

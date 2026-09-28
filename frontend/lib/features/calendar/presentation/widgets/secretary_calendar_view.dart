@@ -108,7 +108,7 @@ class _SecretaryDayColumn extends StatelessWidget {
   static const _startMinute = SecretaryCalendarView.startHour * 60;
   static const _endMinute = SecretaryCalendarView.endHour * 60;
   static const _gap = 2.0;
-  static const _horizontalInset = 2.0;
+  static const _dayEdgeInset = CalendarSizes.calendarItemDayEdgeInset;
 
   @override
   Widget build(BuildContext context) {
@@ -119,6 +119,7 @@ class _SecretaryDayColumn extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         return Container(
+          key: ValueKey('secretary-day-column-$dayIndex'),
           decoration: BoxDecoration(
             border: Border(
               right: dayIndex < 6
@@ -209,12 +210,18 @@ class _SecretaryDayColumn extends StatelessWidget {
           (SecretaryCalendarView.hourHeight / 60);
       final height =
           (clippedEnd - clippedStart) * (SecretaryCalendarView.hourHeight / 60);
-      final usableWidth = availableWidth - (_horizontalInset * 2);
+      // The day gutter belongs to the outer edges of the collision block.
+      // Adjacent items inside the same day only retain the collision gap.
+      final usableWidth = availableWidth - (_dayEdgeInset * 2);
       final gaps = _gap * (placement.columnCount - 1);
       final width = (usableWidth - gaps) / placement.columnCount;
-      final left = _horizontalInset + placement.column * (width + _gap);
+      final left = _dayEdgeInset + placement.column * (width + _gap);
 
       return Positioned(
+        key: ValueKey(
+          'secretary-calendar-${placement.item.type.name}-'
+          '${placement.item.id}',
+        ),
         top: top,
         left: left,
         width: width,

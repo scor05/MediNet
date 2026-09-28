@@ -9,6 +9,7 @@ class WeekGrid extends StatelessWidget {
   final List<Schedule> schedules;
   final bool showDoctor;
   final bool showPatient;
+  final bool splitOverlappingAppointments;
   final int startHour;
   final int endHour;
   final double hourHeight;
@@ -23,6 +24,7 @@ class WeekGrid extends StatelessWidget {
     required this.schedules,
     required this.showDoctor,
     required this.showPatient,
+    this.splitOverlappingAppointments = false,
     required this.startHour,
     required this.endHour,
     required this.hourHeight,
@@ -60,6 +62,7 @@ class WeekGrid extends StatelessWidget {
               schedules: daySchedules,
               showDoctor: showDoctor,
               showPatient: showPatient,
+              splitOverlappingAppointments: splitOverlappingAppointments,
               startHour: startHour,
               endHour: endHour,
               hourHeight: hourHeight,

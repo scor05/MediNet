@@ -96,7 +96,13 @@ class PublicRepository
         $appointments = DB::table('appointments')
             ->whereIn('id_schedule', $scheduleIds)
             ->where('date', $date)
-            ->whereNotIn('status', ['rejected', 'cancelled'])
+            ->whereIn('status', [
+                'requested',
+                'accepted',
+                'rescheduled',
+                'backup_pending',
+                'backup_accepted',
+            ])
             ->get(['id_schedule', 'start_time']);
 
         $blockades = DB::table('schedule_blockades')

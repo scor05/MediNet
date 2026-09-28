@@ -249,6 +249,26 @@ class AppointmentRemoteDatasource {
     }
   }
 
+  Future<void> decideAppointment({
+    required int appointmentId,
+    required String decision,
+  }) async {
+    final token = Supabase.instance.client.auth.currentSession?.accessToken;
+    final response = await http
+        .post(
+          Uri.parse('${AppConfig.apiUrl}/appointments/$appointmentId/decision'),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode({'decision': decision}),
+        )
+        .timeout(_defaultTimeout);
+
+    if (response.statusCode != 200) throw handleApiError(response);
+  }
+
   Future<void> checkRescheduleAvailability({
     required int appointmentId,
     required DateTime date,

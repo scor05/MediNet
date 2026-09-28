@@ -8,6 +8,7 @@ import 'package:frontend/features/appointment/domain/usecases/get_secretary_appo
 import 'package:frontend/features/appointment/domain/usecases/get_secretary_requested_appointments_usecase.dart';
 import 'package:frontend/features/appointment/domain/usecases/reschedule_appointment_usecase.dart';
 import 'package:frontend/features/appointment/domain/usecases/update_appointment_status_usecase.dart';
+import 'package:frontend/features/appointment/domain/usecases/decide_appointment_usecase.dart';
 
 // Provider para el usecase getDoctorAppointments
 final getDoctorAppointmentsUsecaseProvider = Provider((ref) {
@@ -43,6 +44,10 @@ final updateAppointmentStatusUsecaseProvider = Provider((ref) {
   return UpdateAppointmentStatusUsecase(
     ref.read(appointmentRepositoryProvider),
   );
+});
+
+final decideAppointmentUsecaseProvider = Provider((ref) {
+  return DecideAppointmentUsecase(ref.read(appointmentRepositoryProvider));
 });
 
 final rescheduleAppointmentUsecaseProvider = Provider((ref) {

@@ -2,8 +2,9 @@
 
 namespace Tests\Unit\Services;
 
-use App\Events\PatientAppointmentChanged;
+use App\Events\AppointmentChanged;
 use App\Models\Appointment;
+use App\Repositories\AppointmentRepository;
 use App\Services\AppointmentRealtimeService;
 use Illuminate\Contracts\Events\Dispatcher;
 use PHPUnit\Framework\TestCase;
@@ -20,17 +21,25 @@ class AppointmentRealtimeServiceTest extends TestCase
         $this->service($dispatcher)->created($this->appointment([
             'id' => 57,
             'id_patient' => 13,
+            'id_schedule' => 2,
         ]));
     }
 
-    public function test_external_appointment_does_not_dispatch_an_event(): void
+    public function test_external_appointment_still_dispatches_to_staff(): void
     {
         $dispatcher = $this->createMock(Dispatcher::class);
-        $dispatcher->expects($this->never())->method('dispatch');
+        $dispatcher->expects($this->once())
+            ->method('dispatch')
+            ->with($this->callback(function (AppointmentChanged $event): bool {
+                return $event->patientId === null
+                    && $event->doctorId === 7
+                    && $event->clientId === 3;
+            }));
 
         $this->service($dispatcher)->created($this->appointment([
             'id' => 57,
             'id_patient' => null,
+            'id_schedule' => 2,
         ]));
     }
 
@@ -88,7 +97,7 @@ class AppointmentRealtimeServiceTest extends TestCase
         $dispatcher = $this->createMock(Dispatcher::class);
         $dispatcher->expects($this->exactly(2))
             ->method('dispatch')
-            ->willReturnCallback(function (PatientAppointmentChanged $event) use (&$events): void {
+            ->willReturnCallback(function (AppointmentChanged $event) use (&$events): void {
                 $events[] = [$event->patientId, $event->change];
             });
 
@@ -105,13 +114,23 @@ class AppointmentRealtimeServiceTest extends TestCase
 
     private function service(Dispatcher $dispatcher): AppointmentRealtimeService
     {
-        return new AppointmentRealtimeService($dispatcher);
+        $appointments = $this->createStub(AppointmentRepository::class);
+        $appointments->method('findRealtimeAudienceBySchedule')
+            ->willReturn((object) [
+                'doctor_id' => 7,
+                'client_id' => 3,
+            ]);
+
+        return new AppointmentRealtimeService($dispatcher, $appointments);
     }
 
     private function appointment(array $attributes): Appointment
     {
         $appointment = new Appointment;
-        $appointment->forceFill($attributes);
+        $appointment->forceFill([
+            'id_schedule' => 2,
+            ...$attributes,
+        ]);
 
         return $appointment;
     }
@@ -121,8 +140,10 @@ class AppointmentRealtimeServiceTest extends TestCase
         int $appointmentId,
         string $change,
     ): callable {
-        return fn (PatientAppointmentChanged $event): bool => $event->patientId === $patientId
+        return fn (AppointmentChanged $event): bool => $event->patientId === $patientId
             && $event->appointmentId === $appointmentId
-            && $event->change === $change;
+            && $event->change === $change
+            && $event->doctorId === 7
+            && $event->clientId === 3;
     }
 }

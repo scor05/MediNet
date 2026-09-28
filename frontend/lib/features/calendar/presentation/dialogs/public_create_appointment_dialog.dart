@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
+import 'package:frontend/core/utils/time_format.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
 import 'package:frontend/features/calendar/domain/entities/public_slot.dart';
 import 'package:frontend/features/calendar/domain/providers/public_calendar_domain_providers.dart';
@@ -9,6 +10,8 @@ import 'package:frontend/features/user/domain/entities/patient_profile.dart';
 import 'package:frontend/features/user/domain/entities/user.dart';
 import 'package:frontend/features/user/domain/providers/user_domain_providers.dart';
 import 'package:frontend/features/waitlist/presentation/dialogs/join_waitlist_dialog.dart';
+import 'package:frontend/features/waitlist/presentation/dialogs/backup_appointment_dialog.dart';
+import 'package:frontend/features/waitlist/domain/entities/waitlist.dart';
 
 class PublicCreateAppointmentDialog extends ConsumerStatefulWidget {
   final int? initialDoctorId;
@@ -329,7 +332,7 @@ class _PublicCreateAppointmentDialogState
 
   /// Ofrece unirse a la lista de espera cuando el horario no está disponible
   Future<bool?> _offerWaitlist(PublicSlot slot) async {
-    final joined = await showDialog<bool>(
+    final waitlist = await showDialog<Waitlist>(
       context: context,
       builder: (_) => JoinWaitlistDialog(
         scheduleId: slot.scheduleId,
@@ -340,19 +343,37 @@ class _PublicCreateAppointmentDialogState
       ),
     );
 
-    if (joined == true && mounted) {
+    if (waitlist != null && mounted) {
+      final backupCreated = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => BackupAppointmentDialog(
+          waitlistId: waitlist.id,
+          doctorId: slot.doctorId,
+          doctorName: slot.doctorName,
+          clinicId: slot.clinicId,
+          clinicName: slot.clinicName,
+          targetDate: _selectedDate,
+          targetStartTime: slot.startTime,
+        ),
+      );
+      if (!mounted) return true;
+
       final messenger = ScaffoldMessenger.of(context);
       Navigator.of(context).pop();
       messenger.showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Su cita ha sido agregada a la lista de espera para ese horario.',
+            backupCreated == true
+                ? 'Lista de espera y cita de respaldo solicitadas correctamente.'
+                : 'Tu registro fue agregado a la lista de espera sin respaldo.',
           ),
         ),
       );
+      return true;
     }
 
-    return joined;
+    return false;
   }
 
   @override
@@ -533,25 +554,41 @@ class _PublicCreateAppointmentDialogState
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children: _slots
-                            .map(
-                              (slot) => ChoiceChip(
-                                label: Text(
-                                  '${slot.startTime} - ${slot.endTime}',
-                                ),
-                                selected: _selectedSlot == slot,
-                                backgroundColor: slot.isOccupied
-                                    ? Colors.orange.shade100
-                                    : null,
-                                selectedColor: slot.isOccupied
-                                    ? Colors.orange.shade300
-                                    : null,
-                                onSelected: (_) {
-                                  setState(() => _selectedSlot = slot);
-                                },
-                              ),
-                            )
-                            .toList(),
+                        children: _slots.map((slot) {
+                          final isSelected = _selectedSlot == slot;
+                          final selectedColor = slot.isOccupied
+                              ? Colors.orange.shade700
+                              : Colors.blue.shade700;
+
+                          return ChoiceChip(
+                            label: Text(
+                              '${formatTime24(slot.startTime)} - '
+                              '${formatTime24(slot.endTime)}',
+                            ),
+                            selected: isSelected,
+                            backgroundColor: slot.isOccupied
+                                ? Colors.orange.shade100
+                                : Colors.grey.shade100,
+                            selectedColor: selectedColor,
+                            checkmarkColor: Colors.white,
+                            labelStyle: TextStyle(
+                              color: isSelected ? Colors.white : Colors.black87,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                            ),
+                            side: BorderSide(
+                              color: isSelected
+                                  ? selectedColor
+                                  : slot.isOccupied
+                                  ? Colors.orange.shade300
+                                  : Colors.grey.shade400,
+                            ),
+                            onSelected: (_) {
+                              setState(() => _selectedSlot = slot);
+                            },
+                          );
+                        }).toList(),
                       ),
                     if (_slots.any((slot) => slot.isOccupied)) ...[
                       const SizedBox(height: 10),

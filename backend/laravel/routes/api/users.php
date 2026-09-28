@@ -23,6 +23,6 @@ Route::prefix('users')->group(function () {
 
     Route::get('/{doctorId}/schedules', [ScheduleController::class, 'index']);
 
-    // Datos básicos de un paciente (solo para secretarias autorizadas)
+    // Datos básicos de un paciente para doctores/secretarias autorizados
     Route::get('/{patientId}/patient-info', [UserController::class, 'patientInfo'])->whereNumber('patientId');
 });

@@ -31,7 +31,7 @@ class CalendarService
         );
 
         return array_merge(
-            $this->formatAppointments($appointments),
+            $this->formatAppointments($appointments, includeBackupTarget: true),
             $this->formatBlockades($blockades)
         );
     }
@@ -54,7 +54,10 @@ class CalendarService
             status: $status,
         );
 
-        $formattedAppointments = $this->formatAppointments($appointments);
+        $formattedAppointments = $this->formatAppointments(
+            $appointments,
+            includeBackupTarget: true
+        );
 
         if ($status !== null) {
             return $formattedAppointments;
@@ -112,10 +115,13 @@ class CalendarService
     // Helpers
     // -------------------------------------------------------------------------
 
-    private function formatAppointments(array $appointments): array
+    private function formatAppointments(
+        array $appointments,
+        bool $includeBackupTarget = false
+    ): array
     {
-        return array_map(function ($appt) {
-            return [
+        return array_map(function ($appt) use ($includeBackupTarget) {
+            $formatted = [
                 'id' => $appt->id,
                 'date' => $appt->date,
                 'start_time' => $appt->start_time,
@@ -140,6 +146,15 @@ class CalendarService
                 ],
                 'schedule_id' => $appt->id_schedule,
             ];
+
+            if ($includeBackupTarget) {
+                $formatted['backup_target_date'] =
+                    $appt->backup_target_date ?? null;
+                $formatted['backup_target_start_time'] =
+                    $appt->backup_target_start_time ?? null;
+            }
+
+            return $formatted;
         }, $appointments);
     }
 

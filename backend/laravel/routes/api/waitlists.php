@@ -1,7 +1,7 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WaitlistController;
+use Illuminate\Support\Facades\Route;
 
 Route::prefix('waitlists')->group(function () {
 
@@ -28,6 +28,16 @@ Route::prefix('waitlists')->group(function () {
     Route::patch(
         '/{id}',
         [WaitlistController::class, 'update']
+    );
+
+    Route::post(
+        '/{id}/backup',
+        [WaitlistController::class, 'storeBackup']
+    );
+
+    Route::post(
+        '/{id}/backup/decline',
+        [WaitlistController::class, 'declineBackup']
     );
 
     Route::delete(

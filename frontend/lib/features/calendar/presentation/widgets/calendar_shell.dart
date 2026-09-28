@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/features/auth/domain/entities/user_profile.dart';
 import 'package:frontend/features/calendar/presentation/pages/settings_screen.dart';
 import 'package:frontend/features/calendar/presentation/providers/patient_appointment_realtime_provider.dart';
+import 'package:frontend/features/calendar/presentation/providers/staff_realtime_provider.dart';
 import 'package:frontend/theme/calendar_theme.dart';
 
 class CalendarShellNavigation extends InheritedWidget {
@@ -28,6 +29,7 @@ class CalendarShellNavigation extends InheritedWidget {
 class CalendarShell extends ConsumerStatefulWidget {
   final Widget calendarScreen;
   final UserProfile profile;
+  final String role;
 
   final List<Widget> extraPages;
   final List<BottomNavigationBarItem> extraItems;
@@ -36,6 +38,7 @@ class CalendarShell extends ConsumerStatefulWidget {
     super.key,
     required this.calendarScreen,
     required this.profile,
+    required this.role,
     this.extraPages = const [],
     this.extraItems = const [],
   }) : assert(
@@ -67,7 +70,26 @@ class _CalendarShellState extends ConsumerState<CalendarShell> {
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(patientAppointmentRealtimeProvider(widget.profile.id));
+    switch (widget.role) {
+      case 'doctor':
+        ref.watch(
+          staffRealtimeProvider(StaffRealtimeTarget.doctor(widget.profile.id)),
+        );
+        break;
+      case 'secretary':
+        ref.watch(
+          staffRealtimeProvider(
+            StaffRealtimeTarget.secretary(
+              widget.profile.id,
+              widget.profile.secretaryClientIds,
+            ),
+          ),
+        );
+        break;
+      case 'patient':
+        ref.watch(patientAppointmentRealtimeProvider(widget.profile.id));
+        break;
+    }
 
     return CalendarShellNavigation(
       onOpenSettings: () {

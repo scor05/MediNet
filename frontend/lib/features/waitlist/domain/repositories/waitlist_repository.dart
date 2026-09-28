@@ -11,6 +11,15 @@ abstract class WaitlistRepository {
     required String startTime,
   });
 
+  Future<void> createBackupAppointment({
+    required int waitlistId,
+    required int scheduleId,
+    required DateTime date,
+    required String startTime,
+  });
+
+  Future<void> declineBackupAppointment({required int waitlistId});
+
   /// Cancelar un registro de lista de espera
   Future<void> cancelWaitlist({required int waitlistId});
 }

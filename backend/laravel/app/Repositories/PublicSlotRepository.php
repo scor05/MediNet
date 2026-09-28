@@ -18,21 +18,27 @@ class PublicSlotRepository
             ->where('is_active', true)
             ->first();
 
-        if (!$schedule) {
+        if (! $schedule) {
             return [
                 'id_schedule' => null,
                 'slots' => [],
             ];
         }
 
-        $start = Carbon::parse($date . ' ' . $schedule->start_time);
-        $end = Carbon::parse($date . ' ' . $schedule->end_time);
+        $start = Carbon::parse($date.' '.$schedule->start_time);
+        $end = Carbon::parse($date.' '.$schedule->end_time);
         $duration = (int) $schedule->duration;
 
         $occupiedSlots = DB::table('appointments')
             ->where('id_schedule', $schedule->id)
             ->whereDate('date', $date)
-            ->whereIn('status', ['accepted', 'requested'])
+            ->whereIn('status', [
+                'accepted',
+                'requested',
+                'rescheduled',
+                'backup_pending',
+                'backup_accepted',
+            ])
             ->pluck('start_time')
             ->map(function ($time) {
                 return Carbon::parse($time)->format('H:i:s');
@@ -60,7 +66,7 @@ class PublicSlotRepository
                 return $slot >= $blockade->start_time && $slot < $blockade->end_time;
             });
 
-            if (!$isOccupied && !$isBlocked) {
+            if (! $isOccupied && ! $isBlocked) {
                 $slots[] = $slot;
             }
 

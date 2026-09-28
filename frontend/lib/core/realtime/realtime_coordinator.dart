@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:frontend/core/realtime/patient_appointment_realtime_connection.dart';
+import 'package:frontend/core/realtime/realtime_connection.dart';
 
-class PatientAppointmentRealtimeCoordinator {
-  final PatientAppointmentRealtimeConnection connection;
-  final Future<void> Function() onAppointmentChanged;
+class RealtimeCoordinator {
+  final RealtimeConnection connection;
+  final Future<void> Function() onChanged;
   final Duration debounceDuration;
   final Duration retryDelay;
 
@@ -13,9 +13,9 @@ class PatientAppointmentRealtimeCoordinator {
   bool _started = false;
   bool _disposed = false;
 
-  PatientAppointmentRealtimeCoordinator({
+  RealtimeCoordinator({
     required this.connection,
-    required this.onAppointmentChanged,
+    required this.onChanged,
     this.debounceDuration = const Duration(milliseconds: 150),
     this.retryDelay = const Duration(milliseconds: 750),
   });
@@ -25,32 +25,32 @@ class PatientAppointmentRealtimeCoordinator {
     _started = true;
     _subscription = connection.changes.listen((_) {
       _debounceTimer?.cancel();
-      _debounceTimer = Timer(debounceDuration, _notifyCalendar);
+      _debounceTimer = Timer(debounceDuration, _notify);
     });
 
     try {
       await connection.connect();
     } catch (_) {
-      // La actualización en tiempo real no debe bloquear el calendario HTTP.
+      // El tiempo real no debe bloquear las vistas respaldadas por HTTP.
     }
   }
 
-  void _notifyCalendar() {
+  void _notify() {
     if (_disposed) return;
-    unawaited(_refreshCalendar());
+    unawaited(_refresh());
   }
 
-  Future<void> _refreshCalendar() async {
+  Future<void> _refresh() async {
     try {
-      await onAppointmentChanged();
+      await onChanged();
     } catch (_) {
       await Future<void>.delayed(retryDelay);
       if (_disposed) return;
 
       try {
-        await onAppointmentChanged();
+        await onChanged();
       } catch (_) {
-        // El calendario conserva los datos anteriores y muestra el error.
+        // Los providers conservan su estado anterior y exponen el error HTTP.
       }
     }
   }

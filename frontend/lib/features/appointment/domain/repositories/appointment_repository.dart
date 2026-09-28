@@ -41,6 +41,11 @@ abstract class AppointmentRepository {
     required String status,
   });
 
+  Future<void> decideAppointment({
+    required int appointmentId,
+    required String decision,
+  });
+
   Future<void> checkRescheduleAvailability({
     required int appointmentId,
     required DateTime date,

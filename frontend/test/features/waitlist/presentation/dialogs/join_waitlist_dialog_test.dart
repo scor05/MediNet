@@ -12,6 +12,17 @@ import 'package:frontend/features/waitlist/presentation/providers/waitlist_provi
 
 class _FakeWaitlistRepository implements WaitlistRepository {
   @override
+  Future<void> createBackupAppointment({
+    required int waitlistId,
+    required int scheduleId,
+    required DateTime date,
+    required String startTime,
+  }) async {}
+
+  @override
+  Future<void> declineBackupAppointment({required int waitlistId}) async {}
+
+  @override
   Future<Waitlist> createWaitlist({
     required int scheduleId,
     required DateTime date,
@@ -69,7 +80,7 @@ void main() {
               ref.watch(patientWaitlistNotifierProvider);
               return Scaffold(
                 body: TextButton(
-                  onPressed: () => showDialog<bool>(
+                  onPressed: () => showDialog<Waitlist>(
                     context: context,
                     builder: (_) => JoinWaitlistDialog(
                       scheduleId: 3,

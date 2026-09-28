@@ -6,6 +6,7 @@ class WaitlistModel extends Waitlist {
     required super.patientId,
     required super.targetAppointmentId,
     required super.fallbackAppointmentId,
+    super.backupAppointmentId,
     required super.status,
     required super.createdAt,
     required super.updatedAt,
@@ -13,6 +14,9 @@ class WaitlistModel extends Waitlist {
     super.clinicName,
     super.targetDate,
     super.targetStartTime,
+    super.backupDate,
+    super.backupStartTime,
+    super.backupStatus,
   });
 
   factory WaitlistModel.fromJson(Map<String, dynamic> json) {
@@ -21,6 +25,7 @@ class WaitlistModel extends Waitlist {
       patientId: json['id_patient'] as int,
       targetAppointmentId: json['id_target_appointment'] as int,
       fallbackAppointmentId: json['id_fallback_appointment'] as int?,
+      backupAppointmentId: json['id_backup_appointment'] as int?,
       status: json['status'] as String,
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
@@ -28,6 +33,9 @@ class WaitlistModel extends Waitlist {
       clinicName: json['clinic_name'] as String?,
       targetDate: json['target_date'] as String?,
       targetStartTime: json['target_start_time'] as String?,
+      backupDate: json['backup_date'] as String?,
+      backupStartTime: json['backup_start_time'] as String?,
+      backupStatus: json['backup_status'] as String?,
     );
   }
 
@@ -36,6 +44,7 @@ class WaitlistModel extends Waitlist {
       'id_patient': patientId,
       'id_target_appointment': targetAppointmentId,
       'id_fallback_appointment': fallbackAppointmentId,
+      'id_backup_appointment': backupAppointmentId,
       'status': status,
     };
   }

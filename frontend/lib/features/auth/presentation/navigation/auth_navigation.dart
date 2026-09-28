@@ -89,12 +89,21 @@ class AuthNavigation {
         return CalendarShell(
           calendarScreen: DoctorCalendarScreen(profile: profile),
           profile: profile,
+          role: 'doctor',
+          extraPages: const [DoctorRequestedAppointmentsScreen()],
+          extraItems: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.assignment_outlined),
+              label: 'Solicitadas',
+            ),
+          ],
         );
 
       case 'secretary':
         return CalendarShell(
           calendarScreen: SecretaryCalendarScreen(profile: profile),
           profile: profile,
+          role: 'secretary',
           extraPages: const [SecretaryRequestedAppointmentsScreen()],
           extraItems: const [
             BottomNavigationBarItem(
@@ -106,8 +115,10 @@ class AuthNavigation {
 
       case 'patient':
         return CalendarShell(
-          calendarScreen: const PatientCalendarScreen(),
+          key: ValueKey('patient-${profile.id}'),
+          calendarScreen: PatientCalendarScreen(patientId: profile.id),
           profile: profile,
+          role: 'patient',
           extraPages: const [SearchScreen(), PatientWaitlistScreen()],
           extraItems: const [
             BottomNavigationBarItem(

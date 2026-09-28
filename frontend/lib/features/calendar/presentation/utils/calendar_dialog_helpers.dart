@@ -6,10 +6,12 @@ import 'package:frontend/features/calendar/presentation/dialogs/create_appointme
 import 'package:frontend/features/calendar/presentation/dialogs/create_schedule_dialog.dart';
 import 'package:frontend/features/calendar/presentation/dialogs/edit_schedule_dialog.dart';
 import 'package:frontend/features/schedule/domain/entities/schedule.dart';
+import 'package:frontend/features/user/domain/entities/doctor_search_result.dart';
 
 Future<Appointment?> showCreateAppointmentSheet({
   required BuildContext context,
   required DateTime weekStart,
+  DoctorSearchResult? fixedDoctor,
 }) {
   return showModalBottomSheet<Appointment>(
     context: context,
@@ -17,7 +19,8 @@ Future<Appointment?> showCreateAppointmentSheet({
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
-    builder: (_) => CreateAppointmentDialog(weekStart: weekStart),
+    builder: (_) =>
+        CreateAppointmentDialog(weekStart: weekStart, fixedDoctor: fixedDoctor),
   );
 }
 
