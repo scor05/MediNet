@@ -10,6 +10,8 @@ import 'package:frontend/features/appointment/domain/usecases/get_patient_appoin
 import 'package:frontend/features/calendar/presentation/providers/patient_calendar_provider.dart';
 
 void main() {
+  const patientId = 11;
+
   test('keeps current appointments visible while realtime refreshes', () async {
     final initial = [_appointment(1)];
     final refreshed = [_appointment(1), _appointment(2)];
@@ -18,16 +20,18 @@ void main() {
     addTearDown(container.dispose);
 
     expect(
-      await container.read(patientCalendarNotifierProvider.future),
+      await container.read(patientCalendarNotifierProvider(patientId).future),
       initial,
     );
 
     final refresh = container
-        .read(patientCalendarNotifierProvider.notifier)
+        .read(patientCalendarNotifierProvider(patientId).notifier)
         .refreshAll();
     await Future<void>.delayed(Duration.zero);
 
-    final loadingState = container.read(patientCalendarNotifierProvider);
+    final loadingState = container.read(
+      patientCalendarNotifierProvider(patientId),
+    );
     expect(loadingState.isLoading, isTrue);
     expect(loadingState.requireValue, initial);
 
@@ -35,7 +39,7 @@ void main() {
     await refresh;
 
     expect(
-      container.read(patientCalendarNotifierProvider).requireValue,
+      container.read(patientCalendarNotifierProvider(patientId)).requireValue,
       refreshed,
     );
   });
@@ -49,21 +53,40 @@ void main() {
       addTearDown(container.dispose);
 
       expect(
-        await container.read(patientCalendarNotifierProvider.future),
+        await container.read(patientCalendarNotifierProvider(patientId).future),
         initial,
       );
 
       final refresh = container
-          .read(patientCalendarNotifierProvider.notifier)
+          .read(patientCalendarNotifierProvider(patientId).notifier)
           .refreshAll();
       repository.refreshCompleter.completeError(Exception('network error'));
       await expectLater(refresh, throwsException);
 
-      final state = container.read(patientCalendarNotifierProvider);
+      final state = container.read(patientCalendarNotifierProvider(patientId));
       expect(state.hasError, isTrue);
       expect(state.requireValue, initial);
     },
   );
+
+  test('only exposes appointments owned by the active patient', () async {
+    final repository = _PatientCalendarRepository([
+      _appointment(1),
+      _appointment(2, patientId: 99),
+    ]);
+    final container = _container(repository);
+    addTearDown(container.dispose);
+
+    final appointments = await container.read(
+      patientCalendarNotifierProvider(patientId).future,
+    );
+
+    expect(appointments.map((appointment) => appointment.id), [1]);
+    expect(
+      appointments.every((appointment) => appointment.patientId == patientId),
+      isTrue,
+    );
+  });
 }
 
 ProviderContainer _container(_PatientCalendarRepository repository) {
@@ -76,11 +99,11 @@ ProviderContainer _container(_PatientCalendarRepository repository) {
   );
 }
 
-Appointment _appointment(int id) {
+Appointment _appointment(int id, {int patientId = 11}) {
   return Appointment(
     id: id,
     scheduleId: 13,
-    patientId: 11,
+    patientId: patientId,
     patientName: 'Paciente',
     date: DateTime(2026, 8, 29),
     startTime: '12:30:00',

@@ -9,23 +9,33 @@ use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-/**
- * Backward compatibility for broadcast jobs queued before staff realtime was
- * introduced. New mutations dispatch AppointmentChanged instead.
- */
-class PatientAppointmentChanged implements ShouldBroadcast, ShouldDispatchAfterCommit
+class AppointmentChanged implements ShouldBroadcast, ShouldDispatchAfterCommit
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public function __construct(
-        public readonly int $patientId,
         public readonly int $appointmentId,
         public readonly string $change,
+        public readonly ?int $patientId = null,
+        public readonly ?int $doctorId = null,
+        public readonly ?int $clientId = null,
     ) {}
 
     public function broadcastOn(): array
     {
-        return [new PrivateChannel('patients.'.$this->patientId)];
+        $channels = [];
+
+        if ($this->patientId !== null) {
+            $channels[] = new PrivateChannel('patients.'.$this->patientId);
+        }
+        if ($this->doctorId !== null) {
+            $channels[] = new PrivateChannel('doctors.'.$this->doctorId);
+        }
+        if ($this->clientId !== null) {
+            $channels[] = new PrivateChannel('organizations.'.$this->clientId);
+        }
+
+        return $channels;
     }
 
     public function broadcastAs(): string

@@ -10,7 +10,9 @@ import 'package:frontend/features/calendar/presentation/widgets/calendar_shell.d
 import 'package:frontend/features/patient_profile/presentation/pages/patient_profile_screen.dart';
 
 class PatientCalendarScreen extends ConsumerStatefulWidget {
-  const PatientCalendarScreen({super.key});
+  final int patientId;
+
+  const PatientCalendarScreen({super.key, required this.patientId});
 
   @override
   ConsumerState<PatientCalendarScreen> createState() =>
@@ -45,13 +47,17 @@ class _PatientCalendarScreenState extends ConsumerState<PatientCalendarScreen> {
     showAppointmentDetailSheet(
       context: context,
       appointment: appointment,
-      onCancelled: ref.read(patientCalendarNotifierProvider.notifier).refresh,
+      onCancelled: ref
+          .read(patientCalendarNotifierProvider(widget.patientId).notifier)
+          .refresh,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final calendarAsync = ref.watch(patientCalendarNotifierProvider);
+    final calendarAsync = ref.watch(
+      patientCalendarNotifierProvider(widget.patientId),
+    );
     final weekStart = ref.watch(patientWeekStartProvider);
 
     return Scaffold(
@@ -86,7 +92,9 @@ class _PatientCalendarScreenState extends ConsumerState<PatientCalendarScreen> {
       body: CalendarBody(
         calendarAsync: calendarAsync,
         weekStart: weekStart,
-        onRetry: ref.read(patientCalendarNotifierProvider.notifier).refresh,
+        onRetry: ref
+            .read(patientCalendarNotifierProvider(widget.patientId).notifier)
+            .refresh,
         showDoctor: true,
         onAppointmentTap: _openAppointmentDetail,
       ),

@@ -8,6 +8,6 @@ class PatientChannel
 {
     public function join(User $user, int $patientId): bool
     {
-        return $user->id === $patientId;
+        return $user->is_active && $user->id === $patientId;
     }
 }

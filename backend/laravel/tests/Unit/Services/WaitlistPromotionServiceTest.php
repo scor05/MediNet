@@ -11,6 +11,7 @@ use App\Services\AppointmentRealtimeService;
 use App\Services\NotificationService;
 use App\Services\UserService;
 use App\Services\WaitlistPromotionService;
+use App\Services\WaitlistRealtimeService;
 use PHPUnit\Framework\TestCase;
 
 class WaitlistPromotionServiceTest extends TestCase
@@ -40,6 +41,9 @@ class WaitlistPromotionServiceTest extends TestCase
         $firstWaiting = new Waitlist;
         $firstWaiting->forceFill(['id' => 5, 'id_patient' => 19, 'status' => 'waiting']);
         $promotedAppointment = $this->appointment(['id' => 61]);
+        $fulfilledWaitlist = clone $firstWaiting;
+        $fulfilledWaitlist->id_fallback_appointment = 61;
+        $fulfilledWaitlist->status = 'fulfilled';
 
         $waitlistRepository->expects($this->once())
             ->method('findFirstWaitingForFreedAppointment')
@@ -72,7 +76,8 @@ class WaitlistPromotionServiceTest extends TestCase
             ->with(5, [
                 'id_fallback_appointment' => 61,
                 'status' => 'fulfilled',
-            ]);
+            ])
+            ->willReturn($fulfilledWaitlist);
         $appointmentRepository->expects($this->once())
             ->method('findNotificationContext')
             ->with(61)
@@ -188,6 +193,7 @@ class WaitlistPromotionServiceTest extends TestCase
             $notificationService,
             $availabilityService,
             $realtimeService ?? $this->createStub(AppointmentRealtimeService::class),
+            $this->createStub(WaitlistRealtimeService::class),
         );
     }
 

@@ -17,6 +17,7 @@ class BackupAppointmentService
         private UserService $userService,
         private AppointmentAvailabilityService $availabilityService,
         private AppointmentRealtimeService $realtimeService,
+        private WaitlistRealtimeService $waitlistRealtimeService,
     ) {}
 
     public function create(int $waitlistId, int $patientId, array $data): Appointment
@@ -72,10 +73,12 @@ class BackupAppointmentService
                 'updated_by' => $patientId,
             ]);
 
-            $this->waitlistRepository->update($waitlist->id, [
+            $oldWaitlist = clone $waitlist;
+            $waitlist = $this->waitlistRepository->update($waitlist->id, [
                 'id_backup_appointment' => $appointment->id,
             ]);
             $this->realtimeService->created($appointment);
+            $this->waitlistRealtimeService->updated($oldWaitlist, $waitlist);
 
             return $appointment;
         });
@@ -101,9 +104,13 @@ class BackupAppointmentService
                 ]);
             }
 
-            return $this->waitlistRepository->update($waitlist->id, [
+            $oldWaitlist = clone $waitlist;
+            $waitlist = $this->waitlistRepository->update($waitlist->id, [
                 'backup_declined_at' => now(),
             ]);
+            $this->waitlistRealtimeService->updated($oldWaitlist, $waitlist);
+
+            return $waitlist;
         });
     }
 
@@ -119,9 +126,13 @@ class BackupAppointmentService
 
             $this->cancelBackup($waitlist->id_backup_appointment, $patientId);
 
-            return $this->waitlistRepository->update($waitlist->id, [
+            $oldWaitlist = clone $waitlist;
+            $waitlist = $this->waitlistRepository->update($waitlist->id, [
                 'status' => 'cancelled',
             ]);
+            $this->waitlistRealtimeService->updated($oldWaitlist, $waitlist);
+
+            return $waitlist;
         });
     }
 
@@ -151,9 +162,14 @@ class BackupAppointmentService
                 }
 
                 if ($backup->status === 'backup_accepted') {
-                    $this->waitlistRepository->update($waitlist->id, [
+                    $oldWaitlist = clone $waitlist;
+                    $waitlist = $this->waitlistRepository->update($waitlist->id, [
                         'status' => 'fulfilled',
                     ]);
+                    $this->waitlistRealtimeService->updated(
+                        $oldWaitlist,
+                        $waitlist,
+                    );
                 } elseif ($backup->status === 'backup_pending') {
                     $this->cancelBackup($backup->id, $waitlist->id_patient);
                 }

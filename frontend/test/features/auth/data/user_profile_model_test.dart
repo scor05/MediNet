@@ -14,6 +14,7 @@ void main() {
     bool isSecretary = false,
     bool superadmin = false,
     List<Map<String, dynamic>>? adminOf,
+    List<int>? secretaryClientIds,
   }) {
     return {
       'id': id,
@@ -23,6 +24,7 @@ void main() {
       'is_active': isActive,
       'is_doctor': isDoctor,
       'is_secretary': isSecretary,
+      'secretary_client_ids': secretaryClientIds,
       'superadmin': superadmin, // Nombre diferente al del campo en Dart (isSuperadmin)
       'admin_of': adminOf,
     };
@@ -87,6 +89,14 @@ void main() {
       expect(model.adminOf[0].clientName, equals('Clínica Norte'));
       expect(model.adminOf[1].clientId, equals(20));
       expect(model.adminOf[1].clientName, equals('Clínica Sur'));
+    });
+
+    test('parsea las organizaciones activas de una secretaria', () {
+      final model = UserProfileModel.fromJson(
+        buildJson(isSecretary: true, secretaryClientIds: [3, 8]),
+      );
+
+      expect(model.secretaryClientIds, [3, 8]);
     });
 
     test('produce adminOf vacío cuando admin_of es null en el JSON', () {
