@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/utils/time_format.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/appointment/domain/providers/appointment_domain_providers.dart';
@@ -74,41 +75,6 @@ class AppointmentDetailDialog extends ConsumerWidget {
     final month = date.month.toString().padLeft(2, '0');
 
     return '$day/$month/${date.year}';
-  }
-
-  String _formatTime(String time) {
-    final parts = time.split(':');
-
-    final hour = int.parse(parts[0]);
-    final minute = parts[1];
-
-    if (hour == 0) return '12:$minute AM';
-    if (hour < 12) return '$hour:$minute AM';
-    if (hour == 12) return '12:$minute PM';
-
-    return '${hour - 12}:$minute PM';
-  }
-
-  String _calculateEndTime(String startTime, int durationMinutes) {
-    final parts = startTime.split(':');
-
-    final hour = int.parse(parts[0]);
-    final minute = int.parse(parts[1]);
-    final second = parts.length > 2 ? int.parse(parts[2]) : 0;
-
-    final endDateTime = DateTime(
-      2026,
-      1,
-      1,
-      hour,
-      minute,
-      second,
-    ).add(Duration(minutes: durationMinutes));
-
-    final formatted =
-        '${endDateTime.hour}:${endDateTime.minute.toString().padLeft(2, '0')}';
-
-    return _formatTime(formatted);
   }
 
   Future<void> _cancelAppointment(BuildContext context, WidgetRef ref) async {
@@ -252,8 +218,8 @@ class AppointmentDetailDialog extends ConsumerWidget {
               icon: Icons.schedule,
               label: 'Horario',
               value:
-                  '${_formatTime(appointment.startTime)} - '
-                  '${_calculateEndTime(appointment.startTime, appointment.appointmentDuration)}',
+                  '${formatTime24(appointment.startTime)} - '
+                  '${calculateEndTime24(appointment.startTime, appointment.appointmentDuration)}',
             ),
 
             if (showBackupTargetDetails &&
@@ -268,7 +234,7 @@ class AppointmentDetailDialog extends ConsumerWidget {
               _DetailRow(
                 icon: Icons.access_time_outlined,
                 label: 'Hora de Cita Respaldada',
-                value: _formatTime(appointment.backupTargetStartTime!),
+                value: formatTime24(appointment.backupTargetStartTime!),
               ),
             ],
 

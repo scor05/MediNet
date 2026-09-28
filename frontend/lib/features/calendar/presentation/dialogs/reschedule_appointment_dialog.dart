@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:frontend/core/utils/time_format.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
@@ -227,7 +228,7 @@ class _RescheduleAppointmentDialogState
 
   String _formatTime(TimeOfDay? time) {
     if (time == null) return 'Seleccionar hora';
-    return time.format(context);
+    return formatTime24('${time.hour}:${time.minute}');
   }
 
   @override

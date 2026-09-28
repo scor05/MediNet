@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
+import 'package:frontend/core/utils/time_format.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
 import 'package:frontend/features/calendar/domain/entities/public_slot.dart';
 import 'package:frontend/features/calendar/domain/providers/public_calendar_domain_providers.dart';
@@ -560,7 +561,10 @@ class _PublicCreateAppointmentDialogState
                               : Colors.blue.shade700;
 
                           return ChoiceChip(
-                            label: Text('${slot.startTime} - ${slot.endTime}'),
+                            label: Text(
+                              '${formatTime24(slot.startTime)} - '
+                              '${formatTime24(slot.endTime)}',
+                            ),
                             selected: isSelected,
                             backgroundColor: slot.isOccupied
                                 ? Colors.orange.shade100

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
+import 'package:frontend/core/utils/time_format.dart';
 import 'package:frontend/features/calendar/domain/entities/public_slot.dart';
 import 'package:frontend/features/calendar/domain/providers/public_calendar_domain_providers.dart';
 import 'package:frontend/features/waitlist/domain/providers/waitlist_domain_providers.dart';
@@ -69,7 +70,8 @@ class _BackupAppointmentDialogState
         _slots = slots.where((slot) {
           if (slot.isOccupied) return false;
           return !_sameDay(_date, widget.targetDate) ||
-              _trimTime(slot.startTime) != _trimTime(widget.targetStartTime);
+              formatTime24(slot.startTime) !=
+              formatTime24(widget.targetStartTime);
         }).toList();
       });
     } catch (error) {
@@ -238,8 +240,8 @@ class _BackupAppointmentDialogState
 
                       return ChoiceChip(
                         label: Text(
-                          '${_trimTime(slot.startTime)} - '
-                          '${_trimTime(slot.endTime)}',
+                          '${formatTime24(slot.startTime)} - '
+                          '${formatTime24(slot.endTime)}',
                         ),
                         selected: isSelected,
                         backgroundColor: Colors.grey.shade100,
@@ -293,8 +295,6 @@ class _BackupAppointmentDialogState
       first.year == second.year &&
       first.month == second.month &&
       first.day == second.day;
-
-  String _trimTime(String value) => value.substring(0, 5);
 
   String _formatDate(DateTime value) =>
       '${value.day.toString().padLeft(2, '0')}/'

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/utils/time_format.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/theme/calendar_theme.dart';
 
@@ -26,32 +27,6 @@ class AppointmentCard extends StatelessWidget {
       'cancelled' => CalendarColors.appointmentCancelled,
       _ => CalendarColors.appointmentUnknown,
     };
-  }
-
-  String _formatTime(String time) {
-    final parts = time.split(':');
-    final hour = int.parse(parts[0]);
-    final minute = parts[1];
-    if (hour == 0) return '12:$minute AM';
-    if (hour < 12) return '$hour:$minute AM';
-    if (hour == 12) return '12:$minute PM';
-    return '${hour - 12}:$minute PM';
-  }
-
-  String _calculateEndTime(String startTime, int durationMinutes) {
-    final parts = startTime.split(':');
-    final hour = int.parse(parts[0]);
-    final minute = int.parse(parts[1]);
-    final second = parts.length > 2 ? int.parse(parts[2]) : 0;
-    final endDateTime = DateTime(
-      2026,
-      1,
-      1,
-      hour,
-      minute,
-      second,
-    ).add(Duration(minutes: durationMinutes));
-    return '${endDateTime.hour}:${endDateTime.minute.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -85,7 +60,7 @@ class AppointmentCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               Text(
-                '${_formatTime(appointment.startTime)} - ${_calculateEndTime(appointment.startTime, appointment.appointmentDuration)}',
+                '${formatTime24(appointment.startTime)} - ${calculateEndTime24(appointment.startTime, appointment.appointmentDuration)}',
                 style: CalendarTextStyles.appointmentPatient,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -126,7 +101,7 @@ class AppointmentCard extends StatelessWidget {
                 ],
               ),
               Text(
-                '${_formatTime(appointment.startTime)} - ${_calculateEndTime(appointment.startTime, appointment.appointmentDuration)}',
+                '${formatTime24(appointment.startTime)} - ${calculateEndTime24(appointment.startTime, appointment.appointmentDuration)}',
                 style: const TextStyle(fontSize: 10, color: Colors.white70),
               ),
             ],

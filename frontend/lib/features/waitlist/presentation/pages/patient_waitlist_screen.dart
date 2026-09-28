@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/utils/time_format.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/features/waitlist/domain/entities/waitlist.dart';
@@ -209,7 +210,7 @@ class _WaitlistCard extends ConsumerWidget {
   }
 
   String _fmtTargetTime(String value) {
-    return value.length >= 5 ? value.substring(0, 5) : value;
+    return formatTime24(value);
   }
 
   String _backupStatus(String? status) => switch (status) {

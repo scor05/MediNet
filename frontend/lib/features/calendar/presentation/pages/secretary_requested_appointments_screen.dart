@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/utils/time_format.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
@@ -273,7 +274,7 @@ class _RequestedAppointmentCard extends StatelessWidget {
             const SizedBox(height: 8),
             _AppointmentDetailRow(
               icon: Icons.calendar_today_outlined,
-              label: '$dateLabel - ${appointment.startTime}',
+              label: '$dateLabel - ${formatTime24(appointment.startTime)}',
             ),
             const SizedBox(height: 8),
             _AppointmentDetailRow(
@@ -301,7 +302,7 @@ class _RequestedAppointmentCard extends StatelessWidget {
                 ),
               ),
               Text(
-                'Hora: ${_formatTime(appointment.backupTargetStartTime!)}',
+                'Hora: ${formatTime24(appointment.backupTargetStartTime!)}',
                 style: const TextStyle(
                   color: AppTheme.textSecondary,
                   fontSize: 12,
@@ -355,15 +356,6 @@ class _RequestedAppointmentCard extends StatelessWidget {
     return '$day/$month/${date.year}';
   }
 
-  String _formatTime(String time) {
-    final parts = time.split(':');
-    final hour = int.parse(parts[0]);
-    final minute = parts[1];
-    if (hour == 0) return '12:$minute AM';
-    if (hour < 12) return '$hour:$minute AM';
-    if (hour == 12) return '12:$minute PM';
-    return '${hour - 12}:$minute PM';
-  }
 }
 
 class _AppointmentActionButton extends StatelessWidget {
