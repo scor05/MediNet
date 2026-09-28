@@ -110,6 +110,7 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
       onCancelled: ref.read(doctorCalendarNotifierProvider.notifier).refresh,
       onRescheduled: ref.read(doctorCalendarNotifierProvider.notifier).refresh,
       canReschedule: true,
+      showBackupTargetDetails: true,
     );
   }
 
@@ -165,6 +166,7 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
             onRetry: ref.read(doctorCalendarNotifierProvider.notifier).refresh,
             showPatient: true,
             showSchedules: true,
+            splitOverlappingAppointments: true,
             onAppointmentTap: _openAppointmentDetail,
             onBlockadeTap: _onBlockadeTap,
             onScheduleTap: _openScheduleDetail,

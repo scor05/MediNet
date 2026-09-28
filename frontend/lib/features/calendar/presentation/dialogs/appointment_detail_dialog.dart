@@ -11,6 +11,7 @@ Future<void> showAppointmentDetailSheet({
   Future<void> Function()? onCancelled,
   Future<void> Function()? onRescheduled,
   bool canReschedule = false,
+  bool showBackupTargetDetails = false,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -23,6 +24,7 @@ Future<void> showAppointmentDetailSheet({
       onCancelled: onCancelled,
       onRescheduled: onRescheduled,
       canReschedule: canReschedule,
+      showBackupTargetDetails: showBackupTargetDetails,
     ),
   );
 }
@@ -32,6 +34,7 @@ class AppointmentDetailDialog extends ConsumerWidget {
   final Future<void> Function()? onCancelled;
   final Future<void> Function()? onRescheduled;
   final bool canReschedule;
+  final bool showBackupTargetDetails;
 
   const AppointmentDetailDialog({
     super.key,
@@ -39,6 +42,7 @@ class AppointmentDetailDialog extends ConsumerWidget {
     this.onCancelled,
     this.onRescheduled,
     this.canReschedule = false,
+    this.showBackupTargetDetails = false,
   });
 
   Color _statusColor() {
@@ -251,6 +255,22 @@ class AppointmentDetailDialog extends ConsumerWidget {
                   '${_formatTime(appointment.startTime)} - '
                   '${_calculateEndTime(appointment.startTime, appointment.appointmentDuration)}',
             ),
+
+            if (showBackupTargetDetails &&
+                appointment.isBackup &&
+                appointment.backupTargetDate != null &&
+                appointment.backupTargetStartTime != null) ...[
+              _DetailRow(
+                icon: Icons.event_note_outlined,
+                label: 'Fecha de Cita Respaldada',
+                value: _formatDate(appointment.backupTargetDate!),
+              ),
+              _DetailRow(
+                icon: Icons.access_time_outlined,
+                label: 'Hora de Cita Respaldada',
+                value: _formatTime(appointment.backupTargetStartTime!),
+              ),
+            ],
 
             _DetailRow(
               icon: Icons.timer_outlined,

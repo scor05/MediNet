@@ -20,6 +20,8 @@ class AppointmentModel extends Appointment {
     required super.clinicName,
     required super.appointmentDuration,
     super.type,
+    super.backupTargetDate,
+    super.backupTargetStartTime,
   });
 
   factory AppointmentModel.fromJson(Map<String, dynamic> json) {
@@ -44,6 +46,10 @@ class AppointmentModel extends Appointment {
       clinicId: json['clinic']['id'] as int,
       clinicName: json['clinic']['name'] as String,
       appointmentDuration: json['duration'] as int,
+      backupTargetDate: json['backup_target_date'] == null
+          ? null
+          : DateTime.parse(json['backup_target_date'] as String),
+      backupTargetStartTime: json['backup_target_start_time'] as String?,
     );
   }
 

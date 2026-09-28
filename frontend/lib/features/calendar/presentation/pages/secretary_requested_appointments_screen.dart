@@ -280,6 +280,34 @@ class _RequestedAppointmentCard extends StatelessWidget {
               icon: Icons.location_on_outlined,
               label: appointment.clinicName,
             ),
+            if (appointment.isBackup &&
+                appointment.backupTargetDate != null &&
+                appointment.backupTargetStartTime != null) ...[
+              const Divider(height: 20),
+              const Text(
+                'Cita original',
+                style: TextStyle(
+                  color: AppTheme.textSecondary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Fecha: ${_formatDate(appointment.backupTargetDate!)}',
+                style: const TextStyle(
+                  color: AppTheme.textSecondary,
+                  fontSize: 12,
+                ),
+              ),
+              Text(
+                'Hora: ${_formatTime(appointment.backupTargetStartTime!)}',
+                style: const TextStyle(
+                  color: AppTheme.textSecondary,
+                  fontSize: 12,
+                ),
+              ),
+            ],
             const SizedBox(height: 14),
             Row(
               mainAxisSize: MainAxisSize.min,
@@ -319,6 +347,22 @@ class _RequestedAppointmentCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    final day = date.day.toString().padLeft(2, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    return '$day/$month/${date.year}';
+  }
+
+  String _formatTime(String time) {
+    final parts = time.split(':');
+    final hour = int.parse(parts[0]);
+    final minute = parts[1];
+    if (hour == 0) return '12:$minute AM';
+    if (hour < 12) return '$hour:$minute AM';
+    if (hour == 12) return '12:$minute PM';
+    return '${hour - 12}:$minute PM';
   }
 }
 

@@ -8,6 +8,56 @@ use PHPUnit\Framework\TestCase;
 
 class CalendarServiceTest extends TestCase
 {
+    public function test_doctor_calendar_includes_original_slot_for_backup(): void
+    {
+        $repository = $this->createMock(CalendarRepository::class);
+        $repository->expects($this->once())
+            ->method('getAppointmentsForDoctor')
+            ->willReturn([
+                (object) [
+                    'id' => 81,
+                    'id_schedule' => 5,
+                    'id_patient' => 20,
+                    'date' => '2026-10-05',
+                    'start_time' => '14:00:00',
+                    'status' => 'backup_pending',
+                    'appointment_duration' => 30,
+                    'created_at' => '2026-09-27 10:00:00',
+                    'created_by' => 20,
+                    'updated_at' => '2026-09-27 10:00:00',
+                    'updated_by' => 20,
+                    'doctor_id' => 4,
+                    'doctor_name' => 'Doctor',
+                    'doctor_phone' => null,
+                    'patient_name' => 'Paciente',
+                    'clinic_id' => 1,
+                    'clinic_name' => 'Zona 15',
+                    'backup_target_date' => '2026-10-04',
+                    'backup_target_start_time' => '09:30:00',
+                ],
+            ]);
+        $repository->expects($this->once())
+            ->method('getBlockadesForDoctor')
+            ->willReturn([]);
+
+        $result = (new CalendarService($repository))->getDoctorCalendar(
+            doctorId: 4,
+            clientId: null,
+            clinicId: null,
+            dateFrom: null,
+            dateTo: null,
+        );
+
+        $this->assertSame(
+            '2026-10-04',
+            $result[0]['backup_target_date']
+        );
+        $this->assertSame(
+            '09:30:00',
+            $result[0]['backup_target_start_time']
+        );
+    }
+
     public function test_filtered_secretary_calendar_does_not_include_blockades(): void
     {
         $repository = $this->createMock(CalendarRepository::class);
@@ -30,6 +80,7 @@ class CalendarServiceTest extends TestCase
                     'updated_by' => 13,
                     'doctor_id' => 4,
                     'doctor_name' => 'Doctor',
+                    'doctor_phone' => null,
                     'patient_name' => 'Ratoncito Perezz',
                     'clinic_id' => 1,
                     'clinic_name' => 'Zona 15',
