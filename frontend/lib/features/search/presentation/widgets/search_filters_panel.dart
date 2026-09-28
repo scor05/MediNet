@@ -40,6 +40,37 @@ class SearchFiltersPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final doctorField = SearchInputField<DoctorSearchResult>(
+      compact: true,
+      controller: doctorController,
+      label: 'Doctor (o especialidad)',
+      hintText: 'Nombre del doctor o su especialidad',
+      loading: state.loadingDoctors,
+      selectedItem: state.selectedDoctor,
+      results: state.doctorResults,
+      titleBuilder: (doctor) => doctor.name,
+      subtitleBuilder: (doctor) => doctor.specialty,
+      onChanged: onDoctorChanged,
+      onSelected: onDoctorSelected,
+      onClear: onDoctorCleared,
+      onEmptyFocus: onDoctorEmptyFocus,
+    );
+    final clinicField = SearchInputField<ClinicSearchResult>(
+      compact: true,
+      controller: clinicController,
+      label: 'Clínica',
+      hintText: 'Nombre de la clínica',
+      loading: state.loadingClinics,
+      selectedItem: state.selectedClinic,
+      results: state.clinicResults,
+      titleBuilder: (clinic) => clinic.name,
+      subtitleBuilder: (clinic) => clinic.address,
+      onChanged: onClinicChanged,
+      onSelected: onClinicSelected,
+      onClear: onClinicCleared,
+      onEmptyFocus: onClinicEmptyFocus,
+    );
+
     return Material(
       color: AppTheme.background,
       elevation: 1,
@@ -47,62 +78,53 @@ class SearchFiltersPanel extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
         child: Column(
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: SearchInputField<DoctorSearchResult>(
-                    compact: true,
-                    controller: doctorController,
-                    label: 'Doctor (o especialidad)',
-                    hintText: 'Nombre del doctor o su especialidad',
-                    loading: state.loadingDoctors,
-                    selectedItem: state.selectedDoctor,
-                    results: state.doctorResults,
-                    titleBuilder: (doctor) => doctor.name,
-                    subtitleBuilder: (doctor) => doctor.specialty,
-                    onChanged: onDoctorChanged,
-                    onSelected: onDoctorSelected,
-                    onClear: onDoctorCleared,
-                    onEmptyFocus: onDoctorEmptyFocus,
-                  ),
-                ),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isNarrow = constraints.maxWidth < 600;
+                final searchButton = isNarrow
+                    ? ElevatedButton.icon(
+                        style: AppTheme.btnDark,
+                        onPressed: state.canSearch ? onSearchPressed : null,
+                        icon: const Icon(Icons.search, size: 18),
+                        label: const Text('Buscar'),
+                      )
+                    : ElevatedButton(
+                        style: AppTheme.btnDark.copyWith(
+                          minimumSize: const WidgetStatePropertyAll(Size.zero),
+                          padding: const WidgetStatePropertyAll(EdgeInsets.zero),
+                        ),
+                        onPressed: state.canSearch ? onSearchPressed : null,
+                        child: const Icon(Icons.search, size: 18),
+                      );
 
-                if (state.selectedDoctor != null) ...[
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: SearchInputField<ClinicSearchResult>(
-                      compact: true,
-                      controller: clinicController,
-                      label: 'Clínica',
-                      hintText: 'Nombre de la clínica',
-                      loading: state.loadingClinics,
-                      selectedItem: state.selectedClinic,
-                      results: state.clinicResults,
-                      titleBuilder: (clinic) => clinic.name,
-                      subtitleBuilder: (clinic) => clinic.address,
-                      onChanged: onClinicChanged,
-                      onSelected: onClinicSelected,
-                      onClear: onClinicCleared,
-                      onEmptyFocus: onClinicEmptyFocus,
-                    ),
-                  ),
-                ],
+                if (isNarrow) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      doctorField,
+                      if (state.selectedDoctor != null) ...[
+                        const SizedBox(height: 10),
+                        clinicField,
+                      ],
+                      const SizedBox(height: 10),
+                      SizedBox(height: 44, child: searchButton),
+                    ],
+                  );
+                }
 
-                const SizedBox(width: 10),
-
-                SizedBox.square(
-                  dimension: 44,
-                  child: ElevatedButton(
-                    style: AppTheme.btnDark.copyWith(
-                      minimumSize: const WidgetStatePropertyAll(Size.zero),
-                      padding: const WidgetStatePropertyAll(EdgeInsets.zero),
-                    ),
-                    onPressed: state.canSearch ? onSearchPressed : null,
-                    child: const Icon(Icons.search, size: 18),
-                  ),
-                ),
-              ],
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: doctorField),
+                    if (state.selectedDoctor != null) ...[
+                      const SizedBox(width: 10),
+                      Expanded(child: clinicField),
+                    ],
+                    const SizedBox(width: 10),
+                    SizedBox(width: 44, height: 44, child: searchButton),
+                  ],
+                );
+              },
             ),
             if (state.hasSearched) ...[
               const SizedBox(height: 10),
