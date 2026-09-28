@@ -45,9 +45,15 @@ class PublicRepositoryTest extends TestCase
         $db->shouldReceive('table')->once()->with('appointments')->andReturn($appointmentQuery);
         $appointmentQuery->shouldReceive('whereIn')->once()->with('id_schedule', [12])->andReturnSelf();
         $appointmentQuery->shouldReceive('where')->once()->with('date', '2026-08-17')->andReturnSelf();
-        $appointmentQuery->shouldReceive('whereNotIn')
+        $appointmentQuery->shouldReceive('whereIn')
             ->once()
-            ->with('status', ['rejected', 'cancelled'])
+            ->with('status', [
+                'requested',
+                'accepted',
+                'rescheduled',
+                'backup_pending',
+                'backup_accepted',
+            ])
             ->andReturnSelf();
         $appointmentQuery->shouldReceive('get')
             ->once()

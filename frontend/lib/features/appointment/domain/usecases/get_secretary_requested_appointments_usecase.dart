@@ -8,6 +8,6 @@ class GetSecretaryRequestedAppointmentsUsecase {
 
   // Obtiene las citas solicitadas para una secretaria
   Future<List<Appointment>> call() async {
-    return await repository.getSecretaryAppointments(status: 'requested');
+    return await repository.getSecretaryAppointments(status: 'pending');
   }
 }

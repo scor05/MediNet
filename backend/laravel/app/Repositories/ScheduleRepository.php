@@ -55,6 +55,11 @@ class ScheduleRepository
         return Schedule::findOrFail($id);
     }
 
+    public function lockById(int $id)
+    {
+        return Schedule::whereKey($id)->lockForUpdate()->firstOrFail();
+    }
+
     public function findActiveByDoctorClinicAndDay(
         int $doctorId,
         int $clinicId,

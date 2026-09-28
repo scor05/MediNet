@@ -11,6 +11,7 @@ class WaitlistRepository
         'patient',
         'targetAppointment',
         'fallbackAppointment',
+        'backupAppointment',
     ];
 
     public function findAll()
@@ -45,10 +46,47 @@ class WaitlistRepository
                 'clinics.name AS clinic_name',
                 'target.date AS target_date',
                 'target.start_time AS target_start_time',
+                'backup.date AS backup_date',
+                'backup.start_time AS backup_start_time',
+                'backup.status AS backup_status',
             ])
+            ->leftJoin(
+                'appointments AS backup',
+                'backup.id',
+                '=',
+                'waitlists.id_backup_appointment'
+            )
             ->orderByDesc('waitlists.created_at')
             ->orderByDesc('waitlists.id')
             ->get();
+    }
+
+    public function findByIdForUpdate(int $id): ?Waitlist
+    {
+        return Waitlist::whereKey($id)->lockForUpdate()->first();
+    }
+
+    public function findDueBackupWaitlistIds(string $date, string $time): array
+    {
+        return DB::table('waitlists')
+            ->join(
+                'appointments AS backup',
+                'backup.id',
+                '=',
+                'waitlists.id_backup_appointment'
+            )
+            ->where('waitlists.status', 'waiting')
+            ->whereIn('backup.status', ['backup_pending', 'backup_accepted'])
+            ->where(function ($query) use ($date, $time) {
+                $query->where('backup.date', '<', $date)
+                    ->orWhere(function ($sameDay) use ($date, $time) {
+                        $sameDay->where('backup.date', $date)
+                            ->where('backup.start_time', '<=', $time);
+                    });
+            })
+            ->pluck('waitlists.id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
     }
 
     public function findDuplicate(int $patientId, int $appointmentId): ?Waitlist

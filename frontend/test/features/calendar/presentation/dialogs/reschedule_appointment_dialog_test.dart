@@ -8,8 +8,47 @@ import 'package:frontend/features/appointment/domain/repositories/appointment_re
 import 'package:frontend/features/appointment/domain/usecases/reschedule_appointment_usecase.dart';
 import 'package:frontend/features/calendar/presentation/dialogs/appointment_detail_dialog.dart';
 import 'package:frontend/features/calendar/presentation/dialogs/reschedule_appointment_dialog.dart';
+import 'package:frontend/theme/app_theme.dart';
 
 void main() {
+  testWidgets('uses saturated colors for every appointment status dot', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(900, 1000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final expectedColors = <String, Color>{
+      'accepted': AppColors.success,
+      'requested': AppColors.warning,
+      'rejected': AppColors.error,
+      'cancelled': AppColors.error,
+      'rescheduled': AppColors.secondary,
+      'backup_pending': AppColors.warning,
+      'backup_accepted': AppColors.success,
+      'backup_cancelled': AppColors.error,
+    };
+
+    for (final entry in expectedColors.entries) {
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            home: Scaffold(
+              body: AppointmentDetailDialog(
+                appointment: _appt.copyWith(status: entry.key),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final dot = tester.widget<Container>(
+        find.byKey(const Key('appointment-status-dot')),
+      );
+      final decoration = dot.decoration! as BoxDecoration;
+      expect(decoration.color, entry.value, reason: entry.key);
+    }
+  });
+
   testWidgets('places Reprogramar between cancellation and close actions', (
     tester,
   ) async {
@@ -195,6 +234,12 @@ final _appt = Appointment(
 );
 
 class _RescheduleRepository implements AppointmentRepository {
+  @override
+  Future<void> decideAppointment({
+    required int appointmentId,
+    required String decision,
+  }) => throw UnimplementedError();
+
   final String? validationError;
   int rescheduleCalls = 0;
 

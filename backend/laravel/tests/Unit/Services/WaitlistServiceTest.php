@@ -33,6 +33,8 @@ class WaitlistServiceTest extends TestCase
                 'id_patient' => 19,
                 'id_target_appointment' => 55,
                 'id_fallback_appointment' => null,
+                'id_backup_appointment' => null,
+                'backup_declined_at' => null,
                 'status' => 'waiting',
             ])
             ->willReturn($createdWaitlist);

@@ -171,6 +171,7 @@ class _RequestedAppointmentCard extends StatelessWidget {
       'cancelled' => 'Cancelada',
       'rescheduled' => 'Reprogramada',
       'requested' => 'Solicitada',
+      'backup_pending' => 'Pendiente',
       _ => appointment.status,
     };
   }
@@ -209,6 +210,28 @@ class _RequestedAppointmentCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (appointment.status == 'backup_pending') ...[
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: Colors.blue.shade200),
+                ),
+                child: Text(
+                  'Cita de Respaldo',
+                  style: TextStyle(
+                    color: Colors.blue.shade900,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+            ],
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

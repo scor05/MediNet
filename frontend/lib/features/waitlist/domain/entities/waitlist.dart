@@ -3,6 +3,7 @@ class Waitlist {
   final int patientId;
   final int targetAppointmentId;
   final int? fallbackAppointmentId;
+  final int? backupAppointmentId;
   final String status;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -12,12 +13,16 @@ class Waitlist {
   final String? clinicName;
   final String? targetDate;
   final String? targetStartTime;
+  final String? backupDate;
+  final String? backupStartTime;
+  final String? backupStatus;
 
   const Waitlist({
     required this.id,
     required this.patientId,
     required this.targetAppointmentId,
     required this.fallbackAppointmentId,
+    this.backupAppointmentId,
     required this.status,
     required this.createdAt,
     required this.updatedAt,
@@ -25,6 +30,9 @@ class Waitlist {
     this.clinicName,
     this.targetDate,
     this.targetStartTime,
+    this.backupDate,
+    this.backupStartTime,
+    this.backupStatus,
   });
 
   bool get isActive => status == 'waiting';

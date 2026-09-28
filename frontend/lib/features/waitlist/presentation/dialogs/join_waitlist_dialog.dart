@@ -5,7 +5,7 @@ import 'package:frontend/features/waitlist/domain/providers/waitlist_domain_prov
 import 'package:frontend/features/waitlist/presentation/providers/waitlist_provider.dart';
 
 /// Diálogo de confirmación para unirse a la lista de espera.
-/// Retorna `true` si el registro fue exitoso.
+/// Retorna el registro creado si la operación fue exitosa.
 class JoinWaitlistDialog extends ConsumerStatefulWidget {
   final int scheduleId;
   final String doctorName;
@@ -37,7 +37,7 @@ class _JoinWaitlistDialogState extends ConsumerState<JoinWaitlistDialog> {
     });
 
     try {
-      await ref
+      final waitlist = await ref
           .read(createWaitlistUsecaseProvider)
           .call(
             scheduleId: widget.scheduleId,
@@ -48,7 +48,7 @@ class _JoinWaitlistDialogState extends ConsumerState<JoinWaitlistDialog> {
       ref.invalidate(patientWaitlistNotifierProvider);
 
       if (!mounted) return;
-      Navigator.of(context).pop(true);
+      Navigator.of(context).pop(waitlist);
     } catch (e) {
       if (!mounted) return;
       setState(() {

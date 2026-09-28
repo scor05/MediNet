@@ -53,6 +53,21 @@ services:
       reverb:
         condition: service_healthy
 
+  scheduler:
+    image: medinet-backend:latest
+    command:
+      - php
+      - artisan
+      - schedule:work
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      backend:
+        condition: service_started
+
   frontend:
     build: ./frontend
     expose:

@@ -13,7 +13,8 @@ class DoctorRequestedAppointmentsNotifier
     return appointments
         .where(
           (appointment) =>
-              appointment.status == 'requested' && !appointment.isBlockade,
+              ['requested', 'backup_pending'].contains(appointment.status) &&
+              !appointment.isBlockade,
         )
         .toList();
   }
@@ -27,9 +28,9 @@ class DoctorRequestedAppointmentsNotifier
     required int appointmentId,
     required String status,
   }) async {
-    await ref.read(updateAppointmentStatusUsecaseProvider)(
+    await ref.read(decideAppointmentUsecaseProvider)(
       appointmentId: appointmentId,
-      status: status,
+      decision: status == 'accepted' ? 'accept' : 'reject',
     );
 
     final currentAppointments = state.valueOrNull;

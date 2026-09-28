@@ -129,6 +129,49 @@ void main() {
     expect(second.width, lessThan(120));
   });
 
+  testWidgets('adds gutters only at the outer edges of each day block', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1800, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final simultaneous = appointment.copyWith(
+      id: 2,
+      patientName: 'Luis Gómez',
+      doctorId: 8,
+      doctorName: 'Dra. López',
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SecretaryCalendarView(
+            weekStart: DateTime(2026, 9, 21),
+            appointments: [appointment, simultaneous],
+            schedules: const [],
+            doctorColors: const {7: Colors.blue, 8: Colors.purple},
+            onItemsTap: (_) {},
+          ),
+        ),
+      ),
+    );
+
+    final day = tester.getRect(
+      find.byKey(const ValueKey('secretary-day-column-0')),
+    );
+    final first = tester.getRect(
+      find.byKey(const ValueKey('secretary-calendar-appointment-1')),
+    );
+    final second = tester.getRect(
+      find.byKey(const ValueKey('secretary-calendar-appointment-2')),
+    );
+    final leftItem = first.left < second.left ? first : second;
+    final rightItem = first.left < second.left ? second : first;
+
+    expect(leftItem.left - day.left, 4);
+    expect(day.right - rightItem.right, 4);
+    expect(rightItem.left - leftItem.right, 2);
+  });
+
   testWidgets('keeps readable text sizes when three schedules collide', (
     tester,
   ) async {

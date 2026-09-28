@@ -98,6 +98,12 @@ Appointment _appointment(int id) {
 }
 
 class _PatientCalendarRepository implements AppointmentRepository {
+  @override
+  Future<void> decideAppointment({
+    required int appointmentId,
+    required String decision,
+  }) => throw UnimplementedError();
+
   final List<Appointment> initial;
   final refreshCompleter = Completer<List<Appointment>>();
   int calls = 0;

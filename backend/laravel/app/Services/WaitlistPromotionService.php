@@ -63,6 +63,23 @@ class WaitlistPromotionService
             'status' => 'fulfilled',
         ]);
 
+        if ($waitlist->id_backup_appointment !== null) {
+            $backup = $this->appointmentRepository->findById(
+                $waitlist->id_backup_appointment
+            );
+            if (in_array($backup->status, [
+                'backup_pending',
+                'backup_accepted',
+            ], true)) {
+                $oldBackup = clone $backup;
+                $backup = $this->appointmentRepository->update($backup->id, [
+                    'status' => 'backup_cancelled',
+                    'updated_by' => $actorId,
+                ]);
+                $this->realtimeService->updated($oldBackup, $backup);
+            }
+        }
+
         $context = $this->appointmentRepository
             ->findNotificationContext($promotedAppointment->id);
 
@@ -90,7 +107,13 @@ class WaitlistPromotionService
     ): bool {
         $wasHoldingSlot = in_array(
             $oldAppointment->status,
-            ['accepted', 'requested', 'rescheduled'],
+            [
+                'accepted',
+                'requested',
+                'rescheduled',
+                'backup_pending',
+                'backup_accepted',
+            ],
             true
         );
 
@@ -98,8 +121,15 @@ class WaitlistPromotionService
             return false;
         }
 
-        $wasCancelled = $oldAppointment->status !== 'cancelled'
-            && $newAppointment->status === 'cancelled';
+        $wasCancelled = ! in_array($oldAppointment->status, [
+            'cancelled',
+            'rejected',
+            'backup_cancelled',
+        ], true) && in_array($newAppointment->status, [
+            'cancelled',
+            'rejected',
+            'backup_cancelled',
+        ], true);
         $wasMoved = $oldAppointment->id_schedule !== $newAppointment->id_schedule
             || (string) $oldAppointment->date !== (string) $newAppointment->date
             || $this->formatTime($oldAppointment->start_time)

@@ -27,4 +27,9 @@ class Appointment extends Model
     {
         return $this->belongsTo(User::class, 'id_patient');
     }
+
+    public function backupWaitlist()
+    {
+        return $this->hasOne(Waitlist::class, 'id_backup_appointment');
+    }
 }

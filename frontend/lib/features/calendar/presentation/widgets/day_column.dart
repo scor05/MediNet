@@ -98,8 +98,8 @@ class DayColumn extends StatelessWidget {
 
             return Positioned(
               top: top,
-              left: 0,
-              right: 0,
+              left: CalendarSizes.calendarItemDayEdgeInset,
+              right: CalendarSizes.calendarItemDayEdgeInset,
               height: height,
               child: Material(
                 color: Colors.transparent,
@@ -142,8 +142,8 @@ class DayColumn extends StatelessWidget {
 
             return Positioned(
               top: top,
-              left: CalendarSizes.appointmentHorizontalInset,
-              right: CalendarSizes.appointmentHorizontalInset,
+              left: CalendarSizes.calendarItemDayEdgeInset,
+              right: CalendarSizes.calendarItemDayEdgeInset,
               height: height,
               child: AppointmentCard(
                 appointment: appointment,

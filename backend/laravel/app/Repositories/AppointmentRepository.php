@@ -19,6 +19,11 @@ class AppointmentRepository
         return Appointment::findOrFail($id);
     }
 
+    public function findByIdForUpdate(int $id): Appointment
+    {
+        return Appointment::whereKey($id)->lockForUpdate()->firstOrFail();
+    }
+
     // Se crea una nueva cita
     public function create($data)
     {
@@ -49,7 +54,13 @@ class AppointmentRepository
     ) {
         $query = Appointment::where('id_schedule', $idSchedule)
             ->where('date', $date)
-            ->whereNotIn('status', ['rejected', 'cancelled']);
+            ->whereIn('status', [
+                'requested',
+                'accepted',
+                'rescheduled',
+                'backup_pending',
+                'backup_accepted',
+            ]);
 
         if ($ignoreAppointmentId !== null) {
             $query->where('id', '!=', $ignoreAppointmentId);
@@ -63,10 +74,36 @@ class AppointmentRepository
         return Appointment::where('id_schedule', $scheduleId)
             ->where('date', $date)
             ->where('start_time', $startTime)
-            ->whereIn('status', ['requested', 'accepted', 'rescheduled'])
+            ->whereIn('status', [
+                'requested',
+                'accepted',
+                'rescheduled',
+                'backup_pending',
+                'backup_accepted',
+            ])
             ->orderBy('created_at')
             ->orderBy('id')
             ->first();
+    }
+
+    public function canDecide(int $appointmentId, int $actorId): bool
+    {
+        return DB::table('appointments AS a')
+            ->join('schedules AS s', 's.id', '=', 'a.id_schedule')
+            ->join('clinics AS c', 'c.id', '=', 's.id_clinic')
+            ->where('a.id', $appointmentId)
+            ->where(function ($query) use ($actorId) {
+                $query->where('s.id_doctor', $actorId)
+                    ->orWhereExists(function ($subquery) use ($actorId) {
+                        $subquery->selectRaw('1')
+                            ->from('client_users AS cu')
+                            ->whereColumn('cu.id_client', 'c.id_client')
+                            ->where('cu.id_user', $actorId)
+                            ->where('cu.role', 2)
+                            ->where('cu.is_active', true);
+                    });
+            })
+            ->exists();
     }
 
     // Retorna datos para mandar notificación

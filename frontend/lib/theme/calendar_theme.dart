@@ -132,8 +132,9 @@ class CalendarSizes {
   static const double appointmentPatientFontSize = 11;
   static const double appointmentSecondaryFontSize = 10;
 
-  // Positioned appointment
-  static const double appointmentHorizontalInset = 4;
+  // Separación visual entre los ítems y los límites de cada día. Se aplica
+  // únicamente a los extremos del bloque, no entre columnas superpuestas.
+  static const double calendarItemDayEdgeInset = 10;
 
   // FAB
   static const double fabBottom = 20;
