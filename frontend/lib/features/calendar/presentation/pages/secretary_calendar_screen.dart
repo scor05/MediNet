@@ -33,6 +33,7 @@ class SecretaryCalendarScreen extends ConsumerStatefulWidget {
 class _SecretaryCalendarScreenState
     extends ConsumerState<SecretaryCalendarScreen> {
   bool _fabOpen = false;
+  bool _showCancelled = true;
   final _random = Random();
   final _doctorColors = <int, Color>{};
 
@@ -42,6 +43,10 @@ class _SecretaryCalendarScreenState
 
   void _closeFab() {
     setState(() => _fabOpen = false);
+  }
+
+  void _toggleCancelled() {
+    setState(() => _showCancelled = !_showCancelled);
   }
 
   Future<void> _openCreateAppointment() async {
@@ -160,10 +165,10 @@ class _SecretaryCalendarScreenState
     AsyncValue<List<Schedule>> schedulesAsync,
     DateTime weekStart,
   ) {
-    final appointments = calendarAsync.asData?.value;
+    final rawAppointments = calendarAsync.asData?.value;
     final schedules = schedulesAsync.asData?.value;
 
-    if (appointments == null || schedules == null) {
+    if (rawAppointments == null || schedules == null) {
       final error = calendarAsync.error ?? schedulesAsync.error;
       if (error != null) {
         return ErrorView(
@@ -173,6 +178,10 @@ class _SecretaryCalendarScreenState
       }
       return const Center(child: CircularProgressIndicator());
     }
+
+    final appointments = rawAppointments
+        .where((item) => _showCancelled || !item.isCancelled)
+        .toList();
 
     _ensureDoctorColors(appointments, schedules);
     return Stack(
@@ -208,6 +217,18 @@ class _SecretaryCalendarScreenState
           onPressed: () =>
               CalendarShellNavigation.maybeOf(context)?.onOpenSettings(),
         ),
+        extraActions: [
+          IconButton(
+            icon: Icon(
+              _showCancelled ? Icons.event_busy : Icons.event_busy_outlined,
+              color: _showCancelled ? null : Colors.grey,
+            ),
+            tooltip: _showCancelled
+                ? 'Ocultar citas canceladas'
+                : 'Mostrar citas canceladas',
+            onPressed: _toggleCancelled,
+          ),
+        ],
         onPreviousWeek: () => ref
             .read(secretaryWeekStartProvider.notifier)
             .update((d) => d.subtract(const Duration(days: 7))),

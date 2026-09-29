@@ -22,6 +22,8 @@ class Appointment {
 
   bool get isBlockade => type == 'blockade';
   bool get isBackup => status.startsWith('backup_');
+  bool get isCancelled =>
+      status == 'cancelled' || status == 'backup_cancelled';
 
   const Appointment({
     required this.id,

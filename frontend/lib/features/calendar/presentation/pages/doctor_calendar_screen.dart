@@ -27,6 +27,7 @@ class DoctorCalendarScreen extends ConsumerStatefulWidget {
 
 class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
   bool _fabOpen = false;
+  bool _showCancelled = true;
 
   void _toggleFab() {
     setState(() => _fabOpen = !_fabOpen);
@@ -34,6 +35,10 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
 
   void _closeFab() {
     setState(() => _fabOpen = false);
+  }
+
+  void _toggleCancelled() {
+    setState(() => _showCancelled = !_showCancelled);
   }
 
   Future<void> _openCreateAppointment() async {
@@ -142,7 +147,9 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
     final visibleCalendarAsync = calendarAsync.whenData(
       (items) => items
           .where(
-            (item) => item.isBlockade || item.doctorId == widget.profile.id,
+            (item) =>
+                (item.isBlockade || item.doctorId == widget.profile.id) &&
+                (_showCancelled || !item.isCancelled),
           )
           .toList(),
     );
@@ -160,6 +167,18 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
           onPressed: () =>
               CalendarShellNavigation.maybeOf(context)?.onOpenSettings(),
         ),
+        extraActions: [
+          IconButton(
+            icon: Icon(
+              _showCancelled ? Icons.event_busy : Icons.event_busy_outlined,
+              color: _showCancelled ? null : Colors.grey,
+            ),
+            tooltip: _showCancelled
+                ? 'Ocultar citas canceladas'
+                : 'Mostrar citas canceladas',
+            onPressed: _toggleCancelled,
+          ),
+        ],
         onPreviousWeek: () => ref
             .read(doctorWeekStartProvider.notifier)
             .update((d) => d.subtract(const Duration(days: 7))),
