@@ -6,6 +6,7 @@ class CalendarAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback onNextWeek;
   final Widget? leading;
   final Widget? settingsButton;
+  final List<Widget>? extraActions;
   final bool automaticallyImplyLeading;
 
   const CalendarAppBar({
@@ -15,6 +16,7 @@ class CalendarAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.onNextWeek,
     this.leading,
     this.settingsButton,
+    this.extraActions,
     this.automaticallyImplyLeading = false,
   });
 
@@ -26,6 +28,7 @@ class CalendarAppBar extends StatelessWidget implements PreferredSizeWidget {
       automaticallyImplyLeading: automaticallyImplyLeading,
       actions: [
         if (settingsButton != null) settingsButton!,
+        if (extraActions != null) ...extraActions!,
         IconButton(
           icon: const Icon(Icons.chevron_left),
           onPressed: onPreviousWeek,
@@ -35,9 +38,6 @@ class CalendarAppBar extends StatelessWidget implements PreferredSizeWidget {
           onPressed: onNextWeek,
         ),
       ],
-    );
-  }
-
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
