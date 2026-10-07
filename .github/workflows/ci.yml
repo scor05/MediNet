@@ -63,7 +63,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: mbstring, pdo_pgsql
+          extensions: curl, mbstring, pdo_pgsql
           coverage: none
 
       - name: Instalar dependencias
@@ -75,7 +75,7 @@ jobs:
       - name: Ejecutar migraciones
         run: php artisan migrate:fresh --force
 
-      - name: Ejecutar pruebas de integración y regresión
+      - name: Ejecutar pruebas unitarias y funcionales
         run: php artisan test --log-junit storage/test-results/phpunit.xml
 
       - name: Guardar reporte del backend
@@ -86,6 +86,55 @@ jobs:
           path: backend/laravel/storage/test-results/phpunit.xml
           if-no-files-found: warn
           retention-days: 30
+
+  system-tests:
+    name: Integración y regresión (Docker Compose)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Preparar variables temporales
+        run: cp .github/ci/backend.env backend/.env
+
+      - name: Construir e iniciar los servicios
+        run: >-
+          docker compose --env-file backend/.env
+          up -d --build --wait --wait-timeout 120
+          db backend reverb frontend
+
+      - name: Preparar la base de datos
+        run: >-
+          docker compose --env-file backend/.env exec -T backend
+          php artisan migrate:fresh --force
+
+      - name: Preparar carpeta de resultados
+        run: mkdir -p backend/laravel/storage/test-results
+
+      - name: Ejecutar pruebas de integración y regresión
+        run: >-
+          docker compose --env-file backend/.env exec -T backend
+          php vendor/bin/pest --configuration=phpunit.system.xml
+          --log-junit=storage/test-results/system-tests.xml
+
+      - name: Guardar reporte de integración y regresión
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte-integracion-regresion-${{ github.run_number }}
+          path: backend/laravel/storage/test-results/system-tests.xml
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Mostrar logs de contenedores si hubo un fallo
+        if: failure()
+        run: docker compose --env-file backend/.env logs --no-color
+
+      - name: Detener los servicios
+        if: always()
+        run: docker compose --env-file backend/.env down --volumes
 
   frontend-tests:
     name: Frontend (Flutter)

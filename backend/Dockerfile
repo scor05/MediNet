@@ -6,8 +6,9 @@ RUN apt-get update && apt-get install -y \
     curl \
     zip \
     unzip \
+    libcurl4-openssl-dev \
     libpq-dev \
-    && docker-php-ext-install pdo pdo_pgsql opcache pcntl \
+    && docker-php-ext-install curl pdo pdo_pgsql opcache pcntl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY opcache.ini /usr/local/etc/php/conf.d/opcache.ini
