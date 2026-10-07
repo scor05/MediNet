@@ -76,7 +76,11 @@ jobs:
         run: php artisan migrate:fresh --force
 
       - name: Ejecutar pruebas unitarias y funcionales
-        run: php artisan test --log-junit storage/test-results/phpunit.xml
+        # Pest is installed for the separate container-system suites, but the
+        # legacy PHPUnit suite contains tests marked RunInSeparateProcess.
+        # Artisan auto-selects Pest and those child processes cannot bootstrap
+        # PHPUnit's configuration registry, so invoke PHPUnit explicitly here.
+        run: php vendor/bin/phpunit --log-junit storage/test-results/phpunit.xml
 
       - name: Guardar reporte del backend
         if: always()
