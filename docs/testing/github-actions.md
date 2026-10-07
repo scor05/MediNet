@@ -8,10 +8,13 @@ puede ejecutar manualmente desde **Actions > Pruebas automatizadas > Run workflo
 
 - **Backend (Laravel + PostgreSQL):** instala Composer, crea una base PostgreSQL
   temporal, ejecuta todas las migraciones y corre las pruebas de PHPUnit.
+- **Integración y regresión (Docker Compose):** levanta PostgreSQL, Laravel,
+  Reverb y el frontend compilado, y ejecuta las seis pruebas Pest entre los
+  servicios reales.
 - **Frontend (Flutter):** instala paquetes, ejecuta el análisis estático, corre
   todas las pruebas de Flutter y verifica que la aplicación web compile.
 
-Los dos trabajos se ejecutan en paralelo. Un cheque verde significa que todos
+Los tres trabajos se ejecutan en paralelo. Un cheque verde significa que todos
 los pasos terminaron correctamente; uno rojo indica qué paso y prueba fallaron.
 
 ## Reportes y logs
@@ -20,6 +23,7 @@ Al finalizar una ejecución, incluso si falla una prueba, GitHub conserva durant
 30 días los artefactos disponibles al final de la página:
 
 - `reporte-backend-N`: reporte JUnit XML de PHPUnit.
+- `reporte-integracion-regresion-N`: reporte JUnit XML de las pruebas Pest.
 - `reporte-frontend-N`: salida estructurada JSON de `flutter test`.
 
 Los detalles de cada comando también quedan en el log desplegable del trabajo.
