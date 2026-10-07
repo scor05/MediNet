@@ -38,6 +38,9 @@ class CalendarAppBar extends StatelessWidget implements PreferredSizeWidget {
           onPressed: onNextWeek,
         ),
       ],
+    );
+  }
+
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
