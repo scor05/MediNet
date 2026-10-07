@@ -25,7 +25,7 @@ class SearchRepositoryTest extends TestCase
         $db->shouldReceive('table')->once()->with('users')->andReturn($query);
         $db->shouldReceive('raw')
             ->once()
-            ->with("COALESCE(MIN(specialties.specialty), 'Sin especialidad') as specialty")
+            ->with("COALESCE(STRING_AGG(DISTINCT specialties.specialty, ', '), 'Sin especialidad') as specialty")
             ->andReturn('specialty_expression');
 
         $query->shouldReceive('join')
