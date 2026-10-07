@@ -25,7 +25,7 @@ final restoredSessionHomeProvider = FutureProvider<Widget>((ref) async {
 
   try {
     final profile = await ref.read(getProfileUsecaseProvider)();
-    return AuthNavigation.screenAfterLogin(profile);
+    return await AuthNavigation.screenAfterLogin(profile);
   } on ApiException catch (error) {
     if (!error.isUnauthorized) rethrow;
 
@@ -37,7 +37,7 @@ final restoredSessionHomeProvider = FutureProvider<Widget>((ref) async {
     }
 
     final profile = await ref.read(getProfileUsecaseProvider)();
-    return AuthNavigation.screenAfterLogin(profile);
+    return await AuthNavigation.screenAfterLogin(profile);
   }
 });
 
