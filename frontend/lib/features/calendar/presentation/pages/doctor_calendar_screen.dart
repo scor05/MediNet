@@ -7,6 +7,7 @@ import 'package:frontend/features/calendar/presentation/dialogs/appointment_deta
 import 'package:frontend/features/calendar/presentation/dialogs/secretary_calendar_item_dialogs.dart';
 import 'package:frontend/features/calendar/presentation/models/secretary_calendar_item.dart';
 import 'package:frontend/features/calendar/presentation/providers/doctor_calendar_provider.dart';
+import 'package:frontend/features/calendar/presentation/utils/appointment_time_utils.dart';
 import 'package:frontend/features/calendar/presentation/utils/calendar_dialog_helpers.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_app_bar.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_body.dart';
@@ -56,7 +57,11 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
       ),
     );
 
-    if (created != null) {
+    if (created != null && mounted) {
+      final createdWeekStart = calendarWeekStart(created.date);
+      ref
+          .read(doctorWeekStartProvider.notifier)
+          .update((_) => createdWeekStart);
       await ref.read(doctorCalendarNotifierProvider.notifier).refresh();
     }
   }
