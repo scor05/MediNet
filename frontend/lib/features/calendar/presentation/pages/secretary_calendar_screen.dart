@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -35,8 +36,18 @@ class _SecretaryCalendarScreenState
     extends ConsumerState<SecretaryCalendarScreen> {
   bool _fabOpen = false;
   bool _showCancelled = true;
+  int? _highlightedAppointmentId;
+  Timer? _highlightDelayTimer;
+  Timer? _highlightClearTimer;
   final _random = Random();
   final _doctorColors = <int, Color>{};
+
+  @override
+  void dispose() {
+    _highlightDelayTimer?.cancel();
+    _highlightClearTimer?.cancel();
+    super.dispose();
+  }
 
   void _toggleFab() {
     setState(() => _fabOpen = !_fabOpen);
@@ -71,7 +82,39 @@ class _SecretaryCalendarScreenState
             .read(secretaryRequestedAppointmentsNotifierProvider.notifier)
             .refresh(),
       ]);
+      await _highlightCreatedAppointment(created);
     }
+  }
+
+  Future<void> _highlightCreatedAppointment(Appointment appointment) async {
+    if (!mounted) return;
+
+    // Start the delay only after the refreshed target week has been painted.
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+
+    _highlightDelayTimer?.cancel();
+    _highlightClearTimer?.cancel();
+    _highlightDelayTimer = Timer(const Duration(seconds: 1), () {
+      if (!mounted || !_appointmentIsVisible(appointment)) return;
+
+      setState(() => _highlightedAppointmentId = appointment.id);
+      _highlightClearTimer = Timer(const Duration(seconds: 4), () {
+        if (!mounted || _highlightedAppointmentId != appointment.id) return;
+        setState(() => _highlightedAppointmentId = null);
+      });
+    });
+  }
+
+  bool _appointmentIsVisible(Appointment appointment) {
+    final visibleWeek = ref.read(secretaryWeekStartProvider);
+    if (calendarWeekStart(appointment.date) != visibleWeek) return false;
+
+    final appointments = ref
+        .read(secretaryCalendarNotifierProvider)
+        .asData
+        ?.value;
+    return appointments?.any((item) => item.id == appointment.id) ?? false;
   }
 
   Future<void> _openCreateSchedule() async {
@@ -196,6 +239,7 @@ class _SecretaryCalendarScreenState
           appointments: appointments,
           schedules: schedules,
           doctorColors: _doctorColors,
+          highlightedAppointmentId: _highlightedAppointmentId,
           onItemsTap: _openCalendarItems,
         ),
         if (calendarAsync.isLoading || schedulesAsync.isLoading)

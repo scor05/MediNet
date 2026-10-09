@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
@@ -29,6 +31,16 @@ class DoctorCalendarScreen extends ConsumerStatefulWidget {
 class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
   bool _fabOpen = false;
   bool _showCancelled = true;
+  int? _highlightedAppointmentId;
+  Timer? _highlightDelayTimer;
+  Timer? _highlightClearTimer;
+
+  @override
+  void dispose() {
+    _highlightDelayTimer?.cancel();
+    _highlightClearTimer?.cancel();
+    super.dispose();
+  }
 
   void _toggleFab() {
     setState(() => _fabOpen = !_fabOpen);
@@ -63,7 +75,37 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
           .read(doctorWeekStartProvider.notifier)
           .update((_) => createdWeekStart);
       await ref.read(doctorCalendarNotifierProvider.notifier).refresh();
+      await _highlightCreatedAppointment(created);
     }
+  }
+
+  Future<void> _highlightCreatedAppointment(Appointment appointment) async {
+    if (!mounted) return;
+
+    // The refreshed week must complete a frame before the one-second delay
+    // begins. This prevents an item from the previous week being highlighted.
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+
+    _highlightDelayTimer?.cancel();
+    _highlightClearTimer?.cancel();
+    _highlightDelayTimer = Timer(const Duration(seconds: 1), () {
+      if (!mounted || !_appointmentIsVisible(appointment)) return;
+
+      setState(() => _highlightedAppointmentId = appointment.id);
+      _highlightClearTimer = Timer(const Duration(seconds: 4), () {
+        if (!mounted || _highlightedAppointmentId != appointment.id) return;
+        setState(() => _highlightedAppointmentId = null);
+      });
+    });
+  }
+
+  bool _appointmentIsVisible(Appointment appointment) {
+    final visibleWeek = ref.read(doctorWeekStartProvider);
+    if (calendarWeekStart(appointment.date) != visibleWeek) return false;
+
+    final appointments = ref.read(doctorCalendarNotifierProvider).asData?.value;
+    return appointments?.any((item) => item.id == appointment.id) ?? false;
   }
 
   Future<void> _openCreateSchedule() async {
@@ -200,6 +242,7 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
             showPatient: true,
             showSchedules: true,
             splitOverlappingAppointments: true,
+            highlightedAppointmentId: _highlightedAppointmentId,
             onAppointmentTap: _openAppointmentDetail,
             onBlockadeTap: _onBlockadeTap,
             onScheduleTap: _openScheduleDetail,

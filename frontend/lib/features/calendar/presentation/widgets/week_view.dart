@@ -12,6 +12,7 @@ class WeekView extends StatelessWidget {
   final bool showDoctor;
   final bool showPatient;
   final bool splitOverlappingAppointments;
+  final int? highlightedAppointmentId;
   final bool compact;
   final void Function(Appointment)? onAppointmentTap;
   final void Function(Appointment)? onBlockadeTap;
@@ -25,6 +26,7 @@ class WeekView extends StatelessWidget {
     this.showDoctor = false,
     this.showPatient = false,
     this.splitOverlappingAppointments = false,
+    this.highlightedAppointmentId,
     this.compact = false,
     this.onAppointmentTap,
     this.onBlockadeTap,
@@ -83,6 +85,7 @@ class WeekView extends StatelessWidget {
                             showPatient: showPatient,
                             splitOverlappingAppointments:
                                 splitOverlappingAppointments,
+                            highlightedAppointmentId: highlightedAppointmentId,
                             startHour: startHour,
                             endHour: endHour,
                             hourHeight: hourHeight,

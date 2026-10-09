@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/calendar/presentation/widgets/appointment_card.dart';
+import 'package:frontend/features/calendar/presentation/widgets/calendar_appointment_highlight.dart';
 import 'package:frontend/features/schedule/domain/entities/schedule.dart';
 import 'package:frontend/theme/calendar_theme.dart';
 import 'package:frontend/theme/clinic_colors.dart';
@@ -12,6 +13,7 @@ class DayColumn extends StatelessWidget {
   final bool showDoctor;
   final bool showPatient;
   final bool splitOverlappingAppointments;
+  final int? highlightedAppointmentId;
   final int startHour;
   final int endHour;
   final double hourHeight;
@@ -27,6 +29,7 @@ class DayColumn extends StatelessWidget {
     required this.showDoctor,
     required this.showPatient,
     this.splitOverlappingAppointments = false,
+    this.highlightedAppointmentId,
     required this.startHour,
     required this.endHour,
     required this.hourHeight,
@@ -123,13 +126,22 @@ class DayColumn extends StatelessWidget {
   }
 
   Widget _appointmentCard(Appointment appointment) {
-    return AppointmentCard(
+    final card = AppointmentCard(
       appointment: appointment,
       showDoctor: showDoctor,
       showPatient: showPatient,
       onTap: appointment.isBlockade
           ? () => onBlockadeTap?.call(appointment)
           : () => onAppointmentTap?.call(appointment),
+    );
+
+    if (appointment.isBlockade) return card;
+
+    return CalendarAppointmentHighlight(
+      appointmentId: appointment.id,
+      highlighted: appointment.id == highlightedAppointmentId,
+      glowColor: appointmentStatusColor(appointment.status),
+      child: card,
     );
   }
 
@@ -179,7 +191,7 @@ class DayColumn extends StatelessWidget {
                 schedule.endTime,
               );
               final color = getClinicColor(schedule.clinicName);
-              final textColor = color.withOpacity(0.75);
+              final textColor = color.withValues(alpha: 0.75);
 
               return Positioned(
                 top: top,
@@ -194,10 +206,10 @@ class DayColumn extends StatelessWidget {
                         : () => onScheduleTap!(schedule),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: color.withOpacity(0.12),
+                        color: color.withValues(alpha: 0.12),
                         border: Border(
                           left: BorderSide(
-                            color: color.withOpacity(0.6),
+                            color: color.withValues(alpha: 0.6),
                             width: 3,
                           ),
                         ),
