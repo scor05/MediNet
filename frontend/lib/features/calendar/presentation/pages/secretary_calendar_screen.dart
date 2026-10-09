@@ -12,6 +12,7 @@ import 'package:frontend/features/calendar/presentation/dialogs/secretary_calend
 import 'package:frontend/features/calendar/presentation/models/secretary_calendar_item.dart';
 import 'package:frontend/features/calendar/presentation/providers/secretary_calendar_provider.dart';
 import 'package:frontend/features/calendar/presentation/providers/secretary_requested_appointments_provider.dart';
+import 'package:frontend/features/calendar/presentation/utils/appointment_time_utils.dart';
 import 'package:frontend/features/calendar/presentation/utils/calendar_dialog_helpers.dart';
 import 'package:frontend/features/calendar/presentation/utils/secretary_doctor_color.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_app_bar.dart';
@@ -59,7 +60,11 @@ class _SecretaryCalendarScreenState
       weekStart: weekStart,
     );
 
-    if (created != null) {
+    if (created != null && mounted) {
+      final createdWeekStart = calendarWeekStart(created.date);
+      ref
+          .read(secretaryWeekStartProvider.notifier)
+          .update((_) => createdWeekStart);
       await Future.wait([
         ref.read(secretaryCalendarNotifierProvider.notifier).refresh(),
         ref

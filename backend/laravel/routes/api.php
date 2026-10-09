@@ -36,6 +36,6 @@ Route::middleware('supabase.auth')->group(function () {
     Route::get('/profile', [UserController::class, 'profile']);
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard']);
 
-    // Search 
+    // Search
     Route::get('/search', [SearchController::class, 'index']);
 });

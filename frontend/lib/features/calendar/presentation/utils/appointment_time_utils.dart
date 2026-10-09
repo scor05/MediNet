@@ -10,6 +10,15 @@ const daysFull = [
   'Domingo',
 ];
 
+/// Returns the Monday that starts the calendar week containing [date].
+///
+/// The result is normalized to midnight so it can be used consistently by
+/// calendar providers and API date-range queries.
+DateTime calendarWeekStart(DateTime date) {
+  final normalizedDate = DateTime(date.year, date.month, date.day);
+  return normalizedDate.subtract(Duration(days: normalizedDate.weekday - 1));
+}
+
 DateTime nextScheduleDate({
   required DateTime weekStart,
   required DateTime today,

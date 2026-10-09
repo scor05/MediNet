@@ -4,6 +4,26 @@ import 'package:frontend/features/calendar/presentation/utils/appointment_time_u
 import 'package:frontend/features/calendar/presentation/widgets/create_appointment/appointment_date_display.dart';
 
 void main() {
+  group('calendar week start', () {
+    test('returns Monday at midnight for a date during the week', () {
+      final result = calendarWeekStart(DateTime(2026, 10, 8, 14, 35));
+
+      expect(result, DateTime(2026, 10, 5));
+    });
+
+    test('returns the same date when it is already Monday', () {
+      final result = calendarWeekStart(DateTime(2026, 10, 5, 9));
+
+      expect(result, DateTime(2026, 10, 5));
+    });
+
+    test('moves Sunday back to the preceding Monday', () {
+      final result = calendarWeekStart(DateTime(2026, 10, 11));
+
+      expect(result, DateTime(2026, 10, 5));
+    });
+  });
+
   group('schedule date selection', () {
     test('keeps a future matching weekday from the viewed week', () {
       final result = nextScheduleDate(
