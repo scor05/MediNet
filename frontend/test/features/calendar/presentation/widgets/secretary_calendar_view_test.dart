@@ -93,6 +93,58 @@ void main() {
     expect(find.text('Horario - Dr. Ruiz / Clínica Central'), findsOneWidget);
   });
 
+  testWidgets('highlights only the appointment matching the requested id', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1800, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final otherAppointment = appointment.copyWith(
+      id: 2,
+      patientName: 'Luis Gómez',
+      startTime: '09:00:00',
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SecretaryCalendarView(
+            weekStart: DateTime(2026, 9, 21),
+            appointments: [appointment, otherAppointment],
+            schedules: const [],
+            doctorColors: const {7: Colors.blue},
+            highlightedAppointmentId: appointment.id,
+            onItemsTap: (_) {},
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 275));
+
+    final selected = tester.widget<DecoratedBox>(
+      find.descendant(
+        of: find.byKey(const ValueKey('appointment-highlight-1')),
+        matching: find.byType(DecoratedBox),
+      ),
+    );
+    final other = tester.widget<DecoratedBox>(
+      find.descendant(
+        of: find.byKey(const ValueKey('appointment-highlight-2')),
+        matching: find.byType(DecoratedBox),
+      ),
+    );
+
+    final selectedDecoration = selected.decoration as BoxDecoration;
+    final otherDecoration = other.decoration as BoxDecoration;
+    expect(selectedDecoration.border, isNull);
+    expect(selectedDecoration.boxShadow, isNotEmpty);
+    expect(
+      HSLColor.fromColor(selectedDecoration.boxShadow!.single.color).hue,
+      closeTo(HSLColor.fromColor(Colors.blue).hue, 0.1),
+    );
+    expect(otherDecoration.boxShadow, isEmpty);
+  });
+
   testWidgets('places simultaneous appointments in separate columns', (
     tester,
   ) async {

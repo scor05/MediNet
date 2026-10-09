@@ -15,6 +15,7 @@ class CalendarBody extends ConsumerStatefulWidget {
   final bool showPatient;
   final bool showSchedules;
   final bool splitOverlappingAppointments;
+  final int? highlightedAppointmentId;
   final void Function(Appointment)? onAppointmentTap;
   final void Function(Appointment)? onBlockadeTap;
   final void Function(Schedule)? onScheduleTap;
@@ -28,6 +29,7 @@ class CalendarBody extends ConsumerStatefulWidget {
     this.showPatient = false,
     this.showSchedules = false,
     this.splitOverlappingAppointments = false,
+    this.highlightedAppointmentId,
     this.onAppointmentTap,
     this.onBlockadeTap,
     this.onScheduleTap,
@@ -74,6 +76,7 @@ class _CalendarBodyState extends ConsumerState<CalendarBody> {
                 showPatient: widget.showPatient,
                 splitOverlappingAppointments:
                     widget.splitOverlappingAppointments,
+                highlightedAppointmentId: widget.highlightedAppointmentId,
                 onAppointmentTap: widget.onAppointmentTap,
                 onBlockadeTap: widget.onBlockadeTap,
                 onScheduleTap: widget.onScheduleTap,

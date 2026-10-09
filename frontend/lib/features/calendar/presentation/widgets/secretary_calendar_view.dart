@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/calendar/presentation/models/secretary_calendar_item.dart';
 import 'package:frontend/features/calendar/presentation/utils/calendar_collision_layout.dart';
+import 'package:frontend/features/calendar/presentation/widgets/calendar_appointment_highlight.dart';
 import 'package:frontend/features/calendar/presentation/widgets/time_column.dart';
 import 'package:frontend/features/calendar/presentation/widgets/week_header.dart';
 import 'package:frontend/features/schedule/domain/entities/schedule.dart';
@@ -12,6 +13,7 @@ class SecretaryCalendarView extends StatelessWidget {
   final List<Appointment> appointments;
   final List<Schedule> schedules;
   final Map<int, Color> doctorColors;
+  final int? highlightedAppointmentId;
   final ValueChanged<List<SecretaryCalendarItem>> onItemsTap;
 
   const SecretaryCalendarView({
@@ -20,6 +22,7 @@ class SecretaryCalendarView extends StatelessWidget {
     required this.appointments,
     required this.schedules,
     required this.doctorColors,
+    this.highlightedAppointmentId,
     required this.onItemsTap,
   });
 
@@ -74,9 +77,7 @@ class SecretaryCalendarView extends StatelessWidget {
                                 final day = days[index];
                                 final dayAppointments = appointments
                                     .where((item) => _sameDay(item.date, day))
-                                    .map(
-                                      SecretaryCalendarItem.fromAppointment,
-                                    )
+                                    .map(SecretaryCalendarItem.fromAppointment)
                                     .toList();
                                 final daySchedules = schedules
                                     .where((item) => item.dayOfWeek == index)
@@ -97,6 +98,8 @@ class SecretaryCalendarView extends StatelessWidget {
                                       ...dayAppointments,
                                     ],
                                     doctorColors: doctorColors,
+                                    highlightedAppointmentId:
+                                        highlightedAppointmentId,
                                     onItemsTap: onItemsTap,
                                   ),
                                 );
@@ -126,12 +129,14 @@ class _SecretaryDayColumn extends StatelessWidget {
   final int dayIndex;
   final List<SecretaryCalendarItem> items;
   final Map<int, Color> doctorColors;
+  final int? highlightedAppointmentId;
   final ValueChanged<List<SecretaryCalendarItem>> onItemsTap;
 
   const _SecretaryDayColumn({
     required this.dayIndex,
     required this.items,
     required this.doctorColors,
+    required this.highlightedAppointmentId,
     required this.onItemsTap,
   });
 
@@ -256,18 +261,40 @@ class _SecretaryDayColumn extends StatelessWidget {
         left: left,
         width: width,
         height: height,
-        child: _SecretaryCalendarCard(
-          item: placement.item,
-          doctorColor: doctorColors[placement.item.doctorId] ?? Colors.blueGrey,
-          opacity: opacity,
-          onTapAt: (tapFraction) {
-            final tapMinute =
-                clippedStart + (clippedEnd - clippedStart) * tapFraction;
-            onItemsTap(_itemsForTap(placement.item, tapMinute));
-          },
-        ),
+        child: placement.item.type == SecretaryCalendarItemType.appointment
+            ? CalendarAppointmentHighlight(
+                appointmentId: placement.item.id,
+                highlighted: placement.item.id == highlightedAppointmentId,
+                glowColor:
+                    doctorColors[placement.item.doctorId] ?? Colors.blueGrey,
+                child: _calendarCard(
+                  placement.item,
+                  opacity,
+                  clippedStart,
+                  clippedEnd,
+                ),
+              )
+            : _calendarCard(placement.item, opacity, clippedStart, clippedEnd),
       );
     }).toList();
+  }
+
+  Widget _calendarCard(
+    SecretaryCalendarItem item,
+    double opacity,
+    int clippedStart,
+    int clippedEnd,
+  ) {
+    return _SecretaryCalendarCard(
+      item: item,
+      doctorColor: doctorColors[item.doctorId] ?? Colors.blueGrey,
+      opacity: opacity,
+      onTapAt: (tapFraction) {
+        final tapMinute =
+            clippedStart + (clippedEnd - clippedStart) * tapFraction;
+        onItemsTap(_itemsForTap(item, tapMinute));
+      },
+    );
   }
 
   List<SecretaryCalendarItem> _itemsForTap(

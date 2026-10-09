@@ -3,6 +3,18 @@ import 'package:frontend/core/utils/time_format.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/theme/calendar_theme.dart';
 
+Color appointmentStatusColor(String status) {
+  return switch (status) {
+    'accepted' => CalendarColors.appointmentAccepted,
+    'requested' => CalendarColors.appointmentRequested,
+    'backup_pending' => CalendarColors.appointmentRequested,
+    'backup_accepted' => CalendarColors.appointmentAccepted,
+    'backup_cancelled' => CalendarColors.appointmentCancelled,
+    'cancelled' => CalendarColors.appointmentCancelled,
+    _ => CalendarColors.appointmentUnknown,
+  };
+}
+
 class AppointmentCard extends StatelessWidget {
   final Appointment appointment;
   final bool showDoctor;
@@ -17,25 +29,13 @@ class AppointmentCard extends StatelessWidget {
     this.onTap,
   });
 
-  Color _statusColor() {
-    return switch (appointment.status) {
-      'accepted' => CalendarColors.appointmentAccepted,
-      'requested' => CalendarColors.appointmentRequested,
-      'backup_pending' => CalendarColors.appointmentRequested,
-      'backup_accepted' => CalendarColors.appointmentAccepted,
-      'backup_cancelled' => CalendarColors.appointmentCancelled,
-      'cancelled' => CalendarColors.appointmentCancelled,
-      _ => CalendarColors.appointmentUnknown,
-    };
-  }
-
   @override
   Widget build(BuildContext context) {
     if (appointment.isBlockade) {
       return GestureDetector(onTap: onTap, child: _buildBlockadeCard());
     }
     return Card(
-      color: _statusColor(),
+      color: appointmentStatusColor(appointment.status),
       margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
