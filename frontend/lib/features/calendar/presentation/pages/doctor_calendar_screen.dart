@@ -7,8 +7,10 @@ import 'package:frontend/features/auth/presentation/utils/logout_helper.dart';
 import 'package:frontend/features/auth/domain/entities/user_profile.dart';
 import 'package:frontend/features/calendar/presentation/dialogs/appointment_detail_dialog.dart';
 import 'package:frontend/features/calendar/presentation/dialogs/secretary_calendar_item_dialogs.dart';
+import 'package:frontend/features/calendar/presentation/dialogs/staff_calendar_filter_dialog.dart';
 import 'package:frontend/features/calendar/presentation/models/secretary_calendar_item.dart';
 import 'package:frontend/features/calendar/presentation/providers/doctor_calendar_provider.dart';
+import 'package:frontend/features/calendar/presentation/providers/staff_calendar_filter_provider.dart';
 import 'package:frontend/features/calendar/presentation/utils/appointment_time_utils.dart';
 import 'package:frontend/features/calendar/presentation/utils/calendar_dialog_helpers.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_app_bar.dart';
@@ -30,7 +32,6 @@ class DoctorCalendarScreen extends ConsumerStatefulWidget {
 
 class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
   bool _fabOpen = false;
-  bool _showCancelled = true;
   int? _highlightedAppointmentId;
   Timer? _highlightDelayTimer;
   Timer? _highlightClearTimer;
@@ -48,10 +49,6 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
 
   void _closeFab() {
     setState(() => _fabOpen = false);
-  }
-
-  void _toggleCancelled() {
-    setState(() => _showCancelled = !_showCancelled);
   }
 
   Future<void> _openCreateAppointment() async {
@@ -106,6 +103,17 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
 
     final appointments = ref.read(doctorCalendarNotifierProvider).asData?.value;
     return appointments?.any((item) => item.id == appointment.id) ?? false;
+  }
+
+  Future<void> _openFilterDialog() async {
+    final result = await showStaffCalendarFilterDialog(
+      context: context,
+      ref: ref,
+      currentFilters: ref.read(doctorCalendarFilterProvider),
+      allowDoctorFilter: false,
+    );
+    if (result == null) return;
+    ref.read(doctorCalendarFilterProvider.notifier).setFilters(result);
   }
 
   Future<void> _openCreateSchedule() async {
@@ -191,12 +199,17 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
   @override
   Widget build(BuildContext context) {
     final calendarAsync = ref.watch(doctorCalendarNotifierProvider);
+    final filters = ref.watch(doctorCalendarFilterProvider);
     final visibleCalendarAsync = calendarAsync.whenData(
       (items) => items
           .where(
             (item) =>
                 (item.isBlockade || item.doctorId == widget.profile.id) &&
-                (_showCancelled || !item.isCancelled),
+                appointmentMatchesStaffFilters(
+                  item,
+                  filters,
+                  filterByDoctor: false,
+                ),
           )
           .toList(),
     );
@@ -216,14 +229,9 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
         ),
         extraActions: [
           IconButton(
-            icon: Icon(
-              _showCancelled ? Icons.event_busy : Icons.event_busy_outlined,
-              color: _showCancelled ? null : Colors.grey,
-            ),
-            tooltip: _showCancelled
-                ? 'Ocultar citas canceladas'
-                : 'Mostrar citas canceladas',
-            onPressed: _toggleCancelled,
+            icon: const Icon(Icons.filter_alt_outlined),
+            tooltip: 'Filtrar',
+            onPressed: _openFilterDialog,
           ),
         ],
         onPreviousWeek: () => ref
@@ -240,7 +248,12 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
             weekStart: weekStart,
             onRetry: ref.read(doctorCalendarNotifierProvider.notifier).refresh,
             showPatient: true,
-            showSchedules: true,
+            showSchedules: filters.showSchedules,
+            scheduleFilter: (schedule) => scheduleMatchesStaffFilters(
+              schedule,
+              filters,
+              filterByDoctor: false,
+            ),
             splitOverlappingAppointments: true,
             highlightedAppointmentId: _highlightedAppointmentId,
             onAppointmentTap: _openAppointmentDetail,

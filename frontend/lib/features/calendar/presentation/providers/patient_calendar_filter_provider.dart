@@ -5,21 +5,24 @@ class PatientCalendarFilterState {
   final String? doctorName;
   final int? clinicId;
   final String? clinicName;
+  final bool showCancelled;
 
   const PatientCalendarFilterState({
     this.doctorId,
     this.doctorName,
     this.clinicId,
     this.clinicName,
+    this.showCancelled = true,
   });
 
-  bool get hasFilters => doctorId != null || clinicId != null;
+  bool get hasFilters => doctorId != null || clinicId != null || !showCancelled;
 
   PatientCalendarFilterState copyWith({
     int? doctorId,
     String? doctorName,
     int? clinicId,
     String? clinicName,
+    bool? showCancelled,
     bool clearDoctor = false,
     bool clearClinic = false,
   }) {
@@ -28,6 +31,7 @@ class PatientCalendarFilterState {
       doctorName: clearDoctor ? null : doctorName ?? this.doctorName,
       clinicId: clearClinic ? null : clinicId ?? this.clinicId,
       clinicName: clearClinic ? null : clinicName ?? this.clinicName,
+      showCancelled: showCancelled ?? this.showCancelled,
     );
   }
 }
@@ -57,6 +61,10 @@ class PatientCalendarFilterNotifier
 
   void clearAll() {
     state = const PatientCalendarFilterState();
+  }
+
+  void setFilters(PatientCalendarFilterState filters) {
+    state = filters;
   }
 }
 

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/appointment/domain/providers/appointment_domain_providers.dart';
+import 'package:frontend/features/calendar/domain/providers/public_calendar_domain_providers.dart';
 import 'package:frontend/features/calendar/presentation/utils/appointment_time_utils.dart';
 import 'package:frontend/features/clinic/domain/entities/clinic_search_result.dart';
 import 'package:frontend/features/schedule/domain/entities/schedule.dart';
@@ -30,6 +31,7 @@ class CreateAppointmentFormState {
   final DateTime? selectedDate;
   final String? selectedTime;
   final List<String> timeSlots;
+  final bool loadingTimeSlots;
 
   final bool loadingSchedules;
 
@@ -52,6 +54,7 @@ class CreateAppointmentFormState {
     this.selectedDate,
     this.selectedTime,
     this.timeSlots = const [],
+    this.loadingTimeSlots = false,
     this.loadingSchedules = false,
     this.patientResults = const [],
     this.selectedPatient,
@@ -72,6 +75,7 @@ class CreateAppointmentFormState {
     DateTime? selectedDate,
     String? selectedTime,
     List<String>? timeSlots,
+    bool? loadingTimeSlots,
     bool? loadingSchedules,
     List<User>? patientResults,
     User? selectedPatient,
@@ -122,6 +126,7 @@ class CreateAppointmentFormState {
           : selectedTime ?? this.selectedTime,
 
       timeSlots: timeSlots ?? this.timeSlots,
+      loadingTimeSlots: loadingTimeSlots ?? this.loadingTimeSlots,
 
       loadingSchedules: loadingSchedules ?? this.loadingSchedules,
 
@@ -157,6 +162,7 @@ class CreateAppointmentFormNotifier
   int _doctorRequestId = 0;
   int _clinicRequestId = 0;
   int _patientRequestId = 0;
+  int _slotRequestId = 0;
 
   List<Schedule> _doctorSchedules = [];
 
@@ -194,6 +200,7 @@ class CreateAppointmentFormNotifier
       clearSelectedDate: true,
       clearSelectedTime: true,
       timeSlots: const [],
+      loadingTimeSlots: false,
       loadingSchedules: false,
       loadingClinics: false,
       clearError: true,
@@ -271,6 +278,7 @@ class CreateAppointmentFormNotifier
       clearSelectedDate: true,
       clearSelectedTime: true,
       timeSlots: const [],
+      loadingTimeSlots: false,
       loadingDoctors: false,
       loadingClinics: false,
       loadingSchedules: true,
@@ -299,6 +307,7 @@ class CreateAppointmentFormNotifier
       clearSelectedDate: true,
       clearSelectedTime: true,
       timeSlots: const [],
+      loadingTimeSlots: false,
       loadingDoctors: false,
       loadingClinics: false,
       loadingSchedules: false,
@@ -325,6 +334,7 @@ class CreateAppointmentFormNotifier
       clearSelectedDate: true,
       clearSelectedTime: true,
       timeSlots: const [],
+      loadingTimeSlots: false,
       loadingSchedules: false,
       clearError: true,
     );
@@ -424,6 +434,7 @@ class CreateAppointmentFormNotifier
       clearSelectedDate: true,
       clearSelectedTime: true,
       timeSlots: const [],
+      loadingTimeSlots: false,
       loadingClinics: false,
       loadingSchedules: false,
       clearError: true,
@@ -471,6 +482,7 @@ class CreateAppointmentFormNotifier
         clearSelectedDate: true,
         clearSelectedTime: true,
         timeSlots: const [],
+        loadingTimeSlots: false,
         loadingSchedules: false,
         error: 'Este doctor no tiene horarios activos en esta clínica.',
       );
@@ -486,17 +498,17 @@ class CreateAppointmentFormNotifier
       dayOfWeek: firstSchedule.dayOfWeek,
     );
 
-    final timeSlots = buildTimeSlots(firstSchedule);
-
     state = state.copyWith(
       schedules: schedules,
       selectedSchedule: firstSchedule,
       selectedDate: selectedDate,
-      timeSlots: timeSlots,
-      selectedTime: timeSlots.isNotEmpty ? timeSlots.first : null,
+      timeSlots: const [],
+      clearSelectedTime: true,
+      loadingTimeSlots: true,
       loadingSchedules: false,
       clearError: true,
     );
+    unawaited(_loadAvailableTimeSlots(firstSchedule, selectedDate));
   }
 
   void selectSchedule(Schedule? schedule) {
@@ -508,15 +520,15 @@ class CreateAppointmentFormNotifier
       dayOfWeek: schedule.dayOfWeek,
     );
 
-    final timeSlots = buildTimeSlots(schedule);
-
     state = state.copyWith(
       selectedSchedule: schedule,
       selectedDate: selectedDate,
-      timeSlots: timeSlots,
-      selectedTime: timeSlots.isNotEmpty ? timeSlots.first : null,
+      timeSlots: const [],
+      clearSelectedTime: true,
+      loadingTimeSlots: true,
       clearError: true,
     );
+    unawaited(_loadAvailableTimeSlots(schedule, selectedDate));
   }
 
   void selectTime(String? time) {
@@ -534,10 +546,82 @@ class CreateAppointmentFormNotifier
       return;
     }
 
+    final normalizedDate = DateTime(date.year, date.month, date.day);
     state = state.copyWith(
-      selectedDate: DateTime(date.year, date.month, date.day),
+      selectedDate: normalizedDate,
+      timeSlots: const [],
+      clearSelectedTime: true,
+      loadingTimeSlots: true,
       clearError: true,
     );
+    unawaited(_loadAvailableTimeSlots(schedule, normalizedDate));
+  }
+
+  Future<void> _loadAvailableTimeSlots(Schedule schedule, DateTime date) async {
+    final doctor = state.selectedDoctor;
+    final clinic = state.selectedClinic;
+    if (doctor == null || clinic == null) {
+      state = state.copyWith(
+        timeSlots: const [],
+        clearSelectedTime: true,
+        loadingTimeSlots: false,
+      );
+      return;
+    }
+
+    final requestId = ++_slotRequestId;
+
+    try {
+      final slots = await ref
+          .read(getPublicSlotsUsecaseProvider)
+          .call(doctorId: doctor.id, clinicId: clinic.id, date: date);
+
+      if (requestId != _slotRequestId ||
+          !_isCurrentSlotRequest(schedule, date)) {
+        return;
+      }
+
+      final availableTimes =
+          slots
+              .where(
+                (slot) => slot.scheduleId == schedule.id && !slot.isOccupied,
+              )
+              .map((slot) => slot.startTime.substring(0, 5))
+              .toSet()
+              .toList()
+            ..sort();
+
+      state = state.copyWith(
+        timeSlots: availableTimes,
+        selectedTime: availableTimes.isEmpty ? null : availableTimes.first,
+        clearSelectedTime: availableTimes.isEmpty,
+        loadingTimeSlots: false,
+        clearError: true,
+      );
+    } catch (e) {
+      if (requestId != _slotRequestId ||
+          !_isCurrentSlotRequest(schedule, date)) {
+        return;
+      }
+
+      state = state.copyWith(
+        timeSlots: const [],
+        clearSelectedTime: true,
+        loadingTimeSlots: false,
+        error: e is ApiException
+            ? e.message
+            : 'No se pudieron cargar las horas disponibles.',
+      );
+    }
+  }
+
+  bool _isCurrentSlotRequest(Schedule schedule, DateTime date) {
+    final selectedDate = state.selectedDate;
+    return state.selectedSchedule?.id == schedule.id &&
+        selectedDate != null &&
+        selectedDate.year == date.year &&
+        selectedDate.month == date.month &&
+        selectedDate.day == date.day;
   }
 
   // ---------------------------------------------------------------------------

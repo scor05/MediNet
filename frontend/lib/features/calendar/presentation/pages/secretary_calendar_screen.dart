@@ -10,9 +10,11 @@ import 'package:frontend/features/auth/domain/entities/user_profile.dart';
 import 'package:frontend/features/auth/presentation/utils/logout_helper.dart';
 import 'package:frontend/features/calendar/presentation/dialogs/appointment_detail_dialog.dart';
 import 'package:frontend/features/calendar/presentation/dialogs/secretary_calendar_item_dialogs.dart';
+import 'package:frontend/features/calendar/presentation/dialogs/staff_calendar_filter_dialog.dart';
 import 'package:frontend/features/calendar/presentation/models/secretary_calendar_item.dart';
 import 'package:frontend/features/calendar/presentation/providers/secretary_calendar_provider.dart';
 import 'package:frontend/features/calendar/presentation/providers/secretary_requested_appointments_provider.dart';
+import 'package:frontend/features/calendar/presentation/providers/staff_calendar_filter_provider.dart';
 import 'package:frontend/features/calendar/presentation/utils/appointment_time_utils.dart';
 import 'package:frontend/features/calendar/presentation/utils/calendar_dialog_helpers.dart';
 import 'package:frontend/features/calendar/presentation/utils/secretary_doctor_color.dart';
@@ -35,7 +37,6 @@ class SecretaryCalendarScreen extends ConsumerStatefulWidget {
 class _SecretaryCalendarScreenState
     extends ConsumerState<SecretaryCalendarScreen> {
   bool _fabOpen = false;
-  bool _showCancelled = true;
   int? _highlightedAppointmentId;
   Timer? _highlightDelayTimer;
   Timer? _highlightClearTimer;
@@ -55,10 +56,6 @@ class _SecretaryCalendarScreenState
 
   void _closeFab() {
     setState(() => _fabOpen = false);
-  }
-
-  void _toggleCancelled() {
-    setState(() => _showCancelled = !_showCancelled);
   }
 
   Future<void> _openCreateAppointment() async {
@@ -115,6 +112,17 @@ class _SecretaryCalendarScreenState
         .asData
         ?.value;
     return appointments?.any((item) => item.id == appointment.id) ?? false;
+  }
+
+  Future<void> _openFilterDialog() async {
+    final result = await showStaffCalendarFilterDialog(
+      context: context,
+      ref: ref,
+      currentFilters: ref.read(secretaryCalendarFilterProvider),
+      allowDoctorFilter: true,
+    );
+    if (result == null) return;
+    ref.read(secretaryCalendarFilterProvider.notifier).setFilters(result);
   }
 
   Future<void> _openCreateSchedule() async {
@@ -212,6 +220,7 @@ class _SecretaryCalendarScreenState
     AsyncValue<List<Appointment>> calendarAsync,
     AsyncValue<List<Schedule>> schedulesAsync,
     DateTime weekStart,
+    StaffCalendarFilterState filters,
   ) {
     final rawAppointments = calendarAsync.asData?.value;
     final schedules = schedulesAsync.asData?.value;
@@ -228,16 +237,31 @@ class _SecretaryCalendarScreenState
     }
 
     final appointments = rawAppointments
-        .where((item) => _showCancelled || !item.isCancelled)
+        .where(
+          (item) => appointmentMatchesStaffFilters(
+            item,
+            filters,
+            filterByDoctor: true,
+          ),
+        )
+        .toList();
+    final visibleSchedules = schedules
+        .where(
+          (schedule) => scheduleMatchesStaffFilters(
+            schedule,
+            filters,
+            filterByDoctor: true,
+          ),
+        )
         .toList();
 
-    _ensureDoctorColors(appointments, schedules);
+    _ensureDoctorColors(appointments, visibleSchedules);
     return Stack(
       children: [
         SecretaryCalendarView(
           weekStart: weekStart,
           appointments: appointments,
-          schedules: schedules,
+          schedules: visibleSchedules,
           doctorColors: _doctorColors,
           highlightedAppointmentId: _highlightedAppointmentId,
           onItemsTap: _openCalendarItems,
@@ -253,6 +277,7 @@ class _SecretaryCalendarScreenState
     final calendarAsync = ref.watch(secretaryCalendarNotifierProvider);
     final schedulesAsync = ref.watch(secretarySchedulesNotifierProvider);
     final weekStart = ref.watch(secretaryWeekStartProvider);
+    final filters = ref.watch(secretaryCalendarFilterProvider);
 
     return Scaffold(
       appBar: CalendarAppBar(
@@ -268,14 +293,9 @@ class _SecretaryCalendarScreenState
         ),
         extraActions: [
           IconButton(
-            icon: Icon(
-              _showCancelled ? Icons.event_busy : Icons.event_busy_outlined,
-              color: _showCancelled ? null : Colors.grey,
-            ),
-            tooltip: _showCancelled
-                ? 'Ocultar citas canceladas'
-                : 'Mostrar citas canceladas',
-            onPressed: _toggleCancelled,
+            icon: const Icon(Icons.filter_alt_outlined),
+            tooltip: 'Filtrar',
+            onPressed: _openFilterDialog,
           ),
         ],
         onPreviousWeek: () => ref
@@ -287,7 +307,7 @@ class _SecretaryCalendarScreenState
       ),
       body: Stack(
         children: [
-          _calendarContent(calendarAsync, schedulesAsync, weekStart),
+          _calendarContent(calendarAsync, schedulesAsync, weekStart, filters),
           if (_fabOpen)
             GestureDetector(
               onTap: _closeFab,

@@ -16,10 +16,8 @@ Future<PatientCalendarFilterState?> showPatientCalendarFilterDialog({
 }) {
   return showDialog<PatientCalendarFilterState>(
     context: context,
-    builder: (_) => _PatientCalendarFilterDialog(
-      ref: ref,
-      initialFilters: currentFilters,
-    ),
+    builder: (_) =>
+        _PatientCalendarFilterDialog(ref: ref, initialFilters: currentFilters),
   );
 }
 
@@ -56,12 +54,14 @@ class _PatientCalendarFilterDialogState
   bool _loadingClinics = false;
   Timer? _clinicDebounce;
   int _clinicRequestId = 0;
+  bool _showCancelled = true;
 
   @override
   void initState() {
     super.initState();
 
     final filters = widget.initialFilters;
+    _showCancelled = filters.showCancelled;
 
     if (filters.doctorId != null) {
       _doctorEnabled = true;
@@ -247,6 +247,7 @@ class _PatientCalendarFilterDialogState
       doctorName: _doctorEnabled ? _selectedDoctor?.name : null,
       clinicId: _clinicEnabled ? _selectedClinic?.id : null,
       clinicName: _clinicEnabled ? _selectedClinic?.name : null,
+      showCancelled: _showCancelled,
     );
 
     Navigator.pop(context, result);
@@ -312,6 +313,18 @@ class _PatientCalendarFilterDialogState
                 subtitleBuilder: (c) => c.address,
                 onSelected: _selectClinic,
               ),
+
+              const SizedBox(height: 12),
+
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+                controlAffinity: ListTileControlAffinity.leading,
+                title: const Text('Mostrar citas canceladas'),
+                value: _showCancelled,
+                onChanged: (value) =>
+                    setState(() => _showCancelled = value ?? false),
+              ),
             ],
           ),
         ),
@@ -321,10 +334,7 @@ class _PatientCalendarFilterDialogState
           onPressed: () => Navigator.pop(context),
           child: const Text('Cancelar'),
         ),
-        FilledButton(
-          onPressed: _apply,
-          child: const Text('Aplicar'),
-        ),
+        FilledButton(onPressed: _apply, child: const Text('Aplicar')),
       ],
     );
   }
@@ -384,10 +394,7 @@ class _FilterSection<T> extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               label,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
             ),
           ],
         ),
@@ -438,10 +445,8 @@ class _FilterSection<T> extends StatelessWidget {
                 shrinkWrap: true,
                 padding: EdgeInsets.zero,
                 itemCount: results.length,
-                separatorBuilder: (_, __) => Divider(
-                  height: 1,
-                  color: Theme.of(context).dividerColor,
-                ),
+                separatorBuilder: (_, _) =>
+                    Divider(height: 1, color: Theme.of(context).dividerColor),
                 itemBuilder: (_, index) {
                   final item = results[index];
                   return ListTile(

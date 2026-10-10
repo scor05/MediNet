@@ -19,6 +19,7 @@ class CalendarBody extends ConsumerStatefulWidget {
   final void Function(Appointment)? onAppointmentTap;
   final void Function(Appointment)? onBlockadeTap;
   final void Function(Schedule)? onScheduleTap;
+  final bool Function(Schedule)? scheduleFilter;
 
   const CalendarBody({
     super.key,
@@ -33,6 +34,7 @@ class CalendarBody extends ConsumerStatefulWidget {
     this.onAppointmentTap,
     this.onBlockadeTap,
     this.onScheduleTap,
+    this.scheduleFilter,
   });
 
   @override
@@ -55,6 +57,9 @@ class _CalendarBodyState extends ConsumerState<CalendarBody> {
       ),
 
       data: (schedules) {
+        final visibleSchedules = widget.scheduleFilter == null
+            ? schedules
+            : schedules.where(widget.scheduleFilter!).toList();
         return widget.calendarAsync.when(
           skipLoadingOnReload: true,
           skipError: true,
@@ -71,7 +76,7 @@ class _CalendarBodyState extends ConsumerState<CalendarBody> {
               WeekView(
                 weekStart: widget.weekStart,
                 appointments: appointments,
-                schedules: schedules,
+                schedules: visibleSchedules,
                 showDoctor: widget.showDoctor,
                 showPatient: widget.showPatient,
                 splitOverlappingAppointments:
