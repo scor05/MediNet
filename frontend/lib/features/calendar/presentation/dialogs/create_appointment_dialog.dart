@@ -217,6 +217,7 @@ class _CreateAppointmentDialogState
 
     final canSubmit =
         !formState.saving &&
+        !formState.loadingTimeSlots &&
         formState.selectedDoctor != null &&
         formState.selectedClinic != null &&
         formState.selectedSchedule != null &&
@@ -334,11 +335,19 @@ class _CreateAppointmentDialogState
 
               const SizedBox(height: 10),
 
-              TimeSlotDropdown(
-                selectedTime: formState.selectedTime,
-                timeSlots: formState.timeSlots,
-                onChanged: formNotifier.selectTime,
-              ),
+              if (formState.loadingTimeSlots)
+                const Center(child: CircularProgressIndicator())
+              else if (formState.timeSlots.isEmpty)
+                const Text(
+                  'No hay horas disponibles para esta fecha.',
+                  style: TextStyle(color: Colors.red),
+                )
+              else
+                TimeSlotDropdown(
+                  selectedTime: formState.selectedTime,
+                  timeSlots: formState.timeSlots,
+                  onChanged: formNotifier.selectTime,
+                ),
 
               const SizedBox(height: 16),
 

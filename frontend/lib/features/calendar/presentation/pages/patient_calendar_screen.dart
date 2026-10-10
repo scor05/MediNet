@@ -67,19 +67,7 @@ class _PatientCalendarScreenState extends ConsumerState<PatientCalendarScreen> {
 
     if (result == null) return;
 
-    final notifier = ref.read(patientCalendarFilterProvider.notifier);
-
-    if (result.doctorId != null) {
-      notifier.setDoctor(result.doctorId!, result.doctorName!);
-    } else {
-      notifier.clearDoctor();
-    }
-
-    if (result.clinicId != null) {
-      notifier.setClinic(result.clinicId!, result.clinicName!);
-    } else {
-      notifier.clearClinic();
-    }
+    ref.read(patientCalendarFilterProvider.notifier).setFilters(result);
   }
 
   List<Appointment> _applyFilters(
@@ -95,6 +83,7 @@ class _PatientCalendarScreenState extends ConsumerState<PatientCalendarScreen> {
       if (filters.clinicId != null && a.clinicId != filters.clinicId) {
         return false;
       }
+      if (!filters.showCancelled && a.isCancelled) return false;
       return true;
     }).toList();
   }
@@ -179,4 +168,3 @@ class _PatientCalendarScreenState extends ConsumerState<PatientCalendarScreen> {
     );
   }
 }
-
