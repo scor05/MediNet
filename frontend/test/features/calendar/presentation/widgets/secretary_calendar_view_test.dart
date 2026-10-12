@@ -37,7 +37,7 @@ void main() {
     clinicName: 'Clínica Central',
   );
 
-  testWidgets('uses compact labels and returns underlying layers on tap', (
+  testWidgets('uses icons with pertinent names and returns layers on tap', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(700, 900));
@@ -57,10 +57,14 @@ void main() {
       ),
     );
 
-    expect(find.text('Cita'), findsOneWidget);
-    expect(find.text('Horario'), findsOneWidget);
+    expect(find.text('Ana Pérez'), findsOneWidget);
+    expect(find.text('Dr. Ruiz'), findsOneWidget);
+    expect(find.text('08:00–08:30'), findsNothing);
+    expect(find.text('08:00–10:00'), findsNothing);
+    expect(find.byIcon(Icons.event_available_outlined), findsNWidgets(2));
+    expect(find.byIcon(Icons.schedule_outlined), findsNWidgets(2));
 
-    await tester.tap(find.text('Cita'));
+    await tester.tap(find.text('Ana Pérez'));
 
     expect(tapped, isNotNull);
     expect(tapped!.map((item) => item.type), [
@@ -69,62 +73,7 @@ void main() {
     ]);
   });
 
-  testWidgets('shows type, person, clinic and time range in that order', (
-    tester,
-  ) async {
-    await tester.binding.setSurfaceSize(const Size(1800, 900));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    final longAppointment = appointment.copyWith(appointmentDuration: 60);
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: SecretaryCalendarView(
-            weekStart: DateTime(2026, 9, 21),
-            appointments: [longAppointment],
-            schedules: const [],
-            onItemsTap: (_) {},
-          ),
-        ),
-      ),
-    );
-
-    final type = tester.getTopLeft(find.text('Cita')).dy;
-    final person = tester.getTopLeft(find.text('Ana Pérez')).dy;
-    final clinic = tester.getTopLeft(find.text('Clínica Central')).dy;
-    final time = tester.getTopLeft(find.text('08:00–09:00')).dy;
-
-    expect(type, lessThan(person));
-    expect(person, lessThan(clinic));
-    expect(clinic, lessThan(time));
-  });
-
-  testWidgets('schedules show the doctor instead of the patient', (
-    tester,
-  ) async {
-    await tester.binding.setSurfaceSize(const Size(1800, 900));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: SecretaryCalendarView(
-            weekStart: DateTime(2026, 9, 21),
-            appointments: const [],
-            schedules: const [schedule],
-            onItemsTap: (_) {},
-          ),
-        ),
-      ),
-    );
-
-    expect(find.text('Horario'), findsOneWidget);
-    expect(find.text('Dr. Ruiz'), findsOneWidget);
-    expect(find.text('Clínica Central'), findsOneWidget);
-    expect(find.text('08:00–10:00'), findsOneWidget);
-  });
-
-  testWidgets('schedule text sits at the bottom so appointments do not hide it', (
+  testWidgets('does not restore the old item labels in wide columns', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(1800, 900));
@@ -143,73 +92,10 @@ void main() {
       ),
     );
 
-    final block = tester.getRect(
-      find.byKey(const ValueKey('secretary-calendar-schedule-4')),
-    );
-    final appointmentRect = tester.getRect(
-      find.byKey(const ValueKey('secretary-calendar-appointment-1')),
-    );
-    final label = tester.getRect(find.text('Horario'));
-
-    expect(label.top, greaterThanOrEqualTo(appointmentRect.bottom));
-    expect(label.bottom, lessThanOrEqualTo(block.bottom));
-  });
-
-  testWidgets('short items drop lower lines instead of shrinking the font', (
-    tester,
-  ) async {
-    await tester.binding.setSurfaceSize(const Size(1800, 900));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: SecretaryCalendarView(
-            weekStart: DateTime(2026, 9, 21),
-            appointments: [appointment],
-            schedules: const [],
-            onItemsTap: (_) {},
-          ),
-        ),
-      ),
-    );
-
-    // 30 minutos: caben tipo y paciente; clínica y horas se omiten.
-    expect(find.text('Cita'), findsOneWidget);
     expect(find.text('Ana Pérez'), findsOneWidget);
-    expect(find.text('Clínica Central'), findsNothing);
-    expect(
-      tester.widget<Text>(find.text('Ana Pérez')).style?.fontSize,
-      CalendarSizes.itemFontSize,
-    );
-  });
-
-  testWidgets('long names are ellipsized without reducing the font', (
-    tester,
-  ) async {
-    await tester.binding.setSurfaceSize(const Size(900, 900));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    final longName = appointment.copyWith(
-      patientName: 'Maria de los Angeles Fernandez de la Cruz y Villatoro',
-    );
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: SecretaryCalendarView(
-            weekStart: DateTime(2026, 9, 21),
-            appointments: [longName],
-            schedules: const [],
-            onItemsTap: (_) {},
-          ),
-        ),
-      ),
-    );
-
-    final text = tester.widget<Text>(find.textContaining('Maria de los'));
-    expect(text.overflow, TextOverflow.ellipsis);
-    expect(text.maxLines, 1);
-    expect(text.style?.fontSize, CalendarSizes.itemFontSize);
+    expect(find.text('Dr. Ruiz'), findsOneWidget);
+    expect(find.text('Cita - Ana Pérez / Clínica Central'), findsNothing);
+    expect(find.text('Horario - Dr. Ruiz / Clínica Central'), findsNothing);
   });
 
   testWidgets('highlights only the appointment matching the requested id', (
@@ -368,15 +254,15 @@ void main() {
       ),
     );
 
-    final labels = tester.widgetList<Text>(find.text('Horario'));
-    final times = tester.widgetList<Text>(find.text('08:00–10:00'));
+    final labels = tester.widgetList<Text>(find.textContaining('Doctor '));
 
     expect(labels, hasLength(3));
-    expect(labels.every((text) => text.style?.fontSize == CalendarSizes.itemFontSize), isTrue);
-    expect(times, hasLength(3));
     expect(
-      times.every((text) => text.style?.fontSize == CalendarSizes.itemFontSize),
+      labels.every(
+        (text) => text.style?.fontSize == CalendarSizes.itemFontSize,
+      ),
       isTrue,
     );
+    expect(find.text('08:00–10:00'), findsNothing);
   });
 }

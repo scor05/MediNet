@@ -197,6 +197,36 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
     return endMins > startMins;
   }
 
+  String? _intervalPreview() {
+    final duration = int.tryParse(_durationCtrl.text.trim());
+    if (duration == null || duration < 5 || !_isValidRange()) return null;
+
+    final startMinutes = _startTime.hour * 60 + _startTime.minute;
+    final endMinutes = _endTime.hour * 60 + _endTime.minute;
+    final intervals = <String>[];
+    var intervalStart = startMinutes;
+
+    while (intervalStart + duration <= endMinutes && intervals.length < 4) {
+      final intervalEnd = intervalStart + duration;
+      intervals.add(
+        '${_formatMinutes(intervalStart)} - ${_formatMinutes(intervalEnd)}',
+      );
+      intervalStart = intervalEnd;
+    }
+
+    if (intervals.isEmpty) return null;
+    final hasMoreIntervals = intervalStart + duration <= endMinutes;
+    return '*Intervalos a crearse: ${intervals.join(', ')}'
+        '${hasMoreIntervals ? ', ...' : ''}';
+  }
+
+  String _formatMinutes(int minutes) {
+    final hour = minutes ~/ 60;
+    final minute = minutes % 60;
+    return '${hour.toString().padLeft(2, '0')}:'
+        '${minute.toString().padLeft(2, '0')}';
+  }
+
   void _toggleDay(int day) {
     setState(() {
       if (!_selectedDays.add(day)) _selectedDays.remove(day);
@@ -501,9 +531,18 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
                   return null;
                 },
                 onChanged: (_) {
-                  if (_error != null) setState(() => _error = null);
+                  setState(() => _error = null);
                 },
               ),
+
+              if (_intervalPreview() case final preview?) ...[
+                const SizedBox(height: 10),
+                Text(
+                  preview,
+                  key: const ValueKey('schedule-interval-preview'),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
 
               if (_error != null) ...[
                 const SizedBox(height: 12),

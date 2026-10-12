@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
+import 'package:frontend/features/calendar/presentation/widgets/calendar_item_legend.dart';
 import 'package:frontend/features/calendar/presentation/widgets/time_column.dart';
 import 'package:frontend/features/calendar/presentation/widgets/week_grid.dart';
 import 'package:frontend/features/calendar/presentation/widgets/week_header.dart';
@@ -48,59 +49,69 @@ class WeekView extends StatelessWidget {
         final contentWidth = constraints.maxWidth < minimumWidth
             ? minimumWidth
             : constraints.maxWidth;
-        final contentHeight = constraints.hasBoundedHeight
-            ? constraints.maxHeight
-            : 600.0;
-
-        return SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: SizedBox(
-            width: contentWidth,
-            height: contentHeight,
-            child: Column(
-              children: [
-                WeekHeader(days: days, timeColumnWidth: timeColumnWidth),
-                Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: Theme.of(context).dividerColor,
-                ),
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        TimeColumn(
-                          startHour: startHour,
-                          endHour: endHour,
-                          hourHeight: hourHeight,
-                          width: timeColumnWidth,
+        return Column(
+          children: [
+            const CalendarItemLegend(),
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, calendarConstraints) =>
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: SizedBox(
+                        width: contentWidth,
+                        height: calendarConstraints.maxHeight,
+                        child: Column(
+                          children: [
+                            WeekHeader(
+                              days: days,
+                              timeColumnWidth: timeColumnWidth,
+                            ),
+                            Divider(
+                              height: 1,
+                              thickness: 1,
+                              color: Theme.of(context).dividerColor,
+                            ),
+                            Expanded(
+                              child: SingleChildScrollView(
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    TimeColumn(
+                                      startHour: startHour,
+                                      endHour: endHour,
+                                      hourHeight: hourHeight,
+                                      width: timeColumnWidth,
+                                    ),
+                                    Expanded(
+                                      child: WeekGrid(
+                                        days: days,
+                                        appointments: appointments,
+                                        schedules: schedules,
+                                        showDoctor: showDoctor,
+                                        showPatient: showPatient,
+                                        splitOverlappingAppointments:
+                                            splitOverlappingAppointments,
+                                        highlightedAppointmentId:
+                                            highlightedAppointmentId,
+                                        startHour: startHour,
+                                        endHour: endHour,
+                                        hourHeight: hourHeight,
+                                        onAppointmentTap: onAppointmentTap,
+                                        onBlockadeTap: onBlockadeTap,
+                                        onScheduleTap: onScheduleTap,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        Expanded(
-                          child: WeekGrid(
-                            days: days,
-                            appointments: appointments,
-                            schedules: schedules,
-                            showDoctor: showDoctor,
-                            showPatient: showPatient,
-                            splitOverlappingAppointments:
-                                splitOverlappingAppointments,
-                            highlightedAppointmentId: highlightedAppointmentId,
-                            startHour: startHour,
-                            endHour: endHour,
-                            hourHeight: hourHeight,
-                            onAppointmentTap: onAppointmentTap,
-                            onBlockadeTap: onBlockadeTap,
-                            onScheduleTap: onScheduleTap,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
+          ],
         );
       },
     );

@@ -23,6 +23,7 @@ void main() {
     );
 
     expect(tester.takeException(), isNull);
+    expect(find.text('Leyenda'), findsOneWidget);
     expect(
       tester.getSize(find.byKey(const ValueKey('calendar-day-column-0'))).width,
       greaterThan(90),
@@ -49,6 +50,7 @@ void main() {
     );
 
     expect(tester.takeException(), isNull);
+    expect(find.text('Leyenda'), findsOneWidget);
     expect(
       tester
           .getSize(find.byKey(const ValueKey('secretary-day-column-0')))

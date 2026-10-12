@@ -102,6 +102,11 @@ void main() {
 
     expect(find.text('Editar horario'), findsOneWidget);
     expect(find.text('Eliminar horario'), findsOneWidget);
+    final doctorIcon = tester.getRect(
+      find.byIcon(Icons.medical_services_outlined),
+    );
+    final doctorLabel = tester.getRect(find.text('Doctor'));
+    expect(doctorIcon.center.dy, closeTo(doctorLabel.center.dy, 0.5));
 
     await tester.tap(find.text('Eliminar horario'));
     await tester.pumpAndSettle();

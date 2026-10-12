@@ -10,11 +10,17 @@ class ScheduleRepository
     // Se obtienen los horarios de un doctor
     public function findByDoctor($doctorId)
     {
-        return Schedule::select('schedules.*', 'clinics.name as clinic_name')
+        return Schedule::select(
+            'schedules.*',
+            'clinics.name as clinic_name',
+            'users.name as doctor_name',
+        )
             ->join('clinics', 'schedules.id_clinic', '=', 'clinics.id')
+            ->join('users', 'schedules.id_doctor', '=', 'users.id')
             ->where('schedules.id_doctor', $doctorId)
             ->where('schedules.is_active', true)
             ->where('clinics.is_active', true)
+            ->where('users.is_active', true)
             ->get();
     }
 
