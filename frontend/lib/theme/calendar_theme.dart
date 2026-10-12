@@ -38,6 +38,7 @@ class CalendarColors {
 
   // Color uniforme de los horarios de doctor
   static const Color schedule = Color(0xFF4A90D9);
+  static const Color scheduleText = Color(0xFF1E4F8F);
 
   // FAB colors
   static const Color createAppointmentFab = AppColors.success;
@@ -127,6 +128,12 @@ class CalendarSizes {
   static const double hourFontSize = 11;
   static const double hourRightPadding = 8;
   static const double hourTopPadding = 2;
+
+  // Contenido de los elementos del calendario (tipo, persona, clínica, horas)
+  static const double itemFontSize = 11;
+  static const double itemLineHeight = 1.15;
+  static const double itemHorizontalPadding = 4;
+  static const double itemVerticalPadding = 2;
 
   // Appointment card
   static const double appointmentCardMarginBottom = 4;

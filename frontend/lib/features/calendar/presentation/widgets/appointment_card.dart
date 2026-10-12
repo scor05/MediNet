@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/utils/time_format.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
+import 'package:frontend/features/calendar/presentation/widgets/calendar_item_content.dart';
 import 'package:frontend/theme/calendar_theme.dart';
 
 Color appointmentStatusColor(String status) {
@@ -29,44 +30,31 @@ class AppointmentCard extends StatelessWidget {
     this.onTap,
   });
 
+  String get _timeRange =>
+      '${formatTime24(appointment.startTime)}–'
+      '${calculateEndTime24(appointment.startTime, appointment.appointmentDuration)}';
+
   @override
   Widget build(BuildContext context) {
     if (appointment.isBlockade) {
       return GestureDetector(onTap: onTap, child: _buildBlockadeCard());
     }
+    final person = showPatient
+        ? appointment.patientName
+        : (showDoctor ? appointment.doctorName : null);
+
     return Card(
       color: appointmentStatusColor(appointment.status),
       margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (showDoctor)
-                Text(
-                  appointment.doctorName,
-                  style: CalendarTextStyles.appointmentTime,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              if (showPatient)
-                Text(
-                  appointment.patientName,
-                  style: CalendarTextStyles.appointmentTime,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              Text(
-                '${formatTime24(appointment.startTime)} - ${calculateEndTime24(appointment.startTime, appointment.appointmentDuration)}',
-                style: CalendarTextStyles.appointmentPatient,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
+        child: CalendarItemContent(
+          type: 'Cita',
+          person: person,
+          clinic: appointment.clinicName,
+          timeRange: _timeRange,
+          color: Colors.black87,
         ),
       ),
     );
@@ -80,31 +68,13 @@ class AppointmentCard extends StatelessWidget {
           base: CalendarColors.appointmentBlockade,
           stripe: CalendarColors.appointmentBlockadeStripe,
         ),
-        child: Container(
-          padding: const EdgeInsets.all(6),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.block, size: 10, color: Colors.white70),
-                  const SizedBox(width: 4),
-                  const Text(
-                    'Bloqueado',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-              Text(
-                '${formatTime24(appointment.startTime)} - ${calculateEndTime24(appointment.startTime, appointment.appointmentDuration)}',
-                style: const TextStyle(fontSize: 10, color: Colors.white70),
-              ),
-            ],
+        child: SizedBox.expand(
+          child: CalendarItemContent(
+            type: 'Bloqueo',
+            person: showDoctor ? appointment.doctorName : null,
+            clinic: appointment.clinicName,
+            timeRange: _timeRange,
+            color: Colors.white,
           ),
         ),
       ),

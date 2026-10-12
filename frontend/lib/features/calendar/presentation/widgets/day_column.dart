@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/utils/time_format.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/calendar/presentation/widgets/appointment_card.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_appointment_highlight.dart';
+import 'package:frontend/features/calendar/presentation/widgets/calendar_item_content.dart';
 import 'package:frontend/features/schedule/domain/entities/schedule.dart';
 import 'package:frontend/theme/calendar_theme.dart';
 
@@ -190,7 +192,6 @@ class DayColumn extends StatelessWidget {
                 schedule.endTime,
               );
               const color = CalendarColors.schedule;
-              final textColor = color.withValues(alpha: 0.75);
 
               return Positioned(
                 top: top,
@@ -213,17 +214,15 @@ class DayColumn extends StatelessWidget {
                           ),
                         ),
                       ),
-                      padding: const EdgeInsets.only(left: 6, top: 4),
-                      child: Text(
-                        schedule.clinicName,
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: textColor,
-                          height: 1.2,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                      child: CalendarItemContent(
+                        type: 'Horario',
+                        person: showDoctor ? schedule.doctorName : null,
+                        clinic: schedule.clinicName,
+                        timeRange:
+                            '${formatTime24(schedule.startTime)}–'
+                            '${formatTime24(schedule.endTime)}',
+                        color: CalendarColors.scheduleText,
+                        anchorBottom: true,
                       ),
                     ),
                   ),
