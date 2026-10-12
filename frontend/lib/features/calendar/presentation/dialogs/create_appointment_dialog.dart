@@ -6,6 +6,7 @@ import 'package:frontend/features/calendar/presentation/widgets/create_appointme
 import 'package:frontend/features/calendar/presentation/widgets/create_appointment/dialog_handle.dart';
 import 'package:frontend/features/calendar/presentation/widgets/create_appointment/schedule_dropdown.dart';
 import 'package:frontend/features/calendar/presentation/widgets/create_appointment/time_slot_dropdown.dart';
+import 'package:frontend/features/calendar/presentation/widgets/search_selection_status.dart';
 import 'package:frontend/features/clinic/domain/entities/clinic_search_result.dart';
 import 'package:frontend/features/search/presentation/widgets/search_input_field.dart';
 import 'package:frontend/features/user/domain/entities/doctor_search_result.dart';
@@ -351,19 +352,40 @@ class _CreateAppointmentDialogState
 
               const SizedBox(height: 16),
 
-              SearchInputField<User>(
-                controller: _patientCtrl,
-                label: 'Paciente',
-                hintText: 'Nombre del paciente',
-                loading: formState.loadingPatients,
-                selectedItem: formState.selectedPatient,
-                results: formState.patientResults,
-                titleBuilder: (patient) => patient.name,
-                subtitleBuilder: (patient) => patient.email,
-                onChanged: formNotifier.onPatientQueryChanged,
-                onSelected: _selectPatient,
+              SearchSelectionStatus(
+                keyPrefix: 'appointment-patient',
+                selectedLabel: formState.selectedPatient == null
+                    ? null
+                    : 'Paciente seleccionado: '
+                          '${formState.selectedPatient!.name} '
+                          '(${formState.selectedPatient!.email})',
+                hasTypedText: _patientCtrl.text.trim().isNotEmpty,
+                prompt: 'Selecciona un paciente de la lista',
+                typedHint:
+                    'Escribiste un nombre, pero no elegiste un paciente. La '
+                    'cita se agendará solo con ese nombre, sin vincularla a '
+                    'una cuenta de paciente.',
                 onClear: _clearPatient,
-                onEmptyFocus: formNotifier.showPatientSuggestions,
+                clearLabel: formState.selectedPatient == null
+                    ? 'Borrar'
+                    : 'Cambiar',
+                child: SearchInputField<User>(
+                  controller: _patientCtrl,
+                  label: 'Paciente',
+                  hintText: 'Nombre del paciente',
+                  loading: formState.loadingPatients,
+                  selectedItem: formState.selectedPatient,
+                  results: formState.patientResults,
+                  titleBuilder: (patient) => patient.name,
+                  subtitleBuilder: (patient) => patient.email,
+                  onChanged: (query) {
+                    formNotifier.onPatientQueryChanged(query);
+                    setState(() {});
+                  },
+                  onSelected: _selectPatient,
+                  onClear: _clearPatient,
+                  onEmptyFocus: formNotifier.showPatientSuggestions,
+                ),
               ),
             ],
 

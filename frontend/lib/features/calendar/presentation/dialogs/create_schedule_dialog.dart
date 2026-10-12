@@ -6,6 +6,7 @@ import 'package:frontend/features/calendar/presentation/providers/secretary_cale
 import 'package:frontend/features/clinic/domain/entities/clinic.dart';
 import 'package:frontend/features/clinic/domain/providers/clinic_domain_providers.dart';
 import 'package:frontend/features/schedule/domain/providers/schedule_domain_providers.dart';
+import 'package:frontend/features/calendar/presentation/widgets/search_selection_status.dart';
 import 'package:frontend/features/search/presentation/providers/search_form_provider.dart';
 import 'package:frontend/features/search/presentation/widgets/search_input_field.dart';
 import 'package:frontend/features/user/domain/entities/doctor_search_result.dart';
@@ -320,9 +321,15 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
               ),
               const SizedBox(height: 10),
               if (widget.forSecretary) ...[
-                _DoctorSelectionStatus(
-                  selectedDoctor: searchState.selectedDoctor,
+                SearchSelectionStatus(
+                  keyPrefix: 'schedule-doctor',
+                  selectedLabel: searchState.selectedDoctor == null
+                      ? null
+                      : 'Doctor seleccionado: ${searchState.selectedDoctor!.name}',
                   hasTypedText: _doctorCtrl.text.trim().isNotEmpty,
+                  prompt: 'Selecciona un doctor de la lista',
+                  typedHint:
+                      'Lo que escribiste todavía no es un doctor seleccionado.',
                   child: SearchInputField<DoctorSearchResult>(
                     controller: _doctorCtrl,
                     label: 'Doctor',
@@ -456,104 +463,6 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
           ],
         ),
       ),
-    );
-  }
-}
-
-/// Rodea el buscador de doctor y distingue tres estados: sin texto, texto
-/// escrito que aún no es un doctor, y doctor seleccionado de la lista.
-class _DoctorSelectionStatus extends StatelessWidget {
-  final DoctorSearchResult? selectedDoctor;
-  final bool hasTypedText;
-  final Widget child;
-
-  const _DoctorSelectionStatus({
-    required this.selectedDoctor,
-    required this.hasTypedText,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final doctor = selectedDoctor;
-    final isSelected = doctor != null;
-    final accent = isSelected
-        ? AppColors.success
-        : (hasTypedText ? AppColors.warning : AppColors.textSecondary);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          decoration: BoxDecoration(
-            color: isSelected ? AppColors.success.withValues(alpha: 0.08) : null,
-            borderRadius: BorderRadius.circular(8),
-            border: Border(
-              left: BorderSide(
-                color: isSelected || hasTypedText
-                    ? accent
-                    : Colors.transparent,
-                width: 3,
-              ),
-            ),
-          ),
-          child: child,
-        ),
-        const SizedBox(height: 6),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(
-              isSelected
-                  ? Icons.check_circle
-                  : (hasTypedText
-                        ? Icons.warning_amber_rounded
-                        : Icons.info_outline),
-              size: 16,
-              color: accent,
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: isSelected
-                  ? Text(
-                      'Doctor seleccionado: ${doctor.name}',
-                      key: const ValueKey('schedule-doctor-selected'),
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: accent,
-                      ),
-                    )
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Selecciona un doctor de la lista',
-                          key: const ValueKey('schedule-doctor-hint'),
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: accent,
-                          ),
-                        ),
-                        if (hasTypedText)
-                          const Text(
-                            'Lo que escribiste todavía no es un doctor '
-                            'seleccionado.',
-                            key: ValueKey('schedule-doctor-typed-hint'),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                      ],
-                    ),
-            ),
-          ],
-        ),
-      ],
     );
   }
 }

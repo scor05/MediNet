@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/features/calendar/presentation/dialogs/create_appointment_dialog.dart';
+import 'package:frontend/features/calendar/presentation/providers/create_appointment_form_provider.dart';
+import 'package:frontend/features/clinic/domain/entities/clinic_search_result.dart';
 import 'package:frontend/features/schedule/domain/entities/schedule.dart';
 import 'package:frontend/features/schedule/domain/providers/schedule_domain_providers.dart';
 import 'package:frontend/features/schedule/domain/repositories/schedule_repository.dart';
 import 'package:frontend/features/schedule/domain/usecases/get_schedules_by_doctor_id_usecase.dart';
 import 'package:frontend/features/search/presentation/widgets/search_input_field.dart';
 import 'package:frontend/features/user/domain/entities/doctor_search_result.dart';
+import 'package:frontend/features/user/domain/entities/user.dart';
 
 void main() {
   testWidgets('doctor flow fixes the logged-in doctor and shows clinic next', (
@@ -46,6 +49,120 @@ void main() {
     expect(find.byType(SearchInputField<DoctorSearchResult>), findsOneWidget);
     expect(find.widgetWithText(TextField, 'Doctor'), findsOneWidget);
     expect(find.widgetWithText(TextField, 'Clínica'), findsNothing);
+  });
+
+  group('patient search', () {
+    const doctor = DoctorSearchResult(
+      id: 36,
+      name: 'Doom Slayer',
+      specialty: 'Medicina general',
+    );
+
+    Future<ProviderContainer> openPatientField(WidgetTester tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 1600));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(_app(_ScheduleRepository(), fixedDoctor: doctor));
+      await tester.pumpAndSettle();
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(CreateAppointmentDialog)),
+      );
+      container
+          .read(createAppointmentFormProvider(DateTime(2026, 9, 21)).notifier)
+          .selectClinic(
+            const ClinicSearchResult(
+              id: 1,
+              name: 'Clínica Central',
+              address: 'Zona 1',
+            ),
+          );
+      await tester.pumpAndSettle();
+      return container;
+    }
+
+    testWidgets('asks to pick a patient from the list', (tester) async {
+      await openPatientField(tester);
+
+      expect(find.text('Selecciona un paciente de la lista'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('appointment-patient-selected')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const ValueKey('appointment-patient-clear')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('typed text is flagged as not selected and can be erased', (
+      tester,
+    ) async {
+      await openPatientField(tester);
+
+      await tester.enterText(find.widgetWithText(TextField, 'Paciente'), 'A');
+      await tester.pump();
+
+      expect(
+        find.byKey(const ValueKey('appointment-patient-typed-hint')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('appointment-patient-selected')),
+        findsNothing,
+      );
+
+      await tester.tap(find.byKey(const ValueKey('appointment-patient-clear')));
+      await tester.pump();
+
+      expect(
+        tester
+            .widget<TextField>(find.widgetWithText(TextField, 'Paciente'))
+            .controller
+            ?.text,
+        isEmpty,
+      );
+      expect(
+        find.byKey(const ValueKey('appointment-patient-typed-hint')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('shows the selected patient and lets the user change it', (
+      tester,
+    ) async {
+      final container = await openPatientField(tester);
+
+      container
+          .read(createAppointmentFormProvider(DateTime(2026, 9, 21)).notifier)
+          .selectPatient(
+            User(
+              id: 3,
+              name: 'Diego Gudiel',
+              email: 'diego@example.com',
+              phone: '50233333333',
+              isAccountActive: true,
+              createdAt: DateTime(2026),
+              updatedAt: DateTime(2026),
+            ),
+          );
+      await tester.pump();
+
+      expect(
+        find.text('Paciente seleccionado: Diego Gudiel (diego@example.com)'),
+        findsOneWidget,
+      );
+      expect(find.text('Selecciona un paciente de la lista'), findsNothing);
+      expect(find.text('Cambiar'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('appointment-patient-clear')));
+      await tester.pump();
+
+      expect(
+        find.byKey(const ValueKey('appointment-patient-selected')),
+        findsNothing,
+      );
+      expect(find.text('Selecciona un paciente de la lista'), findsOneWidget);
+    });
   });
 }
 
