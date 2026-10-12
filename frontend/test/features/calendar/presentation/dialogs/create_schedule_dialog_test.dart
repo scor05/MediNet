@@ -10,6 +10,8 @@ import 'package:frontend/features/schedule/domain/entities/schedule.dart';
 import 'package:frontend/features/schedule/domain/providers/schedule_domain_providers.dart';
 import 'package:frontend/features/schedule/domain/repositories/schedule_repository.dart';
 import 'package:frontend/features/schedule/domain/usecases/create_schedule_usecase.dart';
+import 'package:frontend/features/search/presentation/providers/search_form_provider.dart';
+import 'package:frontend/features/user/domain/entities/doctor_search_result.dart';
 import 'package:frontend/theme/app_theme.dart';
 
 void main() {
@@ -49,6 +51,66 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('schedule-day-2')));
     await tester.pump();
     expect(_submitButton(tester).onPressed, isNull);
+  });
+
+  testWidgets('explains that a doctor must be picked from the list', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_app(forSecretary: true));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Selecciona un doctor de la lista'), findsOneWidget);
+    expect(find.byKey(const ValueKey('schedule-doctor-selected')), findsNothing);
+    expect(find.byKey(const ValueKey('schedule-submit-hint')), findsOneWidget);
+    expect(_submitButton(tester).onPressed, isNull);
+
+    // Un doctor solo cuenta cuando se elige de las sugerencias.
+    await tester.tap(find.byKey(const ValueKey('schedule-day-0')));
+    await tester.pump();
+    expect(_submitButton(tester).onPressed, isNull);
+  });
+
+  testWidgets('typed text is not treated as a selected doctor', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_app(forSecretary: true));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.widgetWithText(TextField, 'Doctor'), 'Fig');
+    await tester.pump();
+
+    expect(find.text('Selecciona un doctor de la lista'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('schedule-doctor-typed-hint')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('schedule-doctor-selected')), findsNothing);
+    expect(_submitButton(tester).onPressed, isNull);
+  });
+
+  testWidgets('shows the selected doctor and enables saving', (tester) async {
+    await tester.pumpWidget(_app(forSecretary: true));
+    await tester.pumpAndSettle();
+
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(CreateScheduleDialog)),
+    );
+    container
+        .read(searchFormNotifierProvider.notifier)
+        .selectDoctor(
+          const DoctorSearchResult(
+            id: 7,
+            name: 'Dr Figueroa',
+            specialty: 'Pediatría',
+          ),
+        );
+    await tester.tap(find.byKey(const ValueKey('schedule-day-0')));
+    await tester.pump();
+
+    expect(find.text('Doctor seleccionado: Dr Figueroa'), findsOneWidget);
+    expect(find.text('Selecciona un doctor de la lista'), findsNothing);
+    expect(find.byKey(const ValueKey('schedule-submit-hint')), findsNothing);
+    expect(_submitButton(tester).onPressed, isNotNull);
   });
 
   testWidgets('creates one schedule for every selected day', (tester) async {
