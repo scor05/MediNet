@@ -7,6 +7,7 @@ import 'package:frontend/features/calendar/presentation/widgets/create_appointme
 import 'package:frontend/features/calendar/presentation/widgets/create_appointment/schedule_dropdown.dart';
 import 'package:frontend/features/calendar/presentation/widgets/create_appointment/time_slot_dropdown.dart';
 import 'package:frontend/features/calendar/presentation/widgets/search_selection_status.dart';
+import 'package:frontend/features/calendar/presentation/widgets/keyboard_aware_bottom_sheet.dart';
 import 'package:frontend/features/clinic/domain/entities/clinic_search_result.dart';
 import 'package:frontend/features/search/presentation/widgets/search_input_field.dart';
 import 'package:frontend/features/user/domain/entities/doctor_search_result.dart';
@@ -225,13 +226,7 @@ class _CreateAppointmentDialogState
         formState.selectedDate != null &&
         formState.selectedTime != null;
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-        left: 16,
-        right: 16,
-        top: 16,
-      ),
+    return KeyboardAwareBottomSheet(
       child: Form(
         key: _formKey,
         child: Column(

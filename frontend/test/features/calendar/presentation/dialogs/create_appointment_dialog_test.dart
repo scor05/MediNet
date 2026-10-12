@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/features/calendar/presentation/dialogs/create_appointment_dialog.dart';
 import 'package:frontend/features/calendar/presentation/providers/create_appointment_form_provider.dart';
 import 'package:frontend/features/clinic/domain/entities/clinic_search_result.dart';
+import 'package:frontend/features/calendar/presentation/widgets/keyboard_aware_bottom_sheet.dart';
 import 'package:frontend/features/schedule/domain/entities/schedule.dart';
 import 'package:frontend/features/schedule/domain/providers/schedule_domain_providers.dart';
 import 'package:frontend/features/schedule/domain/repositories/schedule_repository.dart';
@@ -35,6 +36,7 @@ void main() {
     );
     expect(doctorField.enabled, isFalse);
     expect(find.text('Doom Slayer'), findsOneWidget);
+    expect(find.byType(KeyboardAwareBottomSheet), findsOneWidget);
     expect(find.byType(SearchInputField<DoctorSearchResult>), findsNothing);
     expect(find.widgetWithText(TextField, 'Clínica'), findsOneWidget);
     expect(repository.requestedDoctorId, 36);
