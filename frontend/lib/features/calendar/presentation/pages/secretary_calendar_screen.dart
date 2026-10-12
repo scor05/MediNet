@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,7 +16,6 @@ import 'package:frontend/features/calendar/presentation/providers/secretary_requ
 import 'package:frontend/features/calendar/presentation/providers/staff_calendar_filter_provider.dart';
 import 'package:frontend/features/calendar/presentation/utils/appointment_time_utils.dart';
 import 'package:frontend/features/calendar/presentation/utils/calendar_dialog_helpers.dart';
-import 'package:frontend/features/calendar/presentation/utils/secretary_doctor_color.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_app_bar.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_fab_menu.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_shell.dart';
@@ -40,8 +38,6 @@ class _SecretaryCalendarScreenState
   int? _highlightedAppointmentId;
   Timer? _highlightDelayTimer;
   Timer? _highlightClearTimer;
-  final _random = Random();
-  final _doctorColors = <int, Color>{};
 
   @override
   void dispose() {
@@ -189,26 +185,6 @@ class _SecretaryCalendarScreenState
     );
   }
 
-  void _ensureDoctorColors(
-    List<Appointment> appointments,
-    List<Schedule> schedules,
-  ) {
-    final doctorIds = <int>{
-      ...appointments.map((item) => item.doctorId),
-      ...schedules.map((item) => item.doctorId),
-    }..remove(0);
-
-    for (final doctorId in doctorIds) {
-      _doctorColors.putIfAbsent(
-        doctorId,
-        () => generateSecretaryDoctorColor(
-          _random,
-          assignedColors: _doctorColors.values,
-        ),
-      );
-    }
-  }
-
   Future<void> _refreshCalendar() async {
     await Future.wait([
       ref.read(secretaryCalendarNotifierProvider.notifier).refresh(),
@@ -255,14 +231,12 @@ class _SecretaryCalendarScreenState
         )
         .toList();
 
-    _ensureDoctorColors(appointments, visibleSchedules);
     return Stack(
       children: [
         SecretaryCalendarView(
           weekStart: weekStart,
           appointments: appointments,
           schedules: visibleSchedules,
-          doctorColors: _doctorColors,
           highlightedAppointmentId: _highlightedAppointmentId,
           onItemsTap: _openCalendarItems,
         ),

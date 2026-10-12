@@ -33,8 +33,11 @@ class CalendarColors {
   static const Color appointmentRequested = Color(0xFFFFEDD5);
   static const Color appointmentCancelled = Color(0xFFFDECEC);
   static const Color appointmentUnknown = Color(0xFFF1F5F9);
-  static const Color appointmentBlockade = Color(0xFF4B5563);
-  static const Color appointmentBlockadeStripe = Color(0xFF374151);
+  static const Color appointmentBlockade = Color(0xFFE53935);
+  static const Color appointmentBlockadeStripe = Color(0xFFC62828);
+
+  // Color uniforme de los horarios de doctor
+  static const Color schedule = Color(0xFF4A90D9);
 
   // FAB colors
   static const Color createAppointmentFab = AppColors.success;

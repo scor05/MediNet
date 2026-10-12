@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/calendar/presentation/models/secretary_calendar_item.dart';
 import 'package:frontend/features/calendar/presentation/utils/calendar_collision_layout.dart';
+import 'package:frontend/features/calendar/presentation/widgets/appointment_card.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_appointment_highlight.dart';
 import 'package:frontend/features/calendar/presentation/widgets/time_column.dart';
 import 'package:frontend/features/calendar/presentation/widgets/week_header.dart';
@@ -12,7 +13,6 @@ class SecretaryCalendarView extends StatelessWidget {
   final DateTime weekStart;
   final List<Appointment> appointments;
   final List<Schedule> schedules;
-  final Map<int, Color> doctorColors;
   final int? highlightedAppointmentId;
   final ValueChanged<List<SecretaryCalendarItem>> onItemsTap;
 
@@ -21,7 +21,6 @@ class SecretaryCalendarView extends StatelessWidget {
     required this.weekStart,
     required this.appointments,
     required this.schedules,
-    required this.doctorColors,
     this.highlightedAppointmentId,
     required this.onItemsTap,
   });
@@ -97,7 +96,6 @@ class SecretaryCalendarView extends StatelessWidget {
                                       ...daySchedules,
                                       ...dayAppointments,
                                     ],
-                                    doctorColors: doctorColors,
                                     highlightedAppointmentId:
                                         highlightedAppointmentId,
                                     onItemsTap: onItemsTap,
@@ -128,14 +126,12 @@ class SecretaryCalendarView extends StatelessWidget {
 class _SecretaryDayColumn extends StatelessWidget {
   final int dayIndex;
   final List<SecretaryCalendarItem> items;
-  final Map<int, Color> doctorColors;
   final int? highlightedAppointmentId;
   final ValueChanged<List<SecretaryCalendarItem>> onItemsTap;
 
   const _SecretaryDayColumn({
     required this.dayIndex,
     required this.items,
-    required this.doctorColors,
     required this.highlightedAppointmentId,
     required this.onItemsTap,
   });
@@ -185,7 +181,7 @@ class _SecretaryDayColumn extends StatelessWidget {
                 context,
                 appointments,
                 constraints.maxWidth,
-                opacity: 0.82,
+                opacity: 1,
               ),
             ],
           ),
@@ -265,8 +261,9 @@ class _SecretaryDayColumn extends StatelessWidget {
             ? CalendarAppointmentHighlight(
                 appointmentId: placement.item.id,
                 highlighted: placement.item.id == highlightedAppointmentId,
-                glowColor:
-                    doctorColors[placement.item.doctorId] ?? Colors.blueGrey,
+                glowColor: appointmentStatusColor(
+                  placement.item.appointment!.status,
+                ),
                 child: _calendarCard(
                   placement.item,
                   opacity,
@@ -287,7 +284,6 @@ class _SecretaryDayColumn extends StatelessWidget {
   ) {
     return _SecretaryCalendarCard(
       item: item,
-      doctorColor: doctorColors[item.doctorId] ?? Colors.blueGrey,
       opacity: opacity,
       onTapAt: (tapFraction) {
         final tapMinute =
@@ -319,21 +315,28 @@ class _SecretaryDayColumn extends StatelessWidget {
 
 class _SecretaryCalendarCard extends StatelessWidget {
   final SecretaryCalendarItem item;
-  final Color doctorColor;
   final double opacity;
   final ValueChanged<double> onTapAt;
 
   const _SecretaryCalendarCard({
     required this.item,
-    required this.doctorColor,
     required this.opacity,
     required this.onTapAt,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isBlockade = item.type == SecretaryCalendarItemType.blockade;
-    final base = isBlockade ? Colors.red.shade200 : doctorColor;
+    final base = switch (item.type) {
+      SecretaryCalendarItemType.schedule => CalendarColors.schedule,
+      SecretaryCalendarItemType.blockade => CalendarColors.appointmentBlockade,
+      SecretaryCalendarItemType.appointment => appointmentStatusColor(
+        item.appointment!.status,
+      ),
+    };
+    final borderColor =
+        item.type == SecretaryCalendarItemType.appointment
+        ? Color.alphaBlend(Colors.black26, base)
+        : base.withValues(alpha: 0.85);
     final background = Color.alphaBlend(
       base.withValues(alpha: opacity),
       Theme.of(context).colorScheme.surface,
@@ -361,11 +364,7 @@ class _SecretaryCalendarCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: background,
               borderRadius: BorderRadius.circular(4),
-              border: Border.all(
-                color: isBlockade
-                    ? Colors.red.shade400
-                    : doctorColor.withValues(alpha: 0.85),
-              ),
+              border: Border.all(color: borderColor),
             ),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
