@@ -4,6 +4,7 @@ import 'package:frontend/features/calendar/presentation/models/secretary_calenda
 import 'package:frontend/features/calendar/presentation/utils/calendar_collision_layout.dart';
 import 'package:frontend/features/calendar/presentation/widgets/appointment_card.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_appointment_highlight.dart';
+import 'package:frontend/features/calendar/presentation/widgets/calendar_item_content.dart';
 import 'package:frontend/features/calendar/presentation/widgets/time_column.dart';
 import 'package:frontend/features/calendar/presentation/widgets/week_header.dart';
 import 'package:frontend/features/schedule/domain/entities/schedule.dart';
@@ -348,7 +349,6 @@ class _SecretaryCalendarCard extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final compact = constraints.maxWidth < 105;
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTapDown: (details) {
@@ -366,35 +366,15 @@ class _SecretaryCalendarCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
               border: Border.all(color: borderColor),
             ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    compact ? item.shortLabel : item.fullLabel,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: foreground,
-                      fontSize: 10,
-                      height: 1.05,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  if (constraints.maxHeight >= 31)
-                    Text(
-                      item.timeRange,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: foreground.withValues(alpha: 0.8),
-                        fontSize: 10,
-                        height: 1.1,
-                      ),
-                    ),
-                ],
-              ),
+            child: CalendarItemContent(
+              type: item.shortLabel,
+              person: item.type == SecretaryCalendarItemType.appointment
+                  ? item.appointment!.patientName
+                  : item.doctorName,
+              clinic: item.clinicName,
+              timeRange: item.timeRange,
+              color: foreground,
+              anchorBottom: item.type == SecretaryCalendarItemType.schedule,
             ),
           ),
         );
