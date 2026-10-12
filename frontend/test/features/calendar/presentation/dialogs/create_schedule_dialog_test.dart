@@ -10,6 +10,8 @@ import 'package:frontend/features/schedule/domain/entities/schedule.dart';
 import 'package:frontend/features/schedule/domain/providers/schedule_domain_providers.dart';
 import 'package:frontend/features/schedule/domain/repositories/schedule_repository.dart';
 import 'package:frontend/features/schedule/domain/usecases/create_schedule_usecase.dart';
+import 'package:frontend/features/schedule/domain/usecases/get_doctor_schedules_usecase.dart';
+import 'package:frontend/features/schedule/domain/usecases/get_schedules_by_doctor_id_usecase.dart';
 import 'package:frontend/features/search/presentation/providers/search_form_provider.dart';
 import 'package:frontend/features/user/domain/entities/doctor_search_result.dart';
 import 'package:frontend/theme/app_theme.dart';
@@ -113,6 +115,130 @@ void main() {
     expect(_submitButton(tester).onPressed, isNotNull);
   });
 
+  group('existing schedules', () {
+    const monday = Schedule(
+      id: 1,
+      dayOfWeek: 0,
+      startTime: '14:00:00',
+      endTime: '16:00:00',
+      duration: 30,
+      doctorId: 7,
+      clinicId: 1,
+      clinicName: 'Clínica Central',
+    );
+    const mondayMorning = Schedule(
+      id: 2,
+      dayOfWeek: 0,
+      startTime: '08:00:00',
+      endTime: '12:00:00',
+      duration: 30,
+      doctorId: 7,
+      clinicId: 1,
+      clinicName: 'Clínica Central',
+    );
+    const friday = Schedule(
+      id: 3,
+      dayOfWeek: 4,
+      startTime: '09:00:00',
+      endTime: '13:00:00',
+      duration: 30,
+      doctorId: 7,
+      clinicId: 1,
+      clinicName: 'Clínica Central',
+    );
+    const otherClinic = Schedule(
+      id: 4,
+      dayOfWeek: 2,
+      startTime: '07:00:00',
+      endTime: '09:00:00',
+      duration: 30,
+      doctorId: 7,
+      clinicId: 99,
+      clinicName: 'Otra clínica',
+    );
+
+    testWidgets('doctor sees their schedules grouped by day', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 1600));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final repository = _RecordingScheduleRepository(
+        existing: const [monday, friday, mondayMorning, otherClinic],
+      );
+      await tester.pumpWidget(
+        _app(forSecretary: false, scheduleRepository: repository),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Horarios existentes'), findsOneWidget);
+      expect(find.text('08:00–12:00 · 14:00–16:00'), findsOneWidget);
+      expect(find.text('09:00–13:00'), findsOneWidget);
+      // Solo se muestra la clínica seleccionada.
+      expect(find.text('07:00–09:00'), findsNothing);
+      expect(
+        find.byKey(const ValueKey('existing-schedules-day-0')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('existing-schedules-day-2')),
+        findsNothing,
+      );
+      expect(
+        find.text('Sin horario: Martes, Miércoles, Jueves, Sábado, Domingo'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('doctor with no schedules sees every day available', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_app(forSecretary: false));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey('existing-schedules-empty')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('secretary sees the panel only after choosing a doctor', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(800, 1600));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final repository = _RecordingScheduleRepository(
+        existing: const [monday, friday],
+      );
+      await tester.pumpWidget(
+        _app(forSecretary: true, scheduleRepository: repository),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey('existing-schedules-panel')),
+        findsNothing,
+      );
+      expect(repository.requestedDoctorId, isNull);
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(CreateScheduleDialog)),
+      );
+      container
+          .read(searchFormNotifierProvider.notifier)
+          .selectDoctor(
+            const DoctorSearchResult(
+              id: 7,
+              name: 'Dr Figueroa',
+              specialty: 'Pediatría',
+            ),
+          );
+      await tester.pumpAndSettle();
+
+      expect(repository.requestedDoctorId, 7);
+      expect(find.text('Dr Figueroa · Clínica Central'), findsOneWidget);
+      expect(find.text('14:00–16:00'), findsOneWidget);
+      expect(find.text('09:00–13:00'), findsOneWidget);
+    });
+  });
+
   testWidgets('creates one schedule for every selected day', (tester) async {
     final scheduleRepository = _RecordingScheduleRepository();
     await tester.pumpWidget(
@@ -150,15 +276,21 @@ Widget _app({
   ScheduleRepository? scheduleRepository,
 }) {
   final repository = _ClinicRepository();
+  final schedules = scheduleRepository ?? _RecordingScheduleRepository();
   return ProviderScope(
     overrides: [
       getClinicsUsecaseProvider.overrideWithValue(
         GetClinicsUsecase(repository),
       ),
-      if (scheduleRepository != null)
-        createScheduleUsecaseProvider.overrideWithValue(
-          CreateScheduleUsecase(scheduleRepository),
-        ),
+      createScheduleUsecaseProvider.overrideWithValue(
+        CreateScheduleUsecase(schedules),
+      ),
+      getDoctorSchedulesUsecaseProvider.overrideWithValue(
+        GetDoctorSchedulesUsecase(schedules),
+      ),
+      getSchedulesByDoctorIdUsecaseProvider.overrideWithValue(
+        GetSchedulesByDoctorIdUsecase(schedules),
+      ),
     ],
     child: MaterialApp(
       home: Scaffold(body: CreateScheduleDialog(forSecretary: forSecretary)),
@@ -168,7 +300,11 @@ Widget _app({
 
 class _RecordingScheduleRepository extends ScheduleRepository {
   final List<int> createdDays = [];
+  final List<Schedule> existing;
   int batchCalls = 0;
+  int? requestedDoctorId;
+
+  _RecordingScheduleRepository({this.existing = const []});
 
   Schedule _schedule({
     required int dayOfWeek,
@@ -239,10 +375,13 @@ class _RecordingScheduleRepository extends ScheduleRepository {
   Future<void> deleteSchedule(int id) async {}
 
   @override
-  Future<List<Schedule>> getDoctorSchedules() async => const [];
+  Future<List<Schedule>> getDoctorSchedules() async => existing;
 
   @override
-  Future<List<Schedule>> getSchedulesByDoctorId(int doctorId) async => const [];
+  Future<List<Schedule>> getSchedulesByDoctorId(int doctorId) async {
+    requestedDoctorId = doctorId;
+    return existing;
+  }
 
   @override
   Future<List<Schedule>> getSecretarySchedules() async => const [];
