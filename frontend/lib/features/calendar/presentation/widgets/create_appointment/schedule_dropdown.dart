@@ -19,7 +19,9 @@ class ScheduleDropdown extends StatelessWidget {
   Widget build(BuildContext context) {
     return DropdownButtonFormField<Schedule>(
       initialValue: selectedSchedule,
-      decoration: const InputDecoration(labelText: 'Horario'),
+      decoration: const InputDecoration(
+        labelText: 'Horario disponible del doctor',
+      ),
       items: schedules
           .map(
             (schedule) => DropdownMenuItem(
@@ -33,7 +35,8 @@ class ScheduleDropdown extends StatelessWidget {
           )
           .toList(),
       onChanged: onChanged,
-      validator: (value) => value == null ? 'Selecciona un horario' : null,
+      validator: (value) =>
+          value == null ? 'Selecciona un horario disponible del doctor' : null,
     );
   }
 }

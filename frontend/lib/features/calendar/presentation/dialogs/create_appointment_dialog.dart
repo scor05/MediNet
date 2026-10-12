@@ -339,7 +339,7 @@ class _CreateAppointmentDialogState
                 const Center(child: CircularProgressIndicator())
               else if (formState.timeSlots.isEmpty)
                 const Text(
-                  'No hay horas disponibles para esta fecha.',
+                  'No hay horas de cita disponibles para esta fecha.',
                   style: TextStyle(color: Colors.red),
                 )
               else

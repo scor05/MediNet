@@ -21,7 +21,7 @@ class TimeSlotDropdown extends StatelessWidget {
           .map((time) => DropdownMenuItem(value: time, child: Text(time)))
           .toList(),
       onChanged: onChanged,
-      validator: (value) => value == null ? 'Selecciona una hora' : null,
+      validator: (value) => value == null ? 'Selecciona la hora de la cita' : null,
     );
   }
 }
