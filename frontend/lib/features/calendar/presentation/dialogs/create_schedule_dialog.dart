@@ -5,9 +5,11 @@ import 'package:frontend/features/calendar/presentation/providers/doctor_calenda
 import 'package:frontend/features/calendar/presentation/providers/secretary_calendar_provider.dart';
 import 'package:frontend/features/clinic/domain/entities/clinic.dart';
 import 'package:frontend/features/clinic/domain/providers/clinic_domain_providers.dart';
+import 'package:frontend/features/schedule/domain/providers/schedule_domain_providers.dart';
 import 'package:frontend/features/search/presentation/providers/search_form_provider.dart';
 import 'package:frontend/features/search/presentation/widgets/search_input_field.dart';
 import 'package:frontend/features/user/domain/entities/doctor_search_result.dart';
+import 'package:frontend/theme/app_theme.dart';
 
 class CreateScheduleDialog extends ConsumerStatefulWidget {
   final bool forSecretary;
@@ -24,7 +26,7 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
   final _doctorCtrl = TextEditingController();
   List<Clinic> _clinics = [];
   int? _selectedClinic;
-  int _dayOfWeek = 0;
+  final Set<int> _selectedDays = {};
   TimeOfDay _startTime = const TimeOfDay(hour: 8, minute: 0);
   TimeOfDay _endTime = const TimeOfDay(hour: 16, minute: 0);
   final _durationCtrl = TextEditingController();
@@ -42,6 +44,7 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
     'Sábado',
     'Domingo',
   ];
+  static const _unselectedDayColor = Color.fromRGBO(210, 210, 210, 1);
 
   @override
   void initState() {
@@ -127,8 +130,27 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
     return endMins > startMins;
   }
 
+  void _toggleDay(int day) {
+    setState(() {
+      if (!_selectedDays.add(day)) _selectedDays.remove(day);
+      _error = null;
+    });
+  }
+
+  String _errorMessage(Object error) {
+    if (error is ApiException) return error.message;
+    var message = error.toString();
+    if (message.startsWith('Exception: ')) message = message.substring(11);
+    return message.isEmpty ? 'Ocurrió un error inesperado.' : message;
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+
+    if (_selectedDays.isEmpty) {
+      setState(() => _error = 'Selecciona al menos un día de la semana.');
+      return;
+    }
 
     final selectedDoctor = ref.read(searchFormNotifierProvider).selectedDoctor;
     if (widget.forSecretary && selectedDoctor == null) {
@@ -154,46 +176,41 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
     });
 
     try {
+      final requestedDays = _selectedDays.toList()..sort();
+      final createSchedule = ref.read(createScheduleUsecaseProvider);
+      final duration = int.parse(_durationCtrl.text.trim());
+      final createdSchedules = await createSchedule.callMany(
+        doctorId: widget.forSecretary ? selectedDoctor!.id : null,
+        clinicId: _selectedClinic!,
+        daysOfWeek: requestedDays,
+        startTime: _startTime,
+        endTime: _endTime,
+        duration: duration,
+      );
+      var confirmationText = createdSchedules.length == 1
+          ? 'Horario creado exitosamente'
+          : '${createdSchedules.length} horarios creados exitosamente';
+      if (selectedDoctor != null && widget.forSecretary) {
+        confirmationText = createdSchedules.length == 1
+            ? 'Horario creado exitosamente para el doctor ${selectedDoctor.name}'
+            : '${createdSchedules.length} horarios creados exitosamente para el doctor ${selectedDoctor.name}';
+      }
+
       if (widget.forSecretary) {
-        await ref
-            .read(secretaryCalendarNotifierProvider.notifier)
-            .createSchedule(
-              doctorId: selectedDoctor!.id,
-              clinicId: _selectedClinic!,
-              dayOfWeek: _dayOfWeek,
-              startTime: _startTime,
-              endTime: _endTime,
-              duration: int.parse(_durationCtrl.text.trim()),
-            );
+        await ref.read(secretarySchedulesNotifierProvider.notifier).refresh();
       } else {
-        await ref
-            .read(doctorCalendarNotifierProvider.notifier)
-            .createSchedule(
-              clinicId: _selectedClinic!,
-              dayOfWeek: _dayOfWeek,
-              startTime: _startTime,
-              endTime: _endTime,
-              duration: int.parse(_durationCtrl.text.trim()),
-            );
+        ref.invalidate(doctorSchedulesProvider);
       }
 
       if (!mounted) return;
 
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Horario creado exitosamente')),
-      );
-    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(confirmationText)));
+    } catch (error) {
       if (!mounted) return;
-      setState(() {
-        if (e is ApiException) {
-          _error = e.message;
-        } else {
-          String msg = e.toString();
-          if (msg.startsWith('Exception: ')) msg = msg.substring(11);
-          _error = msg.isEmpty ? 'Ocurrió un error inesperado.' : msg;
-        }
-      });
+      setState(() => _error = _errorMessage(error));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -205,6 +222,9 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
     final searchNotifier = ref.read(searchFormNotifierProvider.notifier);
     final canSubmit =
         !_saving &&
+        _selectedDays.isNotEmpty &&
+        !_loadingClinics &&
+        _selectedClinic != null &&
         (!widget.forSecretary || searchState.selectedDoctor != null);
 
     return SingleChildScrollView(
@@ -237,24 +257,6 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
             ),
             const SizedBox(height: 16),
 
-            if (widget.forSecretary) ...[
-              SearchInputField<DoctorSearchResult>(
-                controller: _doctorCtrl,
-                label: 'Doctor',
-                hintText: 'Nombre o especialidad del doctor',
-                loading: searchState.loadingDoctors,
-                selectedItem: searchState.selectedDoctor,
-                results: searchState.doctorResults,
-                titleBuilder: (doctor) => doctor.name,
-                subtitleBuilder: (doctor) => doctor.specialty,
-                onChanged: searchNotifier.onDoctorQueryChanged,
-                onSelected: _selectDoctor,
-                onClear: _clearDoctor,
-                onEmptyFocus: searchNotifier.showDoctorSuggestions,
-              ),
-              const SizedBox(height: 10),
-            ],
-
             if (_loadingClinics)
               const Center(child: CircularProgressIndicator())
             else if (_error != null && _clinics.isEmpty)
@@ -271,6 +273,69 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
                 ),
               )
             else ...[
+              Text(
+                'Días de la semana',
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: List.generate(7, (day) {
+                  final selected = _selectedDays.contains(day);
+                  return Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(right: day == 6 ? 0 : 3),
+                      child: Semantics(
+                        button: true,
+                        selected: selected,
+                        label: _days[day],
+                        child: OutlinedButton(
+                          key: ValueKey('schedule-day-$day'),
+                          onPressed: _saving ? null : () => _toggleDay(day),
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size(0, 42),
+                            padding: EdgeInsets.zero,
+                            backgroundColor: selected
+                                ? AppTheme.primary
+                                : _unselectedDayColor,
+                            foregroundColor: selected
+                                ? Colors.white
+                                : Color.fromRGBO(100, 100, 100, 1),
+                            side: BorderSide.none,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text(
+                            _days[day],
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+              const SizedBox(height: 10),
+              if (widget.forSecretary) ...[
+                SearchInputField<DoctorSearchResult>(
+                  controller: _doctorCtrl,
+                  label: 'Doctor',
+                  hintText: 'Nombre o especialidad del doctor',
+                  loading: searchState.loadingDoctors,
+                  selectedItem: searchState.selectedDoctor,
+                  results: searchState.doctorResults,
+                  titleBuilder: (doctor) => doctor.name,
+                  subtitleBuilder: (doctor) => doctor.specialty,
+                  onChanged: searchNotifier.onDoctorQueryChanged,
+                  onSelected: _selectDoctor,
+                  onClear: _clearDoctor,
+                  onEmptyFocus: searchNotifier.showDoctorSuggestions,
+                ),
+                const SizedBox(height: 10),
+              ],
               DropdownButtonFormField<int>(
                 initialValue: _selectedClinic,
                 decoration: const InputDecoration(labelText: 'Clínica'),
@@ -287,22 +352,6 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
               ),
               const SizedBox(height: 10),
 
-              DropdownButtonFormField<int>(
-                initialValue: _dayOfWeek,
-                decoration: const InputDecoration(
-                  labelText: 'Día de la semana',
-                ),
-                items: List.generate(
-                  7,
-                  (i) => DropdownMenuItem(value: i, child: Text(_days[i])),
-                ),
-                onChanged: (v) => setState(() {
-                  _dayOfWeek = v!;
-                  _error = null;
-                }),
-              ),
-              const SizedBox(height: 10),
-
               Row(
                 children: [
                   Expanded(
@@ -312,7 +361,10 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
                         decoration: const InputDecoration(
                           labelText: 'Hora inicio',
                         ),
-                        child: Text(_fmt(_startTime)),
+                        child: Text(
+                          _fmt(_startTime),
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        ),
                       ),
                     ),
                   ),
@@ -324,7 +376,10 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
                         decoration: const InputDecoration(
                           labelText: 'Hora fin',
                         ),
-                        child: Text(_fmt(_endTime)),
+                        child: Text(
+                          _fmt(_endTime),
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        ),
                       ),
                     ),
                   ),

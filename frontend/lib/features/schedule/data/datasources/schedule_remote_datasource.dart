@@ -73,11 +73,11 @@ class ScheduleRemoteDatasource {
     throw handleApiError(response);
   }
 
-  // Se crea un horario
-  Future<ScheduleModel> createSchedule({
+  // Se crean uno o más horarios en una única solicitud atómica.
+  Future<List<ScheduleModel>> createSchedules({
     int? doctorId,
     required int clinicId,
-    required int dayOfWeek,
+    required List<int> daysOfWeek,
     required TimeOfDay startTime,
     required TimeOfDay endTime,
     required int duration,
@@ -95,7 +95,7 @@ class ScheduleRemoteDatasource {
           body: jsonEncode({
             'id_doctor': ?doctorId,
             'id_clinic': clinicId,
-            'day_of_week': dayOfWeek,
+            'days_of_week': daysOfWeek,
             'start_time': _fmtTime(startTime),
             'end_time': _fmtTime(endTime),
             'duration': duration,
@@ -104,8 +104,8 @@ class ScheduleRemoteDatasource {
         .timeout(const Duration(seconds: 10));
 
     if (response.statusCode == 201) {
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      return ScheduleModel.fromJson(data);
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((item) => ScheduleModel.fromJson(item)).toList();
     } else {
       throw handleApiError(response);
     }

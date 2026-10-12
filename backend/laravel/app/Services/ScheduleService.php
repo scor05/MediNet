@@ -27,7 +27,7 @@ class ScheduleService
         return $this->repository->findById($id);
     }
 
-    // Se crea un nuevo horario validando que el doctor no tenga conflicto de horario
+    // Se crean los horarios validando primero que ningún día tenga conflictos.
     public function create($data, int $actorId)
     {
         if (! $this->repository->canCreateForDoctorAtClinic(
@@ -40,14 +40,16 @@ class ScheduleService
             ]);
         }
 
-        $this->validateConflict(
-            $data['id_doctor'],
-            $data['day_of_week'],
-            $data['start_time'],
-            $data['end_time']
-        );
+        foreach ($data['days_of_week'] as $dayOfWeek) {
+            $this->validateConflict(
+                $data['id_doctor'],
+                $dayOfWeek,
+                $data['start_time'],
+                $data['end_time']
+            );
+        }
 
-        return $this->repository->create($data);
+        return $this->repository->createMany($data);
     }
 
     // Se actualiza un horario validando que no haya conflicto

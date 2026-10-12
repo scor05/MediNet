@@ -44,7 +44,8 @@ class ScheduleController extends Controller
         $validated = $request->validate([
             'id_doctor' => 'required|integer|exists:users,id',
             'id_clinic' => 'required|integer|exists:clinics,id',
-            'day_of_week' => 'required|integer|between:0,6',
+            'days_of_week' => 'required|array|min:1|max:7',
+            'days_of_week.*' => 'required|integer|distinct|between:0,6',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
             'duration' => 'required|integer|min:10',

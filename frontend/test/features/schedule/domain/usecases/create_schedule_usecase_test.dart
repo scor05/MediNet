@@ -37,7 +37,7 @@ void main() {
   });
 }
 
-class _RecordingScheduleRepository implements ScheduleRepository {
+class _RecordingScheduleRepository extends ScheduleRepository {
   int? receivedDoctorId;
 
   @override

@@ -73,10 +73,23 @@ class ScheduleRepository
             ->get();
     }
 
-    // Se crea un nuevo horario
-    public function create($data)
+    // Crea un horario por cada día como una sola operación atómica.
+    public function createMany(array $data): array
     {
-        return Schedule::create($data);
+        return DB::transaction(function () use ($data) {
+            $daysOfWeek = $data['days_of_week'];
+            unset($data['days_of_week']);
+
+            $schedules = [];
+            foreach ($daysOfWeek as $dayOfWeek) {
+                $schedules[] = Schedule::create([
+                    ...$data,
+                    'day_of_week' => $dayOfWeek,
+                ]);
+            }
+
+            return $schedules;
+        });
     }
 
     public function canCreateForDoctorAtClinic(
