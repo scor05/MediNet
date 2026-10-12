@@ -21,6 +21,30 @@ abstract class ScheduleRepository {
     required int duration,
   });
 
+  Future<List<Schedule>> createSchedules({
+    int? doctorId,
+    required int clinicId,
+    required List<int> daysOfWeek,
+    required TimeOfDay startTime,
+    required TimeOfDay endTime,
+    required int duration,
+  }) async {
+    final schedules = <Schedule>[];
+    for (final dayOfWeek in daysOfWeek) {
+      schedules.add(
+        await createSchedule(
+          doctorId: doctorId,
+          clinicId: clinicId,
+          dayOfWeek: dayOfWeek,
+          startTime: startTime,
+          endTime: endTime,
+          duration: duration,
+        ),
+      );
+    }
+    return schedules;
+  }
+
   Future<Schedule> updateSchedule({
     required int id,
     required int clinicId,

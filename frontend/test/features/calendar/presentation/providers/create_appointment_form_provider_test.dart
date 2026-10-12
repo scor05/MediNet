@@ -62,7 +62,7 @@ void main() {
   );
 }
 
-class _ScheduleRepository implements ScheduleRepository {
+class _ScheduleRepository extends ScheduleRepository {
   @override
   Future<List<Schedule>> getSchedulesByDoctorId(int doctorId) async => const [
     Schedule(
