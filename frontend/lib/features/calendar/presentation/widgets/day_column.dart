@@ -4,7 +4,6 @@ import 'package:frontend/features/calendar/presentation/widgets/appointment_card
 import 'package:frontend/features/calendar/presentation/widgets/calendar_appointment_highlight.dart';
 import 'package:frontend/features/schedule/domain/entities/schedule.dart';
 import 'package:frontend/theme/calendar_theme.dart';
-import 'package:frontend/theme/clinic_colors.dart';
 
 class DayColumn extends StatelessWidget {
   final int dayIndex;
@@ -190,7 +189,7 @@ class DayColumn extends StatelessWidget {
                 schedule.startTime,
                 schedule.endTime,
               );
-              final color = getClinicColor(schedule.clinicName);
+              const color = CalendarColors.schedule;
               final textColor = color.withValues(alpha: 0.75);
 
               return Positioned(

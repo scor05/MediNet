@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/calendar/presentation/models/secretary_calendar_item.dart';
+import 'package:frontend/features/calendar/presentation/widgets/appointment_card.dart';
 import 'package:frontend/features/calendar/presentation/widgets/secretary_calendar_view.dart';
 import 'package:frontend/features/schedule/domain/entities/schedule.dart';
 import 'package:frontend/theme/calendar_theme.dart';
@@ -50,7 +51,6 @@ void main() {
             weekStart: DateTime(2026, 9, 21),
             appointments: [appointment],
             schedules: const [schedule],
-            doctorColors: const {7: Color.fromARGB(255, 110, 150, 180)},
             onItemsTap: (items) => tapped = items,
           ),
         ),
@@ -82,7 +82,6 @@ void main() {
             weekStart: DateTime(2026, 9, 21),
             appointments: [appointment],
             schedules: const [schedule],
-            doctorColors: const {7: Color.fromARGB(255, 110, 150, 180)},
             onItemsTap: (_) {},
           ),
         ),
@@ -111,7 +110,6 @@ void main() {
             weekStart: DateTime(2026, 9, 21),
             appointments: [appointment, otherAppointment],
             schedules: const [],
-            doctorColors: const {7: Colors.blue},
             highlightedAppointmentId: appointment.id,
             onItemsTap: (_) {},
           ),
@@ -140,7 +138,10 @@ void main() {
     expect(selectedDecoration.boxShadow, isNotEmpty);
     expect(
       HSLColor.fromColor(selectedDecoration.boxShadow!.single.color).hue,
-      closeTo(HSLColor.fromColor(Colors.blue).hue, 0.1),
+      closeTo(
+        HSLColor.fromColor(appointmentStatusColor(appointment.status)).hue,
+        1,
+      ),
     );
     expect(otherDecoration.boxShadow, isEmpty);
   });
@@ -164,10 +165,6 @@ void main() {
             weekStart: DateTime(2026, 9, 21),
             appointments: [appointment, simultaneous],
             schedules: const [],
-            doctorColors: const {
-              7: Color.fromARGB(255, 110, 150, 180),
-              8: Color.fromARGB(255, 170, 130, 160),
-            },
             onItemsTap: (_) {},
           ),
         ),
@@ -201,7 +198,6 @@ void main() {
             weekStart: DateTime(2026, 9, 21),
             appointments: [appointment, simultaneous],
             schedules: const [],
-            doctorColors: const {7: Colors.blue, 8: Colors.purple},
             onItemsTap: (_) {},
           ),
         ),
@@ -246,11 +242,6 @@ void main() {
             weekStart: DateTime(2026, 9, 21),
             appointments: const [],
             schedules: schedules,
-            doctorColors: const {
-              1: Colors.blue,
-              2: Colors.green,
-              3: Colors.purple,
-            },
             onItemsTap: (_) {},
           ),
         ),

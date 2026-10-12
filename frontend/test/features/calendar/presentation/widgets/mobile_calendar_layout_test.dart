@@ -42,7 +42,6 @@ void main() {
             weekStart: DateTime(2026, 9, 28),
             appointments: const [],
             schedules: const [],
-            doctorColors: const {},
             onItemsTap: (_) {},
           ),
         ),
