@@ -25,4 +25,22 @@ class CreateScheduleUsecase {
       duration: duration,
     );
   }
+
+  Future<List<Schedule>> callMany({
+    int? doctorId,
+    required int clinicId,
+    required List<int> daysOfWeek,
+    required TimeOfDay startTime,
+    required TimeOfDay endTime,
+    required int duration,
+  }) {
+    return repository.createSchedules(
+      doctorId: doctorId,
+      clinicId: clinicId,
+      daysOfWeek: daysOfWeek,
+      startTime: startTime,
+      endTime: endTime,
+      duration: duration,
+    );
+  }
 }

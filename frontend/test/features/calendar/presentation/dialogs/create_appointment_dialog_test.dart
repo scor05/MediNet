@@ -67,7 +67,7 @@ Widget _app(_ScheduleRepository repository, {DoctorSearchResult? fixedDoctor}) {
   );
 }
 
-class _ScheduleRepository implements ScheduleRepository {
+class _ScheduleRepository extends ScheduleRepository {
   int? requestedDoctorId;
 
   @override

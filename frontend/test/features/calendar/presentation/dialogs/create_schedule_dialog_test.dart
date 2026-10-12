@@ -75,6 +75,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(scheduleRepository.createdDays, [1, 4]);
+    expect(scheduleRepository.batchCalls, 1);
   });
 }
 
@@ -103,8 +104,54 @@ Widget _app({
   );
 }
 
-class _RecordingScheduleRepository implements ScheduleRepository {
+class _RecordingScheduleRepository extends ScheduleRepository {
   final List<int> createdDays = [];
+  int batchCalls = 0;
+
+  Schedule _schedule({
+    required int dayOfWeek,
+    required int clinicId,
+    required TimeOfDay startTime,
+    required TimeOfDay endTime,
+    required int duration,
+    int? doctorId,
+  }) {
+    return Schedule(
+      id: dayOfWeek + 1,
+      dayOfWeek: dayOfWeek,
+      startTime: '${startTime.hour}:00',
+      endTime: '${endTime.hour}:00',
+      duration: duration,
+      doctorId: doctorId ?? 1,
+      clinicId: clinicId,
+      clinicName: 'Clínica Central',
+    );
+  }
+
+  @override
+  Future<List<Schedule>> createSchedules({
+    int? doctorId,
+    required int clinicId,
+    required List<int> daysOfWeek,
+    required TimeOfDay startTime,
+    required TimeOfDay endTime,
+    required int duration,
+  }) async {
+    batchCalls++;
+    createdDays.addAll(daysOfWeek);
+    return daysOfWeek
+        .map(
+          (day) => _schedule(
+            dayOfWeek: day,
+            clinicId: clinicId,
+            startTime: startTime,
+            endTime: endTime,
+            duration: duration,
+            doctorId: doctorId,
+          ),
+        )
+        .toList();
+  }
 
   @override
   Future<Schedule> createSchedule({
@@ -116,15 +163,13 @@ class _RecordingScheduleRepository implements ScheduleRepository {
     required int duration,
   }) async {
     createdDays.add(dayOfWeek);
-    return Schedule(
-      id: dayOfWeek + 1,
+    return _schedule(
       dayOfWeek: dayOfWeek,
-      startTime: '${startTime.hour}:00',
-      endTime: '${endTime.hour}:00',
-      duration: duration,
-      doctorId: doctorId ?? 1,
       clinicId: clinicId,
-      clinicName: 'Clínica Central',
+      startTime: startTime,
+      endTime: endTime,
+      duration: duration,
+      doctorId: doctorId,
     );
   }
 

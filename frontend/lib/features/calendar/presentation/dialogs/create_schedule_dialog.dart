@@ -177,25 +177,23 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
 
     try {
       final requestedDays = _selectedDays.toList()..sort();
-      final createdDays = <int>[];
-      final failedDays = <int, String>{};
       final createSchedule = ref.read(createScheduleUsecaseProvider);
       final duration = int.parse(_durationCtrl.text.trim());
-
-      for (final day in requestedDays) {
-        try {
-          await createSchedule.call(
-            doctorId: widget.forSecretary ? selectedDoctor!.id : null,
-            clinicId: _selectedClinic!,
-            dayOfWeek: day,
-            startTime: _startTime,
-            endTime: _endTime,
-            duration: duration,
-          );
-          createdDays.add(day);
-        } catch (error) {
-          failedDays[day] = _errorMessage(error);
-        }
+      final createdSchedules = await createSchedule.callMany(
+        doctorId: widget.forSecretary ? selectedDoctor!.id : null,
+        clinicId: _selectedClinic!,
+        daysOfWeek: requestedDays,
+        startTime: _startTime,
+        endTime: _endTime,
+        duration: duration,
+      );
+      var confirmationText = createdSchedules.length == 1
+          ? 'Horario creado exitosamente'
+          : '${createdSchedules.length} horarios creados exitosamente';
+      if (selectedDoctor != null && widget.forSecretary) {
+        confirmationText = createdSchedules.length == 1
+            ? 'Horario creado exitosamente para el doctor ${selectedDoctor.name}'
+            : '${createdSchedules.length} horarios creados exitosamente para el doctor ${selectedDoctor.name}';
       }
 
       if (widget.forSecretary) {
@@ -206,30 +204,13 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
 
       if (!mounted) return;
 
-      if (failedDays.isEmpty) {
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              createdDays.length == 1
-                  ? 'Horario creado exitosamente'
-                  : '${createdDays.length} horarios creados exitosamente',
-            ),
-          ),
-        );
-      } else {
-        final failedNames = failedDays.keys.map((day) => _days[day]).join(', ');
-        final firstError = failedDays.values.first;
-        setState(() {
-          _selectedDays
-            ..clear()
-            ..addAll(failedDays.keys);
-          _error = createdDays.isEmpty
-              ? 'No se pudieron crear los horarios para $failedNames. $firstError'
-              : 'Se crearon ${createdDays.length} de ${requestedDays.length} horarios. '
-                    'No se pudieron crear: $failedNames. $firstError';
-        });
-      }
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(confirmationText)));
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _error = _errorMessage(error));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -275,24 +256,6 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 16),
-
-            if (widget.forSecretary) ...[
-              SearchInputField<DoctorSearchResult>(
-                controller: _doctorCtrl,
-                label: 'Doctor',
-                hintText: 'Nombre o especialidad del doctor',
-                loading: searchState.loadingDoctors,
-                selectedItem: searchState.selectedDoctor,
-                results: searchState.doctorResults,
-                titleBuilder: (doctor) => doctor.name,
-                subtitleBuilder: (doctor) => doctor.specialty,
-                onChanged: searchNotifier.onDoctorQueryChanged,
-                onSelected: _selectDoctor,
-                onClear: _clearDoctor,
-                onEmptyFocus: searchNotifier.showDoctorSuggestions,
-              ),
-              const SizedBox(height: 10),
-            ],
 
             if (_loadingClinics)
               const Center(child: CircularProgressIndicator())
@@ -356,6 +319,23 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
                 }),
               ),
               const SizedBox(height: 10),
+              if (widget.forSecretary) ...[
+                SearchInputField<DoctorSearchResult>(
+                  controller: _doctorCtrl,
+                  label: 'Doctor',
+                  hintText: 'Nombre o especialidad del doctor',
+                  loading: searchState.loadingDoctors,
+                  selectedItem: searchState.selectedDoctor,
+                  results: searchState.doctorResults,
+                  titleBuilder: (doctor) => doctor.name,
+                  subtitleBuilder: (doctor) => doctor.specialty,
+                  onChanged: searchNotifier.onDoctorQueryChanged,
+                  onSelected: _selectDoctor,
+                  onClear: _clearDoctor,
+                  onEmptyFocus: searchNotifier.showDoctorSuggestions,
+                ),
+                const SizedBox(height: 10),
+              ],
               DropdownButtonFormField<int>(
                 initialValue: _selectedClinic,
                 decoration: const InputDecoration(labelText: 'Clínica'),
