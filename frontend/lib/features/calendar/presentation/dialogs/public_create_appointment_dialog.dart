@@ -5,6 +5,7 @@ import 'package:frontend/core/utils/time_format.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
 import 'package:frontend/features/calendar/domain/entities/public_slot.dart';
 import 'package:frontend/features/calendar/domain/providers/public_calendar_domain_providers.dart';
+import 'package:frontend/features/calendar/presentation/widgets/keyboard_aware_bottom_sheet.dart';
 import 'package:frontend/features/clinic/domain/entities/clinic.dart';
 import 'package:frontend/features/user/domain/entities/patient_profile.dart';
 import 'package:frontend/features/user/domain/entities/user.dart';
@@ -378,19 +379,16 @@ class _PublicCreateAppointmentDialogState
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-        left: 16,
-        right: 16,
-        top: 16,
-      ),
+    return KeyboardAwareBottomSheet(
+      scrollContent: false,
+      contentPadding: const EdgeInsets.only(left: 16, right: 16, top: 16),
       child: _loadingInitial
           ? const SizedBox(
               height: 220,
               child: Center(child: CircularProgressIndicator()),
             )
           : SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,

@@ -79,6 +79,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final selectedSlot = await showModalBottomSheet<PublicSlot>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
