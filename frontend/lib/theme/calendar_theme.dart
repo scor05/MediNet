@@ -138,7 +138,7 @@ class CalendarSizes {
   // Appointment card
   static const double appointmentCardMarginBottom = 4;
   static const double appointmentCardPadding = 6;
-  static const double appointmentTimeFontSize = 12;
+  static const double appointmentTimeFontSize = 13;
   static const double appointmentPatientFontSize = 11;
   static const double appointmentSecondaryFontSize = 10;
 

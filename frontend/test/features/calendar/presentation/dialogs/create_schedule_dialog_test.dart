@@ -30,6 +30,13 @@ void main() {
     expect(find.text('Día de la semana'), findsNothing);
     expect(tester.widget<Text>(find.text('08:00')).style?.fontSize, 16);
     expect(tester.widget<Text>(find.text('16:00')).style?.fontSize, 16);
+    expect(
+      find.text(
+        '*Intervalos a crearse: 08:00 - 08:30, 08:30 - 09:00, '
+        '09:00 - 09:30, 09:30 - 10:00, ...',
+      ),
+      findsOneWidget,
+    );
     final unselectedButton = tester.widget<OutlinedButton>(
       find.byKey(const ValueKey('schedule-day-0')),
     );
@@ -62,7 +69,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Selecciona un doctor de la lista'), findsOneWidget);
-    expect(find.byKey(const ValueKey('schedule-doctor-selected')), findsNothing);
+    expect(
+      find.byKey(const ValueKey('schedule-doctor-selected')),
+      findsNothing,
+    );
     expect(find.byKey(const ValueKey('schedule-submit-hint')), findsOneWidget);
     expect(_submitButton(tester).onPressed, isNull);
 
@@ -72,9 +82,7 @@ void main() {
     expect(_submitButton(tester).onPressed, isNull);
   });
 
-  testWidgets('typed text is not treated as a selected doctor', (
-    tester,
-  ) async {
+  testWidgets('typed text is not treated as a selected doctor', (tester) async {
     await tester.pumpWidget(_app(forSecretary: true));
     await tester.pumpAndSettle();
 
@@ -86,7 +94,10 @@ void main() {
       find.byKey(const ValueKey('schedule-doctor-typed-hint')),
       findsOneWidget,
     );
-    expect(find.byKey(const ValueKey('schedule-doctor-selected')), findsNothing);
+    expect(
+      find.byKey(const ValueKey('schedule-doctor-selected')),
+      findsNothing,
+    );
     expect(_submitButton(tester).onPressed, isNull);
   });
 
@@ -237,6 +248,28 @@ void main() {
       expect(find.text('14:00–16:00'), findsOneWidget);
       expect(find.text('09:00–13:00'), findsOneWidget);
     });
+  });
+
+  testWidgets('updates the schedule interval preview when duration changes', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_app(forSecretary: false));
+    await tester.pumpAndSettle();
+
+    final durationField = find.widgetWithText(
+      TextFormField,
+      'Duración por cita (minutos)',
+    );
+    await tester.enterText(durationField, '120');
+    await tester.pump();
+
+    expect(
+      find.text(
+        '*Intervalos a crearse: 08:00 - 10:00, 10:00 - 12:00, '
+        '12:00 - 14:00, 14:00 - 16:00',
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('creates one schedule for every selected day', (tester) async {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/features/calendar/presentation/models/secretary_calendar_item.dart';
+import 'package:frontend/features/calendar/presentation/utils/calendar_item_icons.dart';
 
 Future<SecretaryCalendarItem?> showSecretaryCalendarItemChooser({
   required BuildContext context,
@@ -26,7 +27,7 @@ Future<SecretaryCalendarItem?> showSecretaryCalendarItemChooser({
             ),
             ...items.map(
               (item) => ListTile(
-                leading: Icon(_iconFor(item.type)),
+                leading: Icon(calendarItemIcon(item.type)),
                 title: Text(
                   item.fullLabel,
                   maxLines: 2,
@@ -279,7 +280,8 @@ class _DetailRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, size: 22),
           const SizedBox(width: 12),
@@ -296,12 +298,6 @@ class _DetailRow extends StatelessWidget {
     );
   }
 }
-
-IconData _iconFor(SecretaryCalendarItemType type) => switch (type) {
-  SecretaryCalendarItemType.appointment => Icons.event_available_outlined,
-  SecretaryCalendarItemType.blockade => Icons.block_outlined,
-  SecretaryCalendarItemType.schedule => Icons.schedule_outlined,
-};
 
 String _formatDate(DateTime date) =>
     '${date.day.toString().padLeft(2, '0')}/'

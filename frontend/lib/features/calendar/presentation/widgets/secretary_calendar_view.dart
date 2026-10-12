@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/calendar/presentation/models/secretary_calendar_item.dart';
 import 'package:frontend/features/calendar/presentation/utils/calendar_collision_layout.dart';
+import 'package:frontend/features/calendar/presentation/utils/calendar_item_icons.dart';
 import 'package:frontend/features/calendar/presentation/widgets/appointment_card.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_appointment_highlight.dart';
-import 'package:frontend/features/calendar/presentation/widgets/calendar_item_content.dart';
+import 'package:frontend/features/calendar/presentation/widgets/calendar_item_legend.dart';
 import 'package:frontend/features/calendar/presentation/widgets/time_column.dart';
 import 'package:frontend/features/calendar/presentation/widgets/week_header.dart';
 import 'package:frontend/features/schedule/domain/entities/schedule.dart';
@@ -40,69 +41,86 @@ class SecretaryCalendarView extends StatelessWidget {
         final contentWidth = constraints.maxWidth < 800
             ? 800.0
             : constraints.maxWidth;
-        final contentHeight = constraints.hasBoundedHeight
-            ? constraints.maxHeight
-            : 600.0;
-
-        return SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: SizedBox(
-            width: contentWidth,
-            height: contentHeight,
-            child: Column(
-              children: [
-                WeekHeader(days: days, timeColumnWidth: timeColumnWidth),
-                Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: Theme.of(context).dividerColor,
-                ),
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+        return Column(
+          children: [
+            const CalendarItemLegend(),
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, calendarConstraints) => SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SizedBox(
+                    width: contentWidth,
+                    height: calendarConstraints.maxHeight,
+                    child: Column(
                       children: [
-                        const TimeColumn(
-                          startHour: startHour,
-                          endHour: endHour,
-                          hourHeight: hourHeight,
-                          width: timeColumnWidth,
+                        WeekHeader(
+                          days: days,
+                          timeColumnWidth: timeColumnWidth,
+                        ),
+                        Divider(
+                          height: 1,
+                          thickness: 1,
+                          color: Theme.of(context).dividerColor,
                         ),
                         Expanded(
-                          child: SizedBox(
-                            height: (endHour - startHour) * hourHeight,
+                          child: SingleChildScrollView(
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              children: List.generate(7, (index) {
-                                final day = days[index];
-                                final dayAppointments = appointments
-                                    .where((item) => _sameDay(item.date, day))
-                                    .map(SecretaryCalendarItem.fromAppointment)
-                                    .toList();
-                                final daySchedules = schedules
-                                    .where((item) => item.dayOfWeek == index)
-                                    .map(
-                                      (item) =>
-                                          SecretaryCalendarItem.fromSchedule(
-                                            item,
-                                            day,
-                                          ),
-                                    )
-                                    .toList();
+                              children: [
+                                const TimeColumn(
+                                  startHour: startHour,
+                                  endHour: endHour,
+                                  hourHeight: hourHeight,
+                                  width: timeColumnWidth,
+                                ),
+                                Expanded(
+                                  child: SizedBox(
+                                    height: (endHour - startHour) * hourHeight,
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: List.generate(7, (index) {
+                                        final day = days[index];
+                                        final dayAppointments = appointments
+                                            .where(
+                                              (item) =>
+                                                  _sameDay(item.date, day),
+                                            )
+                                            .map(
+                                              SecretaryCalendarItem
+                                                  .fromAppointment,
+                                            )
+                                            .toList();
+                                        final daySchedules = schedules
+                                            .where(
+                                              (item) => item.dayOfWeek == index,
+                                            )
+                                            .map(
+                                              (item) =>
+                                                  SecretaryCalendarItem.fromSchedule(
+                                                    item,
+                                                    day,
+                                                  ),
+                                            )
+                                            .toList();
 
-                                return Expanded(
-                                  child: _SecretaryDayColumn(
-                                    dayIndex: index,
-                                    items: [
-                                      ...daySchedules,
-                                      ...dayAppointments,
-                                    ],
-                                    highlightedAppointmentId:
-                                        highlightedAppointmentId,
-                                    onItemsTap: onItemsTap,
+                                        return Expanded(
+                                          child: _SecretaryDayColumn(
+                                            dayIndex: index,
+                                            items: [
+                                              ...daySchedules,
+                                              ...dayAppointments,
+                                            ],
+                                            highlightedAppointmentId:
+                                                highlightedAppointmentId,
+                                            onItemsTap: onItemsTap,
+                                          ),
+                                        );
+                                      }),
+                                    ),
                                   ),
-                                );
-                              }),
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -110,9 +128,9 @@ class SecretaryCalendarView extends StatelessWidget {
                     ),
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
+          ],
         );
       },
     );
@@ -334,8 +352,7 @@ class _SecretaryCalendarCard extends StatelessWidget {
         item.appointment!.status,
       ),
     };
-    final borderColor =
-        item.type == SecretaryCalendarItemType.appointment
+    final borderColor = item.type == SecretaryCalendarItemType.appointment
         ? Color.alphaBlend(Colors.black26, base)
         : base.withValues(alpha: 0.85);
     final background = Color.alphaBlend(
@@ -366,15 +383,44 @@ class _SecretaryCalendarCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
               border: Border.all(color: borderColor),
             ),
-            child: CalendarItemContent(
-              type: item.shortLabel,
-              person: item.type == SecretaryCalendarItemType.appointment
-                  ? item.appointment!.patientName
-                  : item.doctorName,
-              clinic: item.clinicName,
-              timeRange: item.timeRange,
-              color: foreground,
-              anchorBottom: item.type == SecretaryCalendarItemType.schedule,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              child: Align(
+                alignment: item.type == SecretaryCalendarItemType.appointment
+                    ? Alignment.center
+                    : Alignment.topCenter,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      calendarItemIcon(item.type),
+                      size: 13,
+                      color: foreground,
+                    ),
+                    const SizedBox(width: 3),
+                    Flexible(
+                      child: Text(
+                        item.type == SecretaryCalendarItemType.appointment
+                            ? item.appointment!.patientName
+                            : item.doctorName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: foreground,
+                          fontSize:
+                              item.type == SecretaryCalendarItemType.appointment
+                              ? CalendarSizes.appointmentTimeFontSize
+                              : CalendarSizes.itemFontSize,
+                          height: 1.1,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         );

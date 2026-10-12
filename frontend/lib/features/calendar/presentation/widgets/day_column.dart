@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/core/utils/time_format.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
+import 'package:frontend/features/calendar/presentation/models/secretary_calendar_item.dart';
+import 'package:frontend/features/calendar/presentation/utils/calendar_item_icons.dart';
 import 'package:frontend/features/calendar/presentation/widgets/appointment_card.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_appointment_highlight.dart';
-import 'package:frontend/features/calendar/presentation/widgets/calendar_item_content.dart';
 import 'package:frontend/features/schedule/domain/entities/schedule.dart';
 import 'package:frontend/theme/calendar_theme.dart';
 
@@ -214,15 +214,34 @@ class DayColumn extends StatelessWidget {
                           ),
                         ),
                       ),
-                      child: CalendarItemContent(
-                        type: 'Horario',
-                        person: showDoctor ? schedule.doctorName : null,
-                        clinic: schedule.clinicName,
-                        timeRange:
-                            '${formatTime24(schedule.startTime)}–'
-                            '${formatTime24(schedule.endTime)}',
-                        color: CalendarColors.scheduleText,
-                        anchorBottom: true,
+                      padding: const EdgeInsets.fromLTRB(6, 4, 6, 0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            calendarItemIcon(
+                              SecretaryCalendarItemType.schedule,
+                            ),
+                            size: 13,
+                            color: CalendarColors.scheduleText,
+                          ),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              schedule.doctorName,
+                              style: TextStyle(
+                                fontSize: CalendarSizes.itemFontSize,
+                                fontWeight: FontWeight.w600,
+                                color: CalendarColors.scheduleText,
+                                height: 1.2,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
