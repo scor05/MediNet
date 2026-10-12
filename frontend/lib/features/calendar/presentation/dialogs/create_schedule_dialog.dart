@@ -320,19 +320,26 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
               ),
               const SizedBox(height: 10),
               if (widget.forSecretary) ...[
-                SearchInputField<DoctorSearchResult>(
-                  controller: _doctorCtrl,
-                  label: 'Doctor',
-                  hintText: 'Nombre o especialidad del doctor',
-                  loading: searchState.loadingDoctors,
-                  selectedItem: searchState.selectedDoctor,
-                  results: searchState.doctorResults,
-                  titleBuilder: (doctor) => doctor.name,
-                  subtitleBuilder: (doctor) => doctor.specialty,
-                  onChanged: searchNotifier.onDoctorQueryChanged,
-                  onSelected: _selectDoctor,
-                  onClear: _clearDoctor,
-                  onEmptyFocus: searchNotifier.showDoctorSuggestions,
+                _DoctorSelectionStatus(
+                  selectedDoctor: searchState.selectedDoctor,
+                  hasTypedText: _doctorCtrl.text.trim().isNotEmpty,
+                  child: SearchInputField<DoctorSearchResult>(
+                    controller: _doctorCtrl,
+                    label: 'Doctor',
+                    hintText: 'Nombre o especialidad del doctor',
+                    loading: searchState.loadingDoctors,
+                    selectedItem: searchState.selectedDoctor,
+                    results: searchState.doctorResults,
+                    titleBuilder: (doctor) => doctor.name,
+                    subtitleBuilder: (doctor) => doctor.specialty,
+                    onChanged: (query) {
+                      searchNotifier.onDoctorQueryChanged(query);
+                      setState(() {});
+                    },
+                    onSelected: _selectDoctor,
+                    onClear: _clearDoctor,
+                    onEmptyFocus: searchNotifier.showDoctorSuggestions,
+                  ),
                 ),
                 const SizedBox(height: 10),
               ],
@@ -436,10 +443,117 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
                     : const Text('Guardar horario'),
               ),
             ),
+            if (widget.forSecretary && searchState.selectedDoctor == null) ...[
+              const SizedBox(height: 8),
+              const Text(
+                'Para guardar el horario, selecciona un doctor de la lista '
+                'de sugerencias. Escribir el nombre no es suficiente.',
+                key: ValueKey('schedule-submit-hint'),
+                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              ),
+            ],
             const SizedBox(height: 24),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Rodea el buscador de doctor y distingue tres estados: sin texto, texto
+/// escrito que aún no es un doctor, y doctor seleccionado de la lista.
+class _DoctorSelectionStatus extends StatelessWidget {
+  final DoctorSearchResult? selectedDoctor;
+  final bool hasTypedText;
+  final Widget child;
+
+  const _DoctorSelectionStatus({
+    required this.selectedDoctor,
+    required this.hasTypedText,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final doctor = selectedDoctor;
+    final isSelected = doctor != null;
+    final accent = isSelected
+        ? AppColors.success
+        : (hasTypedText ? AppColors.warning : AppColors.textSecondary);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.success.withValues(alpha: 0.08) : null,
+            borderRadius: BorderRadius.circular(8),
+            border: Border(
+              left: BorderSide(
+                color: isSelected || hasTypedText
+                    ? accent
+                    : Colors.transparent,
+                width: 3,
+              ),
+            ),
+          ),
+          child: child,
+        ),
+        const SizedBox(height: 6),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              isSelected
+                  ? Icons.check_circle
+                  : (hasTypedText
+                        ? Icons.warning_amber_rounded
+                        : Icons.info_outline),
+              size: 16,
+              color: accent,
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: isSelected
+                  ? Text(
+                      'Doctor seleccionado: ${doctor.name}',
+                      key: const ValueKey('schedule-doctor-selected'),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: accent,
+                      ),
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Selecciona un doctor de la lista',
+                          key: const ValueKey('schedule-doctor-hint'),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: accent,
+                          ),
+                        ),
+                        if (hasTypedText)
+                          const Text(
+                            'Lo que escribiste todavía no es un doctor '
+                            'seleccionado.',
+                            key: ValueKey('schedule-doctor-typed-hint'),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                      ],
+                    ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
