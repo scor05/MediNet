@@ -7,7 +7,7 @@ import 'package:frontend/features/schedule/data/datasources/schedule_remote_data
 import 'package:frontend/features/schedule/domain/entities/schedule.dart';
 import 'package:frontend/features/schedule/domain/repositories/schedule_repository.dart';
 
-class ScheduleRepositoryImpl implements ScheduleRepository {
+class ScheduleRepositoryImpl extends ScheduleRepository {
   final ScheduleRemoteDatasource datasource;
 
   ScheduleRepositoryImpl(this.datasource);
@@ -69,11 +69,31 @@ class ScheduleRepositoryImpl implements ScheduleRepository {
     required TimeOfDay endTime,
     required int duration,
   }) async {
+    final schedules = await createSchedules(
+      doctorId: doctorId,
+      clinicId: clinicId,
+      daysOfWeek: [dayOfWeek],
+      startTime: startTime,
+      endTime: endTime,
+      duration: duration,
+    );
+    return schedules.single;
+  }
+
+  @override
+  Future<List<Schedule>> createSchedules({
+    int? doctorId,
+    required int clinicId,
+    required List<int> daysOfWeek,
+    required TimeOfDay startTime,
+    required TimeOfDay endTime,
+    required int duration,
+  }) async {
     try {
-      return await datasource.createSchedule(
+      return await datasource.createSchedules(
         doctorId: doctorId,
         clinicId: clinicId,
-        dayOfWeek: dayOfWeek,
+        daysOfWeek: daysOfWeek,
         startTime: startTime,
         endTime: endTime,
         duration: duration,
