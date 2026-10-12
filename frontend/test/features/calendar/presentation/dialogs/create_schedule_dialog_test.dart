@@ -6,6 +6,11 @@ import 'package:frontend/features/clinic/domain/entities/clinic.dart';
 import 'package:frontend/features/clinic/domain/providers/clinic_domain_providers.dart';
 import 'package:frontend/features/clinic/domain/repositories/clinic_repository.dart';
 import 'package:frontend/features/clinic/domain/usecases/get_clinics_usecase.dart';
+import 'package:frontend/features/schedule/domain/entities/schedule.dart';
+import 'package:frontend/features/schedule/domain/providers/schedule_domain_providers.dart';
+import 'package:frontend/features/schedule/domain/repositories/schedule_repository.dart';
+import 'package:frontend/features/schedule/domain/usecases/create_schedule_usecase.dart';
+import 'package:frontend/theme/app_theme.dart';
 
 void main() {
   testWidgets('shows the doctor search only for secretary schedule creation', (
@@ -16,12 +21,60 @@ void main() {
 
     expect(find.widgetWithText(TextField, 'Doctor'), findsOneWidget);
     expect(_submitButton(tester).onPressed, isNull);
+    expect(find.byKey(const ValueKey('schedule-day-0')), findsOneWidget);
+    expect(find.byKey(const ValueKey('schedule-day-6')), findsOneWidget);
+    expect(find.text('Día de la semana'), findsNothing);
+    expect(tester.widget<Text>(find.text('08:00')).style?.fontSize, 16);
+    expect(tester.widget<Text>(find.text('16:00')).style?.fontSize, 16);
+    final unselectedButton = tester.widget<OutlinedButton>(
+      find.byKey(const ValueKey('schedule-day-0')),
+    );
+    expect(unselectedButton.style?.side?.resolve({}), BorderSide.none);
 
     await tester.pumpWidget(_app(forSecretary: false));
     await tester.pumpAndSettle();
 
     expect(find.widgetWithText(TextField, 'Doctor'), findsNothing);
+    expect(_submitButton(tester).onPressed, isNull);
+
+    await tester.tap(find.byKey(const ValueKey('schedule-day-0')));
+    await tester.pump();
     expect(_submitButton(tester).onPressed, isNotNull);
+
+    await tester.tap(find.byKey(const ValueKey('schedule-day-2')));
+    await tester.pump();
+    expect(_submitButton(tester).onPressed, isNotNull);
+
+    await tester.tap(find.byKey(const ValueKey('schedule-day-0')));
+    await tester.tap(find.byKey(const ValueKey('schedule-day-2')));
+    await tester.pump();
+    expect(_submitButton(tester).onPressed, isNull);
+  });
+
+  testWidgets('creates one schedule for every selected day', (tester) async {
+    final scheduleRepository = _RecordingScheduleRepository();
+    await tester.pumpWidget(
+      _app(forSecretary: false, scheduleRepository: scheduleRepository),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('schedule-day-4')));
+    await tester.tap(find.byKey(const ValueKey('schedule-day-1')));
+    await tester.pump();
+
+    final selectedButton = tester.widget<OutlinedButton>(
+      find.byKey(const ValueKey('schedule-day-1')),
+    );
+    expect(
+      selectedButton.style?.backgroundColor?.resolve({}),
+      AppTheme.primary,
+    );
+    expect(selectedButton.style?.foregroundColor?.resolve({}), Colors.white);
+    expect(selectedButton.style?.side?.resolve({}), BorderSide.none);
+    await tester.tap(find.text('Guardar horario'));
+    await tester.pumpAndSettle();
+
+    expect(scheduleRepository.createdDays, [1, 4]);
   });
 }
 
@@ -29,18 +82,72 @@ FilledButton _submitButton(WidgetTester tester) => tester.widget<FilledButton>(
   find.widgetWithText(FilledButton, 'Guardar horario'),
 );
 
-Widget _app({required bool forSecretary}) {
+Widget _app({
+  required bool forSecretary,
+  ScheduleRepository? scheduleRepository,
+}) {
   final repository = _ClinicRepository();
   return ProviderScope(
     overrides: [
       getClinicsUsecaseProvider.overrideWithValue(
         GetClinicsUsecase(repository),
       ),
+      if (scheduleRepository != null)
+        createScheduleUsecaseProvider.overrideWithValue(
+          CreateScheduleUsecase(scheduleRepository),
+        ),
     ],
     child: MaterialApp(
       home: Scaffold(body: CreateScheduleDialog(forSecretary: forSecretary)),
     ),
   );
+}
+
+class _RecordingScheduleRepository implements ScheduleRepository {
+  final List<int> createdDays = [];
+
+  @override
+  Future<Schedule> createSchedule({
+    int? doctorId,
+    required int clinicId,
+    required int dayOfWeek,
+    required TimeOfDay startTime,
+    required TimeOfDay endTime,
+    required int duration,
+  }) async {
+    createdDays.add(dayOfWeek);
+    return Schedule(
+      id: dayOfWeek + 1,
+      dayOfWeek: dayOfWeek,
+      startTime: '${startTime.hour}:00',
+      endTime: '${endTime.hour}:00',
+      duration: duration,
+      doctorId: doctorId ?? 1,
+      clinicId: clinicId,
+      clinicName: 'Clínica Central',
+    );
+  }
+
+  @override
+  Future<void> deleteSchedule(int id) async {}
+
+  @override
+  Future<List<Schedule>> getDoctorSchedules() async => const [];
+
+  @override
+  Future<List<Schedule>> getSchedulesByDoctorId(int doctorId) async => const [];
+
+  @override
+  Future<List<Schedule>> getSecretarySchedules() async => const [];
+
+  @override
+  Future<Schedule> updateSchedule({
+    required int id,
+    required int clinicId,
+    required TimeOfDay startTime,
+    required TimeOfDay endTime,
+    required int duration,
+  }) => throw UnimplementedError();
 }
 
 class _ClinicRepository implements ClinicRepository {
