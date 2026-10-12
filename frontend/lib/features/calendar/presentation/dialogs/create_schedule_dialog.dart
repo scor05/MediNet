@@ -5,7 +5,9 @@ import 'package:frontend/features/calendar/presentation/providers/doctor_calenda
 import 'package:frontend/features/calendar/presentation/providers/secretary_calendar_provider.dart';
 import 'package:frontend/features/clinic/domain/entities/clinic.dart';
 import 'package:frontend/features/clinic/domain/providers/clinic_domain_providers.dart';
+import 'package:frontend/features/schedule/domain/entities/schedule.dart';
 import 'package:frontend/features/schedule/domain/providers/schedule_domain_providers.dart';
+import 'package:frontend/features/calendar/presentation/widgets/existing_schedules_panel.dart';
 import 'package:frontend/features/calendar/presentation/widgets/search_selection_status.dart';
 import 'package:frontend/features/search/presentation/providers/search_form_provider.dart';
 import 'package:frontend/features/search/presentation/widgets/search_input_field.dart';
@@ -31,6 +33,11 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
   TimeOfDay _startTime = const TimeOfDay(hour: 8, minute: 0);
   TimeOfDay _endTime = const TimeOfDay(hour: 16, minute: 0);
   final _durationCtrl = TextEditingController();
+
+  List<Schedule> _existingSchedules = const [];
+  bool _loadingExisting = false;
+  String? _existingError;
+  int _existingRequestId = 0;
 
   bool _loadingClinics = true;
   bool _saving = false;
@@ -93,6 +100,7 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
         _clinics = clinics;
         if (_clinics.isNotEmpty) _selectedClinic = _clinics.first.id;
       });
+      _loadExistingSchedules();
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -102,6 +110,53 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
       });
     } finally {
       if (mounted) setState(() => _loadingClinics = false);
+    }
+  }
+
+  /// Consulta los horarios que el doctor ya tiene en la clínica elegida.
+  /// Para la secretaria hace falta un doctor seleccionado; el doctor consulta
+  /// los suyos.
+  Future<void> _loadExistingSchedules() async {
+    final requestId = ++_existingRequestId;
+    final clinicId = _selectedClinic;
+    final doctorId = widget.forSecretary
+        ? ref.read(searchFormNotifierProvider).selectedDoctor?.id
+        : null;
+
+    if (clinicId == null || (widget.forSecretary && doctorId == null)) {
+      setState(() {
+        _existingSchedules = const [];
+        _existingError = null;
+        _loadingExisting = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _loadingExisting = true;
+      _existingError = null;
+    });
+
+    try {
+      final schedules = widget.forSecretary
+          ? await ref.read(getSchedulesByDoctorIdUsecaseProvider).call(doctorId!)
+          : await ref.read(getDoctorSchedulesUsecaseProvider).call();
+      if (!mounted || requestId != _existingRequestId) return;
+      setState(() {
+        _existingSchedules = schedules
+            .where((schedule) => schedule.clinicId == clinicId)
+            .toList();
+      });
+    } catch (_) {
+      if (!mounted || requestId != _existingRequestId) return;
+      setState(() {
+        _existingSchedules = const [];
+        _existingError = 'No se pudieron cargar los horarios existentes.';
+      });
+    } finally {
+      if (mounted && requestId == _existingRequestId) {
+        setState(() => _loadingExisting = false);
+      }
     }
   }
 
@@ -120,6 +175,17 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
         }
       });
     }
+  }
+
+  String _existingSubtitle(String? doctorName) {
+    String? clinicName;
+    for (final clinic in _clinics) {
+      if (clinic.id == _selectedClinic) clinicName = clinic.name;
+    }
+    return [
+      if (widget.forSecretary && doctorName != null) doctorName,
+      ?clinicName,
+    ].join(' · ');
   }
 
   String _fmt(TimeOfDay t) =>
@@ -220,6 +286,12 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
   @override
   Widget build(BuildContext context) {
     final searchState = ref.watch(searchFormNotifierProvider);
+    ref.listen(
+      searchFormNotifierProvider.select((state) => state.selectedDoctor?.id),
+      (previous, next) {
+        if (previous != next) _loadExistingSchedules();
+      },
+    );
     final searchNotifier = ref.read(searchFormNotifierProvider.notifier);
     final canSubmit =
         !_saving &&
@@ -358,13 +430,28 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
                       (c) => DropdownMenuItem(value: c.id, child: Text(c.name)),
                     )
                     .toList(),
-                onChanged: (v) => setState(() {
-                  _selectedClinic = v;
-                  _error = null;
-                }),
+                onChanged: (v) {
+                  setState(() {
+                    _selectedClinic = v;
+                    _error = null;
+                  });
+                  _loadExistingSchedules();
+                },
                 validator: (v) => v == null ? 'Selecciona una clínica' : null,
               ),
               const SizedBox(height: 10),
+
+              if (_selectedClinic != null &&
+                  (!widget.forSecretary ||
+                      searchState.selectedDoctor != null)) ...[
+                ExistingSchedulesPanel(
+                  schedules: _existingSchedules,
+                  loading: _loadingExisting,
+                  error: _existingError,
+                  subtitle: _existingSubtitle(searchState.selectedDoctor?.name),
+                ),
+                const SizedBox(height: 10),
+              ],
 
               Row(
                 children: [
