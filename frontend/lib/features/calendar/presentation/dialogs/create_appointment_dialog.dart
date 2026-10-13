@@ -227,6 +227,23 @@ class _CreateAppointmentDialogState
         formState.selectedTime != null;
 
     return KeyboardAwareBottomSheet(
+      footer: SizedBox(
+        key: const ValueKey('appointment-submit-area'),
+        width: double.infinity,
+        child: FilledButton(
+          onPressed: canSubmit ? _submit : null,
+          child: formState.saving
+              ? const SizedBox(
+                  height: 18,
+                  width: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Text('Agendar cita'),
+        ),
+      ),
       child: Form(
         key: _formKey,
         child: Column(
@@ -390,26 +407,7 @@ class _CreateAppointmentDialogState
               Text(formState.error!, style: const TextStyle(color: Colors.red)),
             ],
 
-            const SizedBox(height: 20),
-
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: canSubmit ? _submit : null,
-                child: formState.saving
-                    ? const SizedBox(
-                        height: 18,
-                        width: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text('Agendar cita'),
-              ),
-            ),
-
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
           ],
         ),
       ),
