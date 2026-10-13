@@ -59,7 +59,7 @@ class ScheduleConfirmationDialog extends StatelessWidget {
               valueKey: const ValueKey('schedule-confirmation-end'),
             ),
             _SummaryItem(
-              label: 'Duración por cita',
+              label: 'Duración de cada cita',
               value: '$duration minutos',
               valueKey: const ValueKey('schedule-confirmation-duration'),
             ),

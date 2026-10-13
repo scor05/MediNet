@@ -4,6 +4,7 @@ import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
 import 'package:frontend/features/calendar/presentation/providers/doctor_calendar_provider.dart';
 import 'package:frontend/features/calendar/presentation/providers/secretary_calendar_provider.dart';
+import 'package:frontend/features/calendar/presentation/utils/schedule_duration_validation.dart';
 import 'package:frontend/features/calendar/presentation/widgets/schedule_confirmation_dialog.dart';
 import 'package:frontend/features/clinic/domain/entities/clinic.dart';
 import 'package:frontend/features/clinic/domain/providers/clinic_domain_providers.dart';
@@ -575,14 +576,16 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
                 controller: _durationCtrl,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
-                  labelText: 'Duración por cita (minutos)',
+                  labelText: 'Duración de cada cita',
+                  suffixText: 'min',
+                  helperText: scheduleDurationHelpText,
+                  helperMaxLines: 2,
                 ),
-                validator: (v) {
-                  if (v == null || v.trim().isEmpty) return 'Requerido';
-                  final n = int.tryParse(v.trim());
-                  if (n == null || n < 5) return 'Mínimo 5 min';
-                  return null;
-                },
+                validator: (value) => validateScheduleDuration(
+                  value: value,
+                  startTime: _startTime,
+                  endTime: _endTime,
+                ),
                 onChanged: (_) {
                   setState(() => _error = null);
                 },

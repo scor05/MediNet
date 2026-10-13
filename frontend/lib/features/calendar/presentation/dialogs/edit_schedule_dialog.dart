@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
+import 'package:frontend/features/calendar/presentation/utils/schedule_duration_validation.dart';
 import 'package:frontend/features/calendar/presentation/providers/doctor_calendar_provider.dart';
 import 'package:frontend/features/calendar/presentation/providers/secretary_calendar_provider.dart';
 import 'package:frontend/features/clinic/domain/entities/clinic.dart';
@@ -234,14 +235,16 @@ class _EditScheduleDialogState extends ConsumerState<EditScheduleDialog> {
                 controller: _durationController,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
-                  labelText: 'Duración por cita (minutos)',
+                  labelText: 'Duración de cada cita',
+                  suffixText: 'min',
+                  helperText: scheduleDurationHelpText,
+                  helperMaxLines: 2,
                 ),
-                validator: (value) {
-                  final duration = int.tryParse(value?.trim() ?? '');
-                  return duration == null || duration < 10
-                      ? 'Mínimo 10 min'
-                      : null;
-                },
+                validator: (value) => validateScheduleDuration(
+                  value: value,
+                  startTime: _startTime,
+                  endTime: _endTime,
+                ),
               ),
               if (_error != null) ...[
                 const SizedBox(height: 12),
