@@ -295,6 +295,75 @@ void main() {
     await tester.tap(find.text('Guardar horario'));
     await tester.pumpAndSettle();
 
+    expect(scheduleRepository.batchCalls, 0);
+    expect(find.text('Confirmar horarios'), findsOneWidget);
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(const ValueKey('schedule-confirmation-doctor')),
+          )
+          .data,
+      'Doctor actual',
+    );
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(const ValueKey('schedule-confirmation-clinic')),
+          )
+          .data,
+      'Clínica Central',
+    );
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(const ValueKey('schedule-confirmation-days')),
+          )
+          .data,
+      'Martes, Viernes',
+    );
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(const ValueKey('schedule-confirmation-start')),
+          )
+          .data,
+      '08:00',
+    );
+    expect(
+      tester
+          .widget<Text>(find.byKey(const ValueKey('schedule-confirmation-end')))
+          .data,
+      '16:00',
+    );
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(const ValueKey('schedule-confirmation-duration')),
+          )
+          .data,
+      '30 minutos',
+    );
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(const ValueKey('schedule-confirmation-intervals')),
+          )
+          .data,
+      contains('08:00 - 08:30'),
+    );
+
+    await tester.tap(find.byKey(const ValueKey('schedule-confirmation-edit')));
+    await tester.pumpAndSettle();
+    expect(scheduleRepository.batchCalls, 0);
+    expect(find.text('Guardar horario'), findsOneWidget);
+
+    await tester.tap(find.text('Guardar horario'));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey('schedule-confirmation-submit')),
+    );
+    await tester.pumpAndSettle();
+
     expect(scheduleRepository.createdDays, [1, 4]);
     expect(scheduleRepository.batchCalls, 1);
   });
