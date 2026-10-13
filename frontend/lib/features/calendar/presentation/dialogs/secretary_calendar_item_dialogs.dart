@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/features/calendar/presentation/dialogs/blockade_detail_dialog.dart';
 import 'package:frontend/features/calendar/presentation/models/secretary_calendar_item.dart';
 import 'package:frontend/features/calendar/presentation/utils/calendar_item_icons.dart';
 
@@ -52,6 +53,13 @@ Future<void> showSecretaryBackgroundItemDetails({
   Future<void> Function()? onDeleteSchedule,
 }) {
   assert(item.type != SecretaryCalendarItemType.appointment);
+  if (item.type == SecretaryCalendarItemType.blockade) {
+    return showBlockadeDetailSheet(
+      context: context,
+      blockade: item.appointment!,
+      onDelete: onDeleteBlockade!,
+    );
+  }
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
