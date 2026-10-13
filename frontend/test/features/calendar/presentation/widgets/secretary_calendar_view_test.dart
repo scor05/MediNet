@@ -265,4 +265,55 @@ void main() {
     );
     expect(find.text('08:00–10:00'), findsNothing);
   });
+
+  testWidgets('keeps a blockade inside its doctor schedule column', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1920, 1080));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final schedules = List.generate(
+      3,
+      (index) => schedule.copyWith(
+        id: index + 1,
+        doctorId: index + 1,
+        doctorName: 'Doctor ${index + 1}',
+      ),
+    );
+    final blockade = appointment.copyWith(
+      id: 20,
+      scheduleId: 2,
+      doctorId: 2,
+      doctorName: 'Doctor 2',
+      startTime: '08:30:00',
+      appointmentDuration: 30,
+      type: 'blockade',
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SecretaryCalendarView(
+            weekStart: DateTime(2026, 9, 21),
+            appointments: [blockade],
+            schedules: schedules,
+            onItemsTap: (_) {},
+          ),
+        ),
+      ),
+    );
+
+    final doctorSchedule = tester.getRect(
+      find.byKey(const ValueKey('secretary-calendar-schedule-2')),
+    );
+    final blockadeRect = tester.getRect(
+      find.byKey(const ValueKey('secretary-calendar-blockade-20')),
+    );
+    final day = tester.getRect(
+      find.byKey(const ValueKey('secretary-day-column-0')),
+    );
+
+    expect(blockadeRect.left, closeTo(doctorSchedule.left, 0.1));
+    expect(blockadeRect.width, closeTo(doctorSchedule.width, 0.1));
+    expect(blockadeRect.width, lessThan(day.width / 2));
+  });
 }

@@ -165,6 +165,8 @@ class _SecretaryDayColumn extends StatelessWidget {
     final schedules = _visibleItems(SecretaryCalendarItemType.schedule);
     final blockades = _visibleItems(SecretaryCalendarItemType.blockade);
     final appointments = _visibleItems(SecretaryCalendarItemType.appointment);
+    final schedulePlacements = layoutCalendarCollisions(schedules);
+    final blockadePlacements = _placeBlockades(blockades, schedulePlacements);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -189,12 +191,14 @@ class _SecretaryDayColumn extends StatelessWidget {
                 schedules,
                 constraints.maxWidth,
                 opacity: 0.25,
+                placements: schedulePlacements,
               ),
               ..._buildLayer(
                 context,
                 blockades,
                 constraints.maxWidth,
                 opacity: 0.52,
+                placements: blockadePlacements,
               ),
               ..._buildLayer(
                 context,
@@ -244,9 +248,11 @@ class _SecretaryDayColumn extends StatelessWidget {
     List<SecretaryCalendarItem> layerItems,
     double availableWidth, {
     required double opacity,
+    List<CalendarCollisionPlacement>? placements,
   }) {
-    final placements = layoutCalendarCollisions(layerItems);
-    return placements.map((placement) {
+    final resolvedPlacements =
+        placements ?? layoutCalendarCollisions(layerItems);
+    return resolvedPlacements.map((placement) {
       final clippedStart = placement.item.startMinute.clamp(
         _startMinute,
         _endMinute,
@@ -293,6 +299,40 @@ class _SecretaryDayColumn extends StatelessWidget {
             : _calendarCard(placement.item, opacity, clippedStart, clippedEnd),
       );
     }).toList();
+  }
+
+  List<CalendarCollisionPlacement> _placeBlockades(
+    List<SecretaryCalendarItem> blockades,
+    List<CalendarCollisionPlacement> schedulePlacements,
+  ) {
+    final result = <CalendarCollisionPlacement>[];
+    final unmatched = <SecretaryCalendarItem>[];
+
+    for (final blockade in blockades) {
+      CalendarCollisionPlacement? matchingSchedule;
+      for (final placement in schedulePlacements) {
+        if (placement.item.id == blockade.appointment!.scheduleId) {
+          matchingSchedule = placement;
+          break;
+        }
+      }
+
+      if (matchingSchedule == null) {
+        unmatched.add(blockade);
+        continue;
+      }
+
+      result.add(
+        CalendarCollisionPlacement(
+          item: blockade,
+          column: matchingSchedule.column,
+          columnCount: matchingSchedule.columnCount,
+        ),
+      );
+    }
+
+    result.addAll(layoutCalendarCollisions(unmatched));
+    return result;
   }
 
   Widget _calendarCard(
