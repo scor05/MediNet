@@ -19,6 +19,7 @@ import 'package:frontend/features/calendar/presentation/widgets/calendar_body.da
 import 'package:frontend/features/calendar/presentation/widgets/calendar_fab_menu.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_shell.dart';
 import 'package:frontend/features/schedule/domain/entities/schedule.dart';
+import 'package:frontend/features/schedule_blockade/domain/entities/schedule_blockade.dart';
 import 'package:frontend/features/user/domain/entities/doctor_search_result.dart';
 
 class DoctorCalendarScreen extends ConsumerStatefulWidget {
@@ -33,7 +34,9 @@ class DoctorCalendarScreen extends ConsumerStatefulWidget {
 
 class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
   bool _fabOpen = false;
+  final _calendarScrollController = ScrollController();
   int? _highlightedAppointmentId;
+  int? _highlightedBlockadeId;
   Timer? _highlightDelayTimer;
   Timer? _highlightClearTimer;
 
@@ -41,6 +44,7 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
   void dispose() {
     _highlightDelayTimer?.cancel();
     _highlightClearTimer?.cancel();
+    _calendarScrollController.dispose();
     super.dispose();
   }
 
@@ -90,7 +94,10 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
     _highlightDelayTimer = Timer(const Duration(seconds: 1), () {
       if (!mounted || !_appointmentIsVisible(appointment)) return;
 
-      setState(() => _highlightedAppointmentId = appointment.id);
+      setState(() {
+        _highlightedBlockadeId = null;
+        _highlightedAppointmentId = appointment.id;
+      });
       _highlightClearTimer = Timer(const Duration(seconds: 4), () {
         if (!mounted || _highlightedAppointmentId != appointment.id) return;
         setState(() => _highlightedAppointmentId = null);
@@ -125,7 +132,54 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
 
   Future<void> _openBlockSchedule() async {
     _closeFab();
-    await showBlockScheduleSheet(context: context);
+    final created = await showBlockScheduleSheet(context: context);
+    if (created != null && mounted) await _revealCreatedBlockade(created);
+  }
+
+  Future<void> _revealCreatedBlockade(ScheduleBlockade blockade) async {
+    final blockadeDate = DateTime.parse(blockade.date);
+    ref
+        .read(doctorWeekStartProvider.notifier)
+        .update((_) => calendarWeekStart(blockadeDate));
+    await ref.read(doctorCalendarNotifierProvider.notifier).refresh();
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+
+    if (_calendarScrollController.hasClients) {
+      final position = _calendarScrollController.position;
+      final target = calendarScrollOffsetForTime(
+        blockade.startTime,
+      ).clamp(position.minScrollExtent, position.maxScrollExtent).toDouble();
+      await _calendarScrollController.animateTo(
+        target,
+        duration: const Duration(milliseconds: 450),
+        curve: Curves.easeOutCubic,
+      );
+    }
+    if (!mounted || !_blockadeIsVisible(blockade)) return;
+
+    _highlightDelayTimer?.cancel();
+    _highlightClearTimer?.cancel();
+    setState(() {
+      _highlightedAppointmentId = null;
+      _highlightedBlockadeId = blockade.id;
+    });
+    _highlightClearTimer = Timer(const Duration(seconds: 4), () {
+      if (!mounted || _highlightedBlockadeId != blockade.id) return;
+      setState(() => _highlightedBlockadeId = null);
+    });
+  }
+
+  bool _blockadeIsVisible(ScheduleBlockade blockade) {
+    final visibleWeek = ref.read(doctorWeekStartProvider);
+    if (calendarWeekStart(DateTime.parse(blockade.date)) != visibleWeek) {
+      return false;
+    }
+    final appointments = ref.read(doctorCalendarNotifierProvider).asData?.value;
+    return appointments?.any(
+          (item) => item.isBlockade && item.id == blockade.id,
+        ) ??
+        false;
   }
 
   Future<void> _onBlockadeTap(Appointment appointment) async {
@@ -229,6 +283,8 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
             ),
             splitOverlappingAppointments: true,
             highlightedAppointmentId: _highlightedAppointmentId,
+            highlightedBlockadeId: _highlightedBlockadeId,
+            verticalScrollController: _calendarScrollController,
             onAppointmentTap: _openAppointmentDetail,
             onBlockadeTap: _onBlockadeTap,
             onScheduleTap: _openScheduleDetail,

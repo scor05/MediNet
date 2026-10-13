@@ -222,7 +222,7 @@ class _BlockScheduleSecretaryDialogState
     });
 
     try {
-      await ref
+      final created = await ref
           .read(secretaryCalendarNotifierProvider.notifier)
           .createBlockade(
             scheduleId: _selectedSchedule!.id,
@@ -232,7 +232,7 @@ class _BlockScheduleSecretaryDialogState
           );
 
       if (!mounted) return;
-      Navigator.of(context).pop();
+      Navigator.of(context).pop(created);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Horario bloqueado exitosamente')),
       );

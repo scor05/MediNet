@@ -75,6 +75,16 @@ void main() {
     });
   });
 
+  group('calendar scroll offset', () {
+    test('positions the selected time with one hour of context', () {
+      expect(calendarScrollOffsetForTime('10:30:00'), 280);
+    });
+
+    test('does not scroll before the beginning of the calendar', () {
+      expect(calendarScrollOffsetForTime('06:30:00'), 0);
+    });
+  });
+
   testWidgets('date field shows only the date and handles taps', (
     tester,
   ) async {

@@ -76,4 +76,54 @@ void main() {
     );
     expect((completedHighlight.decoration as BoxDecoration).boxShadow, isEmpty);
   });
+
+  testWidgets('highlights a newly created blockade independently', (
+    tester,
+  ) async {
+    final blockade = Appointment(
+      id: 10,
+      scheduleId: 4,
+      patientName: '',
+      date: DateTime(2026, 8, 17),
+      startTime: '10:00:00',
+      status: 'blockade',
+      createdAt: DateTime(2026, 8, 1),
+      createdBy: 7,
+      updatedAt: DateTime(2026, 8, 1),
+      updatedBy: 7,
+      doctorId: 3,
+      doctorName: 'Dr. Ruiz',
+      clinicId: 2,
+      clinicName: 'Zona 15',
+      appointmentDuration: 60,
+      type: 'blockade',
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: CalendarBody(
+              calendarAsync: AsyncData([blockade]),
+              weekStart: DateTime(2026, 8, 17),
+              onRetry: () {},
+              highlightedBlockadeId: blockade.id,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 275));
+
+    final highlight = tester.widget<DecoratedBox>(
+      find.descendant(
+        of: find.byKey(const ValueKey('appointment-highlight--10')),
+        matching: find.byType(DecoratedBox),
+      ),
+    );
+    expect((highlight.decoration as BoxDecoration).boxShadow, isNotEmpty);
+
+    await tester.pumpAndSettle();
+  });
 }

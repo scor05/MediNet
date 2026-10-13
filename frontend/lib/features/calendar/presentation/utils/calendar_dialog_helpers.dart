@@ -6,6 +6,7 @@ import 'package:frontend/features/calendar/presentation/dialogs/create_appointme
 import 'package:frontend/features/calendar/presentation/dialogs/create_schedule_dialog.dart';
 import 'package:frontend/features/calendar/presentation/dialogs/edit_schedule_dialog.dart';
 import 'package:frontend/features/schedule/domain/entities/schedule.dart';
+import 'package:frontend/features/schedule_blockade/domain/entities/schedule_blockade.dart';
 import 'package:frontend/features/user/domain/entities/doctor_search_result.dart';
 
 Future<Appointment?> showCreateAppointmentSheet({
@@ -55,8 +56,10 @@ Future<void> showEditScheduleSheet({
   );
 }
 
-Future<void> showBlockScheduleSheet({required BuildContext context}) {
-  return showModalBottomSheet(
+Future<ScheduleBlockade?> showBlockScheduleSheet({
+  required BuildContext context,
+}) {
+  return showModalBottomSheet<ScheduleBlockade>(
     context: context,
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(
@@ -66,8 +69,10 @@ Future<void> showBlockScheduleSheet({required BuildContext context}) {
   );
 }
 
-Future<void> showBlockScheduleSecretarySheet({required BuildContext context}) {
-  return showModalBottomSheet(
+Future<ScheduleBlockade?> showBlockScheduleSecretarySheet({
+  required BuildContext context,
+}) {
+  return showModalBottomSheet<ScheduleBlockade>(
     context: context,
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(

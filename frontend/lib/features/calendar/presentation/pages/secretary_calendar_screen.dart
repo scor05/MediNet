@@ -21,6 +21,7 @@ import 'package:frontend/features/calendar/presentation/widgets/calendar_fab_men
 import 'package:frontend/features/calendar/presentation/widgets/calendar_shell.dart';
 import 'package:frontend/features/calendar/presentation/widgets/secretary_calendar_view.dart';
 import 'package:frontend/features/schedule/domain/entities/schedule.dart';
+import 'package:frontend/features/schedule_blockade/domain/entities/schedule_blockade.dart';
 
 class SecretaryCalendarScreen extends ConsumerStatefulWidget {
   final UserProfile profile;
@@ -35,7 +36,9 @@ class SecretaryCalendarScreen extends ConsumerStatefulWidget {
 class _SecretaryCalendarScreenState
     extends ConsumerState<SecretaryCalendarScreen> {
   bool _fabOpen = false;
+  final _calendarScrollController = ScrollController();
   int? _highlightedAppointmentId;
+  int? _highlightedBlockadeId;
   Timer? _highlightDelayTimer;
   Timer? _highlightClearTimer;
 
@@ -43,6 +46,7 @@ class _SecretaryCalendarScreenState
   void dispose() {
     _highlightDelayTimer?.cancel();
     _highlightClearTimer?.cancel();
+    _calendarScrollController.dispose();
     super.dispose();
   }
 
@@ -91,7 +95,10 @@ class _SecretaryCalendarScreenState
     _highlightDelayTimer = Timer(const Duration(seconds: 1), () {
       if (!mounted || !_appointmentIsVisible(appointment)) return;
 
-      setState(() => _highlightedAppointmentId = appointment.id);
+      setState(() {
+        _highlightedBlockadeId = null;
+        _highlightedAppointmentId = appointment.id;
+      });
       _highlightClearTimer = Timer(const Duration(seconds: 4), () {
         if (!mounted || _highlightedAppointmentId != appointment.id) return;
         setState(() => _highlightedAppointmentId = null);
@@ -131,7 +138,57 @@ class _SecretaryCalendarScreenState
 
   Future<void> _openBlockSchedule() async {
     _closeFab();
-    await showBlockScheduleSecretarySheet(context: context);
+    final created = await showBlockScheduleSecretarySheet(context: context);
+    if (created != null && mounted) await _revealCreatedBlockade(created);
+  }
+
+  Future<void> _revealCreatedBlockade(ScheduleBlockade blockade) async {
+    final blockadeDate = DateTime.parse(blockade.date);
+    ref
+        .read(secretaryWeekStartProvider.notifier)
+        .update((_) => calendarWeekStart(blockadeDate));
+    await ref.read(secretaryCalendarNotifierProvider.notifier).refresh();
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+
+    if (_calendarScrollController.hasClients) {
+      final position = _calendarScrollController.position;
+      final target = calendarScrollOffsetForTime(
+        blockade.startTime,
+      ).clamp(position.minScrollExtent, position.maxScrollExtent).toDouble();
+      await _calendarScrollController.animateTo(
+        target,
+        duration: const Duration(milliseconds: 450),
+        curve: Curves.easeOutCubic,
+      );
+    }
+    if (!mounted || !_blockadeIsVisible(blockade)) return;
+
+    _highlightDelayTimer?.cancel();
+    _highlightClearTimer?.cancel();
+    setState(() {
+      _highlightedAppointmentId = null;
+      _highlightedBlockadeId = blockade.id;
+    });
+    _highlightClearTimer = Timer(const Duration(seconds: 4), () {
+      if (!mounted || _highlightedBlockadeId != blockade.id) return;
+      setState(() => _highlightedBlockadeId = null);
+    });
+  }
+
+  bool _blockadeIsVisible(ScheduleBlockade blockade) {
+    final visibleWeek = ref.read(secretaryWeekStartProvider);
+    if (calendarWeekStart(DateTime.parse(blockade.date)) != visibleWeek) {
+      return false;
+    }
+    final appointments = ref
+        .read(secretaryCalendarNotifierProvider)
+        .asData
+        ?.value;
+    return appointments?.any(
+          (item) => item.isBlockade && item.id == blockade.id,
+        ) ??
+        false;
   }
 
   void _openAppointmentDetail(Appointment appointment) {
@@ -238,6 +295,8 @@ class _SecretaryCalendarScreenState
           appointments: appointments,
           schedules: visibleSchedules,
           highlightedAppointmentId: _highlightedAppointmentId,
+          highlightedBlockadeId: _highlightedBlockadeId,
+          verticalScrollController: _calendarScrollController,
           onItemsTap: _openCalendarItems,
         ),
         if (calendarAsync.isLoading || schedulesAsync.isLoading)
