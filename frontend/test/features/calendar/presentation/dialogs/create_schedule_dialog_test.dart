@@ -251,6 +251,105 @@ void main() {
     });
   });
 
+  group('conflict detection', () {
+    Schedule schedule(int id, int day, String start, String end, int clinic) =>
+        Schedule(
+          id: id,
+          dayOfWeek: day,
+          startTime: start,
+          endTime: end,
+          duration: 30,
+          doctorId: 7,
+          clinicId: clinic,
+          clinicName: clinic == 1 ? 'Clínica Central' : 'Otra clínica',
+        );
+
+    Future<_RecordingScheduleRepository> open(
+      WidgetTester tester,
+      List<Schedule> existing,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(800, 1600));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final repository = _RecordingScheduleRepository(existing: existing);
+      await tester.pumpWidget(
+        _app(forSecretary: false, scheduleRepository: repository),
+      );
+      await tester.pumpAndSettle();
+      return repository;
+    }
+
+    FilledButton saveButton(WidgetTester tester) =>
+        tester.widget<FilledButton>(find.byType(FilledButton));
+
+    testWidgets('warns immediately and blocks saving on overlap', (
+      tester,
+    ) async {
+      await open(tester, [schedule(1, 0, '14:00:00', '18:00:00', 1)]);
+
+      await tester.tap(find.byKey(const ValueKey('schedule-day-1')));
+      await tester.pump();
+      expect(
+        find.byKey(const ValueKey('schedule-conflict-warning')),
+        findsNothing,
+      );
+      expect(saveButton(tester).onPressed, isNotNull);
+
+      await tester.tap(find.byKey(const ValueKey('schedule-day-0')));
+      await tester.pump();
+
+      expect(
+        find.byKey(const ValueKey('schedule-conflict-warning')),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Lunes 14:00–18:00 · Clínica Central'),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('schedule-conflict-hint')),
+        findsOneWidget,
+      );
+      expect(saveButton(tester).onPressed, isNull);
+
+      // Quitar el día en conflicto libera el guardado.
+      await tester.tap(find.byKey(const ValueKey('schedule-day-0')));
+      await tester.pump();
+      expect(
+        find.byKey(const ValueKey('schedule-conflict-warning')),
+        findsNothing,
+      );
+      expect(saveButton(tester).onPressed, isNotNull);
+    });
+
+    testWidgets('ranges that only touch are not a conflict', (tester) async {
+      await open(tester, [schedule(1, 0, '16:00:00', '18:00:00', 1)]);
+
+      await tester.tap(find.byKey(const ValueKey('schedule-day-0')));
+      await tester.pump();
+
+      expect(
+        find.byKey(const ValueKey('schedule-conflict-warning')),
+        findsNothing,
+      );
+      expect(saveButton(tester).onPressed, isNotNull);
+    });
+
+    testWidgets('detects conflicts in another clinic like the backend', (
+      tester,
+    ) async {
+      await open(tester, [schedule(1, 0, '10:00:00', '12:00:00', 99)]);
+
+      await tester.tap(find.byKey(const ValueKey('schedule-day-0')));
+      await tester.pump();
+
+      expect(
+        find.text('Lunes 10:00–12:00 · Otra clínica'),
+        findsOneWidget,
+      );
+      expect(saveButton(tester).onPressed, isNull);
+    });
+  });
+
   testWidgets('updates the schedule interval preview when duration changes', (
     tester,
   ) async {
