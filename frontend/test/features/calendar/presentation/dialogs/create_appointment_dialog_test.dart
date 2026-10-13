@@ -53,6 +53,39 @@ void main() {
     expect(find.widgetWithText(TextField, 'Clínica'), findsNothing);
   });
 
+  testWidgets('keeps the appointment action visible above the keyboard', (
+    tester,
+  ) async {
+    const screenSize = Size(360, 640);
+    const keyboardHeight = 300.0;
+    await tester.binding.setSurfaceSize(screenSize);
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      _app(
+        _ScheduleRepository(),
+        fixedDoctor: const DoctorSearchResult(
+          id: 36,
+          name: 'Doom Slayer',
+          specialty: 'Medicina general',
+        ),
+        mediaQueryData: const MediaQueryData(
+          size: screenSize,
+          viewInsets: EdgeInsets.only(bottom: keyboardHeight),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final action = find.byKey(const ValueKey('appointment-submit-area'));
+    expect(action, findsOneWidget);
+    expect(
+      tester.getBottomRight(action).dy,
+      lessThanOrEqualTo(screenSize.height - keyboardHeight),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   group('patient search', () {
     const doctor = DoctorSearchResult(
       id: 36,
@@ -168,7 +201,19 @@ void main() {
   });
 }
 
-Widget _app(_ScheduleRepository repository, {DoctorSearchResult? fixedDoctor}) {
+Widget _app(
+  _ScheduleRepository repository, {
+  DoctorSearchResult? fixedDoctor,
+  MediaQueryData? mediaQueryData,
+}) {
+  final page = Scaffold(
+    resizeToAvoidBottomInset: false,
+    body: CreateAppointmentDialog(
+      weekStart: DateTime(2026, 9, 21),
+      fixedDoctor: fixedDoctor,
+    ),
+  );
+
   return ProviderScope(
     overrides: [
       getSchedulesByDoctorIdUsecaseProvider.overrideWithValue(
@@ -176,12 +221,9 @@ Widget _app(_ScheduleRepository repository, {DoctorSearchResult? fixedDoctor}) {
       ),
     ],
     child: MaterialApp(
-      home: Scaffold(
-        body: CreateAppointmentDialog(
-          weekStart: DateTime(2026, 9, 21),
-          fixedDoctor: fixedDoctor,
-        ),
-      ),
+      home: mediaQueryData == null
+          ? page
+          : MediaQuery(data: mediaQueryData, child: page),
     ),
   );
 }
