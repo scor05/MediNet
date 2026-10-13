@@ -53,6 +53,9 @@ class CalendarFabMenu extends StatelessWidget {
           ],
           const SizedBox(height: 16),
           FloatingActionButton(
+            tooltip: isOpen
+                ? 'Cerrar acciones del calendario'
+                : 'Abrir acciones del calendario',
             onPressed: onToggle,
             child: AnimatedRotation(
               turns: isOpen ? 0.125 : 0,

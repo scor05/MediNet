@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/features/calendar/domain/providers/public_calendar_domain_providers.dart';
 import 'package:frontend/features/calendar/presentation/providers/secretary_calendar_provider.dart';
+import 'package:frontend/features/calendar/presentation/utils/block_schedule_utils.dart';
 import 'package:frontend/features/search/presentation/widgets/search_input_field.dart';
 import 'package:frontend/features/schedule/domain/entities/schedule.dart';
 import 'package:frontend/features/user/domain/entities/user.dart';
@@ -142,10 +143,11 @@ class _BlockScheduleSecretaryDialogState
   void _onDateChanged(DateTime date) {
     final dow = date.weekday - 1;
     final filtered = _allSchedules.where((s) => s.dayOfWeek == dow).toList();
+    final clinics = uniqueClinicSchedules(filtered);
     setState(() {
       _selectedDate = date;
       _schedulesForDay = filtered;
-      _selectedSchedule = filtered.length == 1 ? filtered.first : null;
+      _selectedSchedule = clinics.length == 1 ? clinics.first : null;
       _error = null;
     });
   }
@@ -190,6 +192,8 @@ class _BlockScheduleSecretaryDialogState
     return e > s;
   }
 
+  List<Schedule> get _clinicOptions => uniqueClinicSchedules(_schedulesForDay);
+
   Future<void> _submit() async {
     if (_selectedDoctor == null) {
       setState(() => _error = 'Selecciona un doctor.');
@@ -216,6 +220,20 @@ class _BlockScheduleSecretaryDialogState
       return;
     }
 
+    final matchingSchedule = scheduleContainingBlockade(
+      schedules: _schedulesForDay,
+      clinicId: _selectedSchedule!.clinicId,
+      startTime: _startTime,
+      endTime: _endTime,
+    );
+    if (matchingSchedule == null) {
+      setState(
+        () => _error =
+            'El bloqueo debe quedar dentro de uno de los horarios de la clínica seleccionada.',
+      );
+      return;
+    }
+
     setState(() {
       _saving = true;
       _error = null;
@@ -225,7 +243,7 @@ class _BlockScheduleSecretaryDialogState
       final created = await ref
           .read(secretaryCalendarNotifierProvider.notifier)
           .createBlockade(
-            scheduleId: _selectedSchedule!.id,
+            scheduleId: matchingSchedule.id,
             date: _selectedDate!,
             startTime: _startTime,
             endTime: _endTime,
@@ -255,6 +273,7 @@ class _BlockScheduleSecretaryDialogState
   @override
   Widget build(BuildContext context) {
     final canSubmit = !_saving && _selectedDoctor != null;
+    final clinicOptions = _clinicOptions;
 
     return SingleChildScrollView(
       padding: EdgeInsets.only(
@@ -330,13 +349,12 @@ class _BlockScheduleSecretaryDialogState
               const SizedBox(height: 10),
 
               // Schedule selector (multiple clinics same day)
-              if (_selectedDate != null && _schedulesForDay.length > 1) ...[
+              if (_selectedDate != null && clinicOptions.length > 1) ...[
                 DropdownButtonFormField<Schedule>(
+                  key: ValueKey(_selectedDate),
                   initialValue: _selectedSchedule,
-                  decoration: const InputDecoration(
-                    labelText: 'Horario / Clínica',
-                  ),
-                  items: _schedulesForDay
+                  decoration: const InputDecoration(labelText: 'Clínica'),
+                  items: clinicOptions
                       .map(
                         (s) => DropdownMenuItem(
                           value: s,
@@ -352,7 +370,7 @@ class _BlockScheduleSecretaryDialogState
                 const SizedBox(height: 10),
               ],
 
-              if (_selectedDate != null && _schedulesForDay.length == 1)
+              if (_selectedDate != null && clinicOptions.length == 1)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
                   child: Text(

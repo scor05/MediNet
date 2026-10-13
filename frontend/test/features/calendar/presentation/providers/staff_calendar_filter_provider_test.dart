@@ -112,6 +112,13 @@ void main() {
       isTrue,
     );
   });
+
+  test('a blockade belongs only to its doctor', () {
+    final blockade = _appointment().copyWith(type: 'blockade');
+
+    expect(appointmentBelongsToDoctor(blockade, 7), isTrue);
+    expect(appointmentBelongsToDoctor(blockade, 8), isFalse);
+  });
 }
 
 Appointment _appointment() => Appointment(

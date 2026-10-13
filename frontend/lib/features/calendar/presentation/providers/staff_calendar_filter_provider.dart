@@ -89,6 +89,9 @@ bool appointmentMatchesStaffFilters(
   );
 }
 
+bool appointmentBelongsToDoctor(Appointment appointment, int doctorId) =>
+    appointment.doctorId == doctorId;
+
 bool scheduleMatchesStaffFilters(
   Schedule schedule,
   StaffCalendarFilterState filters, {

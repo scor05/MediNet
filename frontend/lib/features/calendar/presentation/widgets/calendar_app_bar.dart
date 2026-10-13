@@ -27,13 +27,15 @@ class CalendarAppBar extends StatelessWidget implements PreferredSizeWidget {
       leading: leading,
       automaticallyImplyLeading: automaticallyImplyLeading,
       actions: [
-        if (settingsButton != null) settingsButton!,
-        if (extraActions != null) ...extraActions!,
+        ?settingsButton,
+        ...?extraActions,
         IconButton(
+          tooltip: 'Semana anterior',
           icon: const Icon(Icons.chevron_left),
           onPressed: onPreviousWeek,
         ),
         IconButton(
+          tooltip: 'Semana siguiente',
           icon: const Icon(Icons.chevron_right),
           onPressed: onNextWeek,
         ),

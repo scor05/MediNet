@@ -377,11 +377,15 @@ class _SecretaryDayColumn extends StatelessWidget {
     final result = <SecretaryCalendarItem>[selected];
     for (final item in items) {
       if (identical(item, selected) || item.type == selected.type) continue;
+      if (_scheduleId(item) != _scheduleId(selected)) continue;
       if (item.containsMinute(minute)) result.add(item);
     }
     result.sort((a, b) => _layerOrder(b.type).compareTo(_layerOrder(a.type)));
     return result;
   }
+
+  int _scheduleId(SecretaryCalendarItem item) =>
+      item.schedule?.id ?? item.appointment!.scheduleId;
 
   int _layerOrder(SecretaryCalendarItemType type) => switch (type) {
     SecretaryCalendarItemType.schedule => 0,
@@ -424,59 +428,64 @@ class _SecretaryCalendarCard extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        return GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTapDown: (details) {
-            final fraction = constraints.maxHeight == 0
-                ? 0.0
-                : (details.localPosition.dy / constraints.maxHeight).clamp(
-                    0.0,
-                    0.999,
-                  );
-            onTapAt(fraction);
-          },
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: background,
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(color: borderColor),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              child: Align(
-                alignment: item.type == SecretaryCalendarItemType.schedule
-                    ? Alignment.topCenter
-                    : Alignment.center,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Icon(
-                      calendarItemIcon(item.type),
-                      size: 13,
-                      color: foreground,
-                    ),
-                    const SizedBox(width: 3),
-                    Flexible(
-                      child: Text(
-                        item.type == SecretaryCalendarItemType.appointment
-                            ? item.appointment!.patientName
-                            : item.doctorName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: foreground,
-                          fontSize:
-                              item.type == SecretaryCalendarItemType.schedule
-                              ? CalendarSizes.itemFontSize
-                              : CalendarSizes.appointmentTimeFontSize,
-                          height: 1.1,
-                          fontWeight: FontWeight.w700,
+        return Semantics(
+          button: true,
+          label: '${item.fullLabel}, ${item.timeRange}',
+          excludeSemantics: true,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTapDown: (details) {
+              final fraction = constraints.maxHeight == 0
+                  ? 0.0
+                  : (details.localPosition.dy / constraints.maxHeight).clamp(
+                      0.0,
+                      0.999,
+                    );
+              onTapAt(fraction);
+            },
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: background,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: borderColor),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                child: Align(
+                  alignment: item.type == SecretaryCalendarItemType.schedule
+                      ? Alignment.topCenter
+                      : Alignment.center,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Icon(
+                        calendarItemIcon(item.type),
+                        size: 13,
+                        color: foreground,
+                      ),
+                      const SizedBox(width: 3),
+                      Flexible(
+                        child: Text(
+                          item.type == SecretaryCalendarItemType.appointment
+                              ? item.appointment!.patientName
+                              : item.doctorName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: foreground,
+                            fontSize:
+                                item.type == SecretaryCalendarItemType.schedule
+                                ? CalendarSizes.itemFontSize
+                                : CalendarSizes.appointmentTimeFontSize,
+                            height: 1.1,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

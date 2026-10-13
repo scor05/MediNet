@@ -231,7 +231,7 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
       (items) => items
           .where(
             (item) =>
-                (item.isBlockade || item.doctorId == widget.profile.id) &&
+                appointmentBelongsToDoctor(item, widget.profile.id) &&
                 appointmentMatchesStaffFilters(
                   item,
                   filters,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/features/calendar/presentation/providers/doctor_calendar_provider.dart';
+import 'package:frontend/features/calendar/presentation/utils/block_schedule_utils.dart';
 import 'package:frontend/features/schedule/domain/entities/schedule.dart';
 
 class BlockScheduleDialog extends ConsumerStatefulWidget {
@@ -59,10 +60,11 @@ class _BlockScheduleDialogState extends ConsumerState<BlockScheduleDialog> {
     // Flutter weekday: 1=Monday ... 7=Sunday
     final dow = date.weekday - 1;
     final filtered = _allSchedules.where((s) => s.dayOfWeek == dow).toList();
+    final clinics = uniqueClinicSchedules(filtered);
     setState(() {
       _selectedDate = date;
       _schedulesForDay = filtered;
-      _selectedSchedule = filtered.length == 1 ? filtered.first : null;
+      _selectedSchedule = clinics.length == 1 ? clinics.first : null;
       _error = null;
     });
   }
@@ -107,6 +109,8 @@ class _BlockScheduleDialogState extends ConsumerState<BlockScheduleDialog> {
     return e > s;
   }
 
+  List<Schedule> get _clinicOptions => uniqueClinicSchedules(_schedulesForDay);
+
   Future<void> _submit() async {
     if (_selectedDate == null) {
       setState(() => _error = 'Selecciona una fecha.');
@@ -127,6 +131,20 @@ class _BlockScheduleDialogState extends ConsumerState<BlockScheduleDialog> {
       return;
     }
 
+    final matchingSchedule = scheduleContainingBlockade(
+      schedules: _schedulesForDay,
+      clinicId: _selectedSchedule!.clinicId,
+      startTime: _startTime,
+      endTime: _endTime,
+    );
+    if (matchingSchedule == null) {
+      setState(
+        () => _error =
+            'El bloqueo debe quedar dentro de uno de los horarios de la clínica seleccionada.',
+      );
+      return;
+    }
+
     setState(() {
       _saving = true;
       _error = null;
@@ -136,7 +154,7 @@ class _BlockScheduleDialogState extends ConsumerState<BlockScheduleDialog> {
       final created = await ref
           .read(doctorCalendarNotifierProvider.notifier)
           .createBlockade(
-            scheduleId: _selectedSchedule!.id,
+            scheduleId: matchingSchedule.id,
             date: _selectedDate!,
             startTime: _startTime,
             endTime: _endTime,
@@ -165,6 +183,7 @@ class _BlockScheduleDialogState extends ConsumerState<BlockScheduleDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final clinicOptions = _clinicOptions;
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -217,13 +236,12 @@ class _BlockScheduleDialogState extends ConsumerState<BlockScheduleDialog> {
             const SizedBox(height: 10),
 
             // Schedule selector (only when multiple schedules match the day)
-            if (_selectedDate != null && _schedulesForDay.length > 1) ...[
+            if (_selectedDate != null && clinicOptions.length > 1) ...[
               DropdownButtonFormField<Schedule>(
-                value: _selectedSchedule,
-                decoration: const InputDecoration(
-                  labelText: 'Horario / Clínica',
-                ),
-                items: _schedulesForDay
+                key: ValueKey(_selectedDate),
+                initialValue: _selectedSchedule,
+                decoration: const InputDecoration(labelText: 'Clínica'),
+                items: clinicOptions
                     .map(
                       (s) =>
                           DropdownMenuItem(value: s, child: Text(s.clinicName)),
@@ -237,7 +255,7 @@ class _BlockScheduleDialogState extends ConsumerState<BlockScheduleDialog> {
               const SizedBox(height: 10),
             ],
 
-            if (_selectedDate != null && _schedulesForDay.length == 1)
+            if (_selectedDate != null && clinicOptions.length == 1)
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
                 child: Text(
