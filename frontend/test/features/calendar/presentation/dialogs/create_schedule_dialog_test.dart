@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/features/calendar/presentation/dialogs/create_schedule_dialog.dart';
+import 'package:frontend/features/calendar/presentation/utils/schedule_duration_validation.dart';
 import 'package:frontend/features/clinic/domain/entities/clinic.dart';
 import 'package:frontend/features/clinic/domain/providers/clinic_domain_providers.dart';
 import 'package:frontend/features/clinic/domain/repositories/clinic_repository.dart';
@@ -258,7 +259,7 @@ void main() {
 
     final durationField = find.widgetWithText(
       TextFormField,
-      'Duración por cita (minutos)',
+      'Duración de cada cita',
     );
     await tester.enterText(durationField, '120');
     await tester.pump();
@@ -270,6 +271,28 @@ void main() {
       ),
       findsOneWidget,
     );
+  });
+
+  testWidgets('explains duration and rejects values incompatible with range', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_app(forSecretary: false));
+    await tester.pumpAndSettle();
+
+    expect(find.text(scheduleDurationHelpText), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('schedule-day-0')));
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Duración de cada cita'),
+      '70',
+    );
+    await tester.tap(find.text('Guardar horario'));
+    await tester.pump();
+
+    expect(
+      find.text('Debe dividir exactamente el rango de 480 minutos'),
+      findsOneWidget,
+    );
+    expect(find.text('Confirmar horario'), findsNothing);
   });
 
   testWidgets('creates one schedule for every selected day', (tester) async {
