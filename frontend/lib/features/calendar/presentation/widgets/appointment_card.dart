@@ -95,13 +95,11 @@ class AppointmentCard extends StatelessWidget {
               const SizedBox(width: 4),
               Flexible(
                 child: Text(
-                  appointment.doctorName,
+                  'Bloqueo',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
+                  style: CalendarTextStyles.appointmentTime.copyWith(
                     color: Colors.white,
                   ),
                 ),
