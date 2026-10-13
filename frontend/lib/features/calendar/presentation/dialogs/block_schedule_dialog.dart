@@ -58,8 +58,7 @@ class _BlockScheduleDialogState extends ConsumerState<BlockScheduleDialog> {
     // dayOfWeek en el backend: 0=Lunes ... 6=Domingo
     // Flutter weekday: 1=Monday ... 7=Sunday
     final dow = date.weekday - 1;
-    final filtered =
-        _allSchedules.where((s) => s.dayOfWeek == dow).toList();
+    final filtered = _allSchedules.where((s) => s.dayOfWeek == dow).toList();
     setState(() {
       _selectedDate = date;
       _schedulesForDay = filtered;
@@ -134,7 +133,7 @@ class _BlockScheduleDialogState extends ConsumerState<BlockScheduleDialog> {
     });
 
     try {
-      await ref
+      final created = await ref
           .read(doctorCalendarNotifierProvider.notifier)
           .createBlockade(
             scheduleId: _selectedSchedule!.id,
@@ -144,7 +143,7 @@ class _BlockScheduleDialogState extends ConsumerState<BlockScheduleDialog> {
           );
 
       if (!mounted) return;
-      Navigator.of(context).pop();
+      Navigator.of(context).pop(created);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Horario bloqueado exitosamente')),
       );
@@ -221,13 +220,13 @@ class _BlockScheduleDialogState extends ConsumerState<BlockScheduleDialog> {
             if (_selectedDate != null && _schedulesForDay.length > 1) ...[
               DropdownButtonFormField<Schedule>(
                 value: _selectedSchedule,
-                decoration: const InputDecoration(labelText: 'Horario / Clínica'),
+                decoration: const InputDecoration(
+                  labelText: 'Horario / Clínica',
+                ),
                 items: _schedulesForDay
                     .map(
-                      (s) => DropdownMenuItem(
-                        value: s,
-                        child: Text(s.clinicName),
-                      ),
+                      (s) =>
+                          DropdownMenuItem(value: s, child: Text(s.clinicName)),
                     )
                     .toList(),
                 onChanged: (v) => setState(() {

@@ -16,6 +16,8 @@ class SecretaryCalendarView extends StatelessWidget {
   final List<Appointment> appointments;
   final List<Schedule> schedules;
   final int? highlightedAppointmentId;
+  final int? highlightedBlockadeId;
+  final ScrollController? verticalScrollController;
   final ValueChanged<List<SecretaryCalendarItem>> onItemsTap;
 
   const SecretaryCalendarView({
@@ -24,6 +26,8 @@ class SecretaryCalendarView extends StatelessWidget {
     required this.appointments,
     required this.schedules,
     this.highlightedAppointmentId,
+    this.highlightedBlockadeId,
+    this.verticalScrollController,
     required this.onItemsTap,
   });
 
@@ -64,6 +68,7 @@ class SecretaryCalendarView extends StatelessWidget {
                         ),
                         Expanded(
                           child: SingleChildScrollView(
+                            controller: verticalScrollController,
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -113,6 +118,8 @@ class SecretaryCalendarView extends StatelessWidget {
                                             ],
                                             highlightedAppointmentId:
                                                 highlightedAppointmentId,
+                                            highlightedBlockadeId:
+                                                highlightedBlockadeId,
                                             onItemsTap: onItemsTap,
                                           ),
                                         );
@@ -146,12 +153,14 @@ class _SecretaryDayColumn extends StatelessWidget {
   final int dayIndex;
   final List<SecretaryCalendarItem> items;
   final int? highlightedAppointmentId;
+  final int? highlightedBlockadeId;
   final ValueChanged<List<SecretaryCalendarItem>> onItemsTap;
 
   const _SecretaryDayColumn({
     required this.dayIndex,
     required this.items,
     required this.highlightedAppointmentId,
+    required this.highlightedBlockadeId,
     required this.onItemsTap,
   });
 
@@ -282,13 +291,22 @@ class _SecretaryDayColumn extends StatelessWidget {
         left: left,
         width: width,
         height: height,
-        child: placement.item.type == SecretaryCalendarItemType.appointment
+        child: placement.item.type != SecretaryCalendarItemType.schedule
             ? CalendarAppointmentHighlight(
-                appointmentId: placement.item.id,
-                highlighted: placement.item.id == highlightedAppointmentId,
-                glowColor: appointmentStatusColor(
-                  placement.item.appointment!.status,
-                ),
+                appointmentId:
+                    placement.item.type == SecretaryCalendarItemType.blockade
+                    ? -placement.item.id
+                    : placement.item.id,
+                highlighted:
+                    placement.item.type == SecretaryCalendarItemType.blockade
+                    ? placement.item.id == highlightedBlockadeId
+                    : placement.item.id == highlightedAppointmentId,
+                glowColor:
+                    placement.item.type == SecretaryCalendarItemType.blockade
+                    ? CalendarColors.appointmentBlockade
+                    : appointmentStatusColor(
+                        placement.item.appointment!.status,
+                      ),
                 child: _calendarCard(
                   placement.item,
                   opacity,

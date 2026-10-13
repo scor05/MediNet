@@ -14,6 +14,8 @@ class WeekView extends StatelessWidget {
   final bool showPatient;
   final bool splitOverlappingAppointments;
   final int? highlightedAppointmentId;
+  final int? highlightedBlockadeId;
+  final ScrollController? verticalScrollController;
   final bool compact;
   final void Function(Appointment)? onAppointmentTap;
   final void Function(Appointment)? onBlockadeTap;
@@ -28,6 +30,8 @@ class WeekView extends StatelessWidget {
     this.showPatient = false,
     this.splitOverlappingAppointments = false,
     this.highlightedAppointmentId,
+    this.highlightedBlockadeId,
+    this.verticalScrollController,
     this.compact = false,
     this.onAppointmentTap,
     this.onBlockadeTap,
@@ -73,6 +77,7 @@ class WeekView extends StatelessWidget {
                             ),
                             Expanded(
                               child: SingleChildScrollView(
+                                controller: verticalScrollController,
                                 child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -93,6 +98,8 @@ class WeekView extends StatelessWidget {
                                             splitOverlappingAppointments,
                                         highlightedAppointmentId:
                                             highlightedAppointmentId,
+                                        highlightedBlockadeId:
+                                            highlightedBlockadeId,
                                         startHour: startHour,
                                         endHour: endHour,
                                         hourHeight: hourHeight,

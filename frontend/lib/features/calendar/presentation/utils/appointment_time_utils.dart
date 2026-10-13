@@ -19,6 +19,19 @@ DateTime calendarWeekStart(DateTime date) {
   return normalizedDate.subtract(Duration(days: normalizedDate.weekday - 1));
 }
 
+/// Returns a vertical calendar offset that leaves one hour of context above
+/// the selected time whenever possible.
+double calendarScrollOffsetForTime(
+  String time, {
+  int startHour = 6,
+  double hourHeight = 80,
+}) {
+  final parts = time.split(':');
+  final minutes = int.parse(parts[0]) * 60 + int.parse(parts[1]);
+  final offset = (minutes - startHour * 60) * (hourHeight / 60) - hourHeight;
+  return offset < 0 ? 0 : offset;
+}
+
 DateTime nextScheduleDate({
   required DateTime weekStart,
   required DateTime today,

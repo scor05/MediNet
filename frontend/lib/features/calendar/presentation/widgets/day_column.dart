@@ -15,6 +15,7 @@ class DayColumn extends StatelessWidget {
   final bool showPatient;
   final bool splitOverlappingAppointments;
   final int? highlightedAppointmentId;
+  final int? highlightedBlockadeId;
   final int startHour;
   final int endHour;
   final double hourHeight;
@@ -31,6 +32,7 @@ class DayColumn extends StatelessWidget {
     required this.showPatient,
     this.splitOverlappingAppointments = false,
     this.highlightedAppointmentId,
+    this.highlightedBlockadeId,
     required this.startHour,
     required this.endHour,
     required this.hourHeight,
@@ -136,12 +138,14 @@ class DayColumn extends StatelessWidget {
           : () => onAppointmentTap?.call(appointment),
     );
 
-    if (appointment.isBlockade) return card;
-
     return CalendarAppointmentHighlight(
-      appointmentId: appointment.id,
-      highlighted: appointment.id == highlightedAppointmentId,
-      glowColor: appointmentStatusColor(appointment.status),
+      appointmentId: appointment.isBlockade ? -appointment.id : appointment.id,
+      highlighted: appointment.isBlockade
+          ? appointment.id == highlightedBlockadeId
+          : appointment.id == highlightedAppointmentId,
+      glowColor: appointment.isBlockade
+          ? CalendarColors.appointmentBlockade
+          : appointmentStatusColor(appointment.status),
       child: card,
     );
   }

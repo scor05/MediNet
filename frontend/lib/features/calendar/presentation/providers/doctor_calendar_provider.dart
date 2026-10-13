@@ -168,7 +168,7 @@ class DoctorCalendarNotifier
         type: 'blockade',
       ),
     );
-    refresh();
+    await refresh();
     return blockade;
   }
 
@@ -204,12 +204,10 @@ final doctorCalendarNotifierProvider =
     AsyncNotifierProvider.autoDispose<
       DoctorCalendarNotifier,
       List<Appointment>
-    >(
-      DoctorCalendarNotifier.new,
-    );
+    >(DoctorCalendarNotifier.new);
 
-final doctorSchedulesProvider = FutureProvider.autoDispose<List<Schedule>>(
-  (ref) async {
-    return ref.read(getDoctorSchedulesUsecaseProvider).call();
-  },
-);
+final doctorSchedulesProvider = FutureProvider.autoDispose<List<Schedule>>((
+  ref,
+) async {
+  return ref.read(getDoctorSchedulesUsecaseProvider).call();
+});

@@ -331,6 +331,7 @@ void main() {
             weekStart: DateTime(2026, 9, 21),
             appointments: [blockade],
             schedules: schedules,
+            highlightedBlockadeId: blockade.id,
             onItemsTap: (_) {},
           ),
         ),
@@ -350,5 +351,17 @@ void main() {
     expect(blockadeRect.left, closeTo(doctorSchedule.left, 0.1));
     expect(blockadeRect.width, closeTo(doctorSchedule.width, 0.1));
     expect(blockadeRect.width, lessThan(day.width / 2));
+
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 275));
+    final highlight = tester.widget<DecoratedBox>(
+      find.descendant(
+        of: find.byKey(const ValueKey('appointment-highlight--20')),
+        matching: find.byType(DecoratedBox),
+      ),
+    );
+    expect((highlight.decoration as BoxDecoration).boxShadow, isNotEmpty);
+
+    await tester.pumpAndSettle();
   });
 }
