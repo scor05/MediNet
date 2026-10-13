@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
+import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
 import 'package:frontend/features/calendar/presentation/providers/doctor_calendar_provider.dart';
 import 'package:frontend/features/calendar/presentation/providers/secretary_calendar_provider.dart';
+import 'package:frontend/features/calendar/presentation/widgets/schedule_confirmation_dialog.dart';
 import 'package:frontend/features/clinic/domain/entities/clinic.dart';
 import 'package:frontend/features/clinic/domain/providers/clinic_domain_providers.dart';
 import 'package:frontend/features/schedule/domain/entities/schedule.dart';
@@ -139,7 +141,9 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
 
     try {
       final schedules = widget.forSecretary
-          ? await ref.read(getSchedulesByDoctorIdUsecaseProvider).call(doctorId!)
+          ? await ref
+                .read(getSchedulesByDoctorIdUsecaseProvider)
+                .call(doctorId!)
           : await ref.read(getDoctorSchedulesUsecaseProvider).call();
       if (!mounted || requestId != _existingRequestId) return;
       setState(() {
@@ -198,15 +202,24 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
   }
 
   String? _intervalPreview() {
+    final intervals = _resultingIntervals();
+    if (intervals.isEmpty) return null;
+
+    final visibleIntervals = intervals.take(4).toList();
+    return '*Intervalos a crearse: ${visibleIntervals.join(', ')}'
+        '${intervals.length > visibleIntervals.length ? ', ...' : ''}';
+  }
+
+  List<String> _resultingIntervals() {
     final duration = int.tryParse(_durationCtrl.text.trim());
-    if (duration == null || duration < 5 || !_isValidRange()) return null;
+    if (duration == null || duration < 5 || !_isValidRange()) return const [];
 
     final startMinutes = _startTime.hour * 60 + _startTime.minute;
     final endMinutes = _endTime.hour * 60 + _endTime.minute;
     final intervals = <String>[];
     var intervalStart = startMinutes;
 
-    while (intervalStart + duration <= endMinutes && intervals.length < 4) {
+    while (intervalStart + duration <= endMinutes) {
       final intervalEnd = intervalStart + duration;
       intervals.add(
         '${_formatMinutes(intervalStart)} - ${_formatMinutes(intervalEnd)}',
@@ -214,10 +227,7 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
       intervalStart = intervalEnd;
     }
 
-    if (intervals.isEmpty) return null;
-    final hasMoreIntervals = intervalStart + duration <= endMinutes;
-    return '*Intervalos a crearse: ${intervals.join(', ')}'
-        '${hasMoreIntervals ? ', ...' : ''}';
+    return intervals;
   }
 
   String _formatMinutes(int minutes) {
@@ -239,6 +249,42 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
     var message = error.toString();
     if (message.startsWith('Exception: ')) message = message.substring(11);
     return message.isEmpty ? 'Ocurrió un error inesperado.' : message;
+  }
+
+  String _selectedClinicName() {
+    for (final clinic in _clinics) {
+      if (clinic.id == _selectedClinic) return clinic.name;
+    }
+    return 'Clínica seleccionada';
+  }
+
+  String _doctorName(DoctorSearchResult? selectedDoctor) {
+    if (widget.forSecretary) return selectedDoctor!.name;
+
+    final authState = ref.read(authNotifierProvider);
+    if (authState is AuthAuthenticated) return authState.profile.name;
+    return 'Doctor actual';
+  }
+
+  Future<bool> _confirmCreation({
+    required DoctorSearchResult? selectedDoctor,
+    required List<int> requestedDays,
+    required int duration,
+  }) async {
+    FocusScope.of(context).unfocus();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => ScheduleConfirmationDialog(
+        doctor: _doctorName(selectedDoctor),
+        clinic: _selectedClinicName(),
+        days: requestedDays.map((day) => _days[day]).toList(),
+        startTime: _fmt(_startTime),
+        endTime: _fmt(_endTime),
+        duration: duration,
+        intervals: _resultingIntervals(),
+      ),
+    );
+    return confirmed ?? false;
   }
 
   Future<void> _submit() async {
@@ -267,15 +313,22 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
       return;
     }
 
+    final requestedDays = _selectedDays.toList()..sort();
+    final duration = int.parse(_durationCtrl.text.trim());
+    final confirmed = await _confirmCreation(
+      selectedDoctor: selectedDoctor,
+      requestedDays: requestedDays,
+      duration: duration,
+    );
+    if (!mounted || !confirmed) return;
+
     setState(() {
       _saving = true;
       _error = null;
     });
 
     try {
-      final requestedDays = _selectedDays.toList()..sort();
       final createSchedule = ref.read(createScheduleUsecaseProvider);
-      final duration = int.parse(_durationCtrl.text.trim());
       final createdSchedules = await createSchedule.callMany(
         doctorId: widget.forSecretary ? selectedDoctor!.id : null,
         clinicId: _selectedClinic!,
