@@ -33,44 +33,66 @@ class AppointmentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (appointment.isBlockade) {
-      return GestureDetector(onTap: onTap, child: _buildBlockadeCard());
+      return Semantics(
+        button: onTap != null,
+        label: _semanticLabel('Bloqueo'),
+        excludeSemantics: true,
+        child: GestureDetector(onTap: onTap, child: _buildBlockadeCard()),
+      );
     }
     final label = showPatient
         ? appointment.patientName
         : showDoctor
         ? appointment.doctorName
         : appointment.patientName;
-    return Card(
-      color: appointmentStatusColor(appointment.status),
-      margin: EdgeInsets.zero,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Icon(
-                calendarItemIcon(SecretaryCalendarItemType.appointment),
-                size: 13,
-              ),
-              const SizedBox(width: 4),
-              Flexible(
-                child: Text(
-                  label,
-                  style: CalendarTextStyles.appointmentTime,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
+    return Semantics(
+      button: onTap != null,
+      label: _semanticLabel('Cita de $label'),
+      excludeSemantics: true,
+      child: Card(
+        color: appointmentStatusColor(appointment.status),
+        margin: EdgeInsets.zero,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(
+                  calendarItemIcon(SecretaryCalendarItemType.appointment),
+                  size: 13,
                 ),
-              ),
-            ],
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    label,
+                    style: CalendarTextStyles.appointmentTime,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
+  }
+
+  String _semanticLabel(String prefix) {
+    final start = appointment.startTime.substring(0, 5);
+    final parts = appointment.startTime.split(':');
+    final startMinutes = int.parse(parts[0]) * 60 + int.parse(parts[1]);
+    final endMinutes = startMinutes + appointment.appointmentDuration;
+    final end =
+        '${(endMinutes ~/ 60).toString().padLeft(2, '0')}:'
+        '${(endMinutes % 60).toString().padLeft(2, '0')}';
+    return '$prefix, ${appointment.doctorName}, ${appointment.clinicName}, '
+        '$start a $end';
   }
 
   Widget _buildBlockadeCard() {

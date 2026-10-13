@@ -37,6 +37,7 @@ class FabMenuItem extends StatelessWidget {
         const SizedBox(width: 8),
         FloatingActionButton.small(
           heroTag: label,
+          tooltip: label,
           backgroundColor: color,
           onPressed: onTap,
           child: Icon(

@@ -54,4 +54,49 @@ void main() {
     );
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('keeps the primary action fixed above the mobile keyboard', (
+    tester,
+  ) async {
+    const screenSize = Size(360, 640);
+    const keyboardHeight = 300.0;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MediaQuery(
+          data: const MediaQueryData(
+            size: screenSize,
+            viewInsets: EdgeInsets.only(bottom: keyboardHeight),
+          ),
+          child: Scaffold(
+            body: Align(
+              alignment: Alignment.bottomCenter,
+              child: KeyboardAwareBottomSheet(
+                footer: const SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: null,
+                    child: Text('Confirmar cita'),
+                  ),
+                ),
+                child: const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [TextField(), SizedBox(height: 500)],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final button = find.text('Confirmar cita');
+    expect(button, findsOneWidget);
+    expect(
+      tester.getBottomRight(button).dy,
+      lessThanOrEqualTo(screenSize.height - keyboardHeight),
+    );
+    expect(tester.takeException(), isNull);
+  });
 }
