@@ -4,7 +4,9 @@ import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
 import 'package:frontend/features/calendar/presentation/providers/doctor_calendar_provider.dart';
 import 'package:frontend/features/calendar/presentation/providers/secretary_calendar_provider.dart';
+import 'package:frontend/features/calendar/presentation/utils/schedule_conflicts.dart';
 import 'package:frontend/features/calendar/presentation/utils/schedule_duration_validation.dart';
+import 'package:frontend/features/calendar/presentation/widgets/schedule_conflict_warning.dart';
 import 'package:frontend/features/calendar/presentation/widgets/schedule_confirmation_dialog.dart';
 import 'package:frontend/features/clinic/domain/entities/clinic.dart';
 import 'package:frontend/features/clinic/domain/providers/clinic_domain_providers.dart';
@@ -37,7 +39,7 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
   TimeOfDay _endTime = const TimeOfDay(hour: 16, minute: 0);
   final _durationCtrl = TextEditingController();
 
-  List<Schedule> _existingSchedules = const [];
+  List<Schedule> _doctorSchedules = const [];
   bool _loadingExisting = false;
   String? _existingError;
   int _existingRequestId = 0;
@@ -128,7 +130,7 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
 
     if (clinicId == null || (widget.forSecretary && doctorId == null)) {
       setState(() {
-        _existingSchedules = const [];
+        _doctorSchedules = const [];
         _existingError = null;
         _loadingExisting = false;
       });
@@ -148,14 +150,12 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
           : await ref.read(getDoctorSchedulesUsecaseProvider).call();
       if (!mounted || requestId != _existingRequestId) return;
       setState(() {
-        _existingSchedules = schedules
-            .where((schedule) => schedule.clinicId == clinicId)
-            .toList();
+        _doctorSchedules = schedules;
       });
     } catch (_) {
       if (!mounted || requestId != _existingRequestId) return;
       setState(() {
-        _existingSchedules = const [];
+        _doctorSchedules = const [];
         _existingError = 'No se pudieron cargar los horarios existentes.';
       });
     } finally {
@@ -164,6 +164,20 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
       }
     }
   }
+
+  /// Horarios del doctor en la clínica elegida (los que muestra el panel).
+  List<Schedule> get _existingSchedules => _doctorSchedules
+      .where((schedule) => schedule.clinicId == _selectedClinic)
+      .toList();
+
+  /// Horarios que chocan con los días y el rango configurados. La regla del
+  /// backend considera todas las clínicas del doctor, no solo la elegida.
+  List<Schedule> _conflicts() => findScheduleConflicts(
+    existing: _doctorSchedules,
+    days: _selectedDays,
+    startMinutes: _startTime.hour * 60 + _startTime.minute,
+    endMinutes: _endTime.hour * 60 + _endTime.minute,
+  );
 
   Future<void> _pickTime(bool isStart) async {
     final picked = await showTimePicker(
@@ -377,8 +391,10 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
       },
     );
     final searchNotifier = ref.read(searchFormNotifierProvider.notifier);
+    final conflicts = _conflicts();
     final canSubmit =
         !_saving &&
+        conflicts.isEmpty &&
         _selectedDays.isNotEmpty &&
         !_loadingClinics &&
         _selectedClinic != null &&
@@ -600,6 +616,11 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
                 ),
               ],
 
+              if (conflicts.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                ScheduleConflictWarning(conflicts: conflicts),
+              ],
+
               if (_error != null) ...[
                 const SizedBox(height: 12),
                 Text(_error!, style: const TextStyle(color: Colors.red)),
@@ -638,6 +659,15 @@ class _CreateScheduleDialogState extends ConsumerState<CreateScheduleDialog> {
                 'Para guardar el horario, selecciona un doctor de la lista '
                 'de sugerencias. Escribir el nombre no es suficiente.',
                 key: ValueKey('schedule-submit-hint'),
+                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              ),
+            ],
+            if (conflicts.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              const Text(
+                'Cambia los días, la clínica o el rango de horas para poder '
+                'guardar.',
+                key: ValueKey('schedule-conflict-hint'),
                 style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
               ),
             ],
