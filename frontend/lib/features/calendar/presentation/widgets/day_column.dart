@@ -229,7 +229,7 @@ class DayColumn extends StatelessWidget {
                           const SizedBox(width: 4),
                           Flexible(
                             child: Text(
-                              schedule.doctorName,
+                              'Horario',
                               style: TextStyle(
                                 fontSize: CalendarSizes.itemFontSize,
                                 fontWeight: FontWeight.w600,

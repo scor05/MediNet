@@ -98,6 +98,41 @@ void main() {
     expect(find.text('Horario - Dr. Ruiz / Clínica Central'), findsNothing);
   });
 
+  testWidgets('centers secretary blockades like appointments', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1800, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final blockade = appointment.copyWith(
+      id: 9,
+      patientName: '',
+      type: 'blockade',
+      appointmentDuration: 60,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SecretaryCalendarView(
+            weekStart: DateTime(2026, 9, 21),
+            appointments: [blockade],
+            schedules: const [],
+            onItemsTap: (_) {},
+          ),
+        ),
+      ),
+    );
+
+    final card = tester.getRect(
+      find.byKey(const ValueKey('secretary-calendar-blockade-9')),
+    );
+    final labelFinder = find.text('Dr. Ruiz');
+    final label = tester.getRect(labelFinder);
+    expect(label.center.dy, closeTo(card.center.dy, 0.5));
+    expect(
+      tester.widget<Text>(labelFinder).style?.fontSize,
+      CalendarSizes.appointmentTimeFontSize,
+    );
+  });
+
   testWidgets('highlights only the appointment matching the requested id', (
     tester,
   ) async {

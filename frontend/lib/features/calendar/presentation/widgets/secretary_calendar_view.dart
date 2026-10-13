@@ -426,12 +426,12 @@ class _SecretaryCalendarCard extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
               child: Align(
-                alignment: item.type == SecretaryCalendarItemType.appointment
-                    ? Alignment.center
-                    : Alignment.topCenter,
+                alignment: item.type == SecretaryCalendarItemType.schedule
+                    ? Alignment.topCenter
+                    : Alignment.center,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Icon(
                       calendarItemIcon(item.type),
@@ -450,9 +450,9 @@ class _SecretaryCalendarCard extends StatelessWidget {
                         style: TextStyle(
                           color: foreground,
                           fontSize:
-                              item.type == SecretaryCalendarItemType.appointment
-                              ? CalendarSizes.appointmentTimeFontSize
-                              : CalendarSizes.itemFontSize,
+                              item.type == SecretaryCalendarItemType.schedule
+                              ? CalendarSizes.itemFontSize
+                              : CalendarSizes.appointmentTimeFontSize,
                           height: 1.1,
                           fontWeight: FontWeight.w700,
                         ),

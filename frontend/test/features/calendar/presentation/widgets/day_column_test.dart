@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/calendar/presentation/widgets/day_column.dart';
+import 'package:frontend/features/schedule/domain/entities/schedule.dart';
 import 'package:frontend/theme/calendar_theme.dart';
 
 void main() {
@@ -18,6 +19,17 @@ void main() {
         type: 'blockade',
         appointmentDuration: 60,
       );
+      const schedule = Schedule(
+        id: 4,
+        dayOfWeek: 0,
+        startTime: '07:00:00',
+        endTime: '10:00:00',
+        duration: 30,
+        doctorId: 3,
+        doctorName: 'Dr. Ruiz',
+        clinicId: 2,
+        clinicName: 'Clínica Central',
+      );
 
       await tester.pumpWidget(
         MaterialApp(
@@ -30,7 +42,7 @@ void main() {
                 child: DayColumn(
                   dayIndex: 0,
                   appointments: [first, second, blockade],
-                  schedules: const [],
+                  schedules: const [schedule],
                   showDoctor: false,
                   showPatient: true,
                   splitOverlappingAppointments: true,
@@ -85,6 +97,9 @@ void main() {
       );
       expect(firstRect.width, lessThan(blockadeRect.width));
       expect(secondRect.width, lessThan(blockadeRect.width));
+      expect(find.text('Horario'), findsOneWidget);
+      expect(find.text('Bloqueo'), findsOneWidget);
+      expect(find.text('Dr. Ruiz'), findsNothing);
     },
   );
 }
