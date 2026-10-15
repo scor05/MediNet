@@ -100,6 +100,21 @@ jobs:
       - name: Descargar el código
         uses: actions/checkout@v4
 
+      - name: Flutter
+        uses: subosito/flutter-action@v2
+        with:
+            channel: stable
+            cache: true
+      
+      - name: Dependencias de flutter
+        working-directory: frontend
+        run: flutter pub get
+
+      - name: Compilar frontend
+        working-directory: frontend
+        run: >-
+            flutter build web --release --pwa-strategy=none --dart-define=API_URL=https://medinet.lat/api --dart-define=REVERB_WS_HOST=medinet.lat --dart-define=REVERB_WS_PORT=443 --dart-define=REVERB_WS_SCHEME=wss --dart-define=REVERB_APP_KEY=4e836df03ccf5c509e2b22c46f29daa58152ce10
+
       - name: Preparar variables temporales
         run: cp .github/ci/backend.env backend/.env
 
@@ -192,11 +207,6 @@ jobs:
 
       - name: Analizar código
         run: flutter analyze --no-fatal-infos
-
-      - name: Compilar frontend
-        working-directory: frontend
-        run: >-
-            flutter build web --release --pwa-strategy=none --dart-define=API_URL=https://medinet.lat/api --dart-define=REVERB_WS_HOST=medinet.lat --dart-define=REVERB_WS_PORT=443 --dart-define=REVERB_WS_SCHEME=wss --dart-define=REVERB_APP_KEY=4e836df03ccf5c509e2b22c46f29daa58152ce10
 
       - name: Preparar carpeta de resultados
         run: mkdir -p build/test-results
