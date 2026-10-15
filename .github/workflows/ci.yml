@@ -106,12 +106,15 @@ jobs:
       - name: Construir e iniciar los servicios
         run: >-
           docker compose --env-file backend/.env
+          -f docker-compose.yml
           up -d --build --wait --wait-timeout 120
           db backend reverb frontend
 
       - name: Preparar la base de datos
         run: >-
-          docker compose --env-file backend/.env exec -T backend
+          docker compose --env-file backend/.env
+          -f docker-compose.yml
+          exec -T backend
           php artisan migrate:fresh --force
 
       - name: Preparar carpeta de resultados
@@ -119,9 +122,23 @@ jobs:
 
       - name: Ejecutar pruebas de integración y regresión
         run: >-
-          docker compose --env-file backend/.env exec -T backend
+          docker compose --env-file backend/.env
+          -f docker-compose.yml
+          exec -T backend
           php vendor/bin/pest --configuration=phpunit.system.xml
           --log-junit=storage/test-results/system-tests.xml
+
+      - name: Copiar reporte desde el contenedor
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p backend/laravel/storage/test-results
+          if docker compose --env-file backend/.env -f docker-compose.yml \
+            exec -T backend test -f storage/test-results/system-tests.xml; then
+            docker compose --env-file backend/.env -f docker-compose.yml \
+              cp backend:/app/storage/test-results/system-tests.xml \
+              backend/laravel/storage/test-results/system-tests.xml
+          fi
 
       - name: Guardar reporte de integración y regresión
         if: always()
@@ -134,11 +151,17 @@ jobs:
 
       - name: Mostrar logs de contenedores si hubo un fallo
         if: failure()
-        run: docker compose --env-file backend/.env logs --no-color
+        run: >-
+          docker compose --env-file backend/.env
+          -f docker-compose.yml
+          logs --no-color
 
       - name: Detener los servicios
         if: always()
-        run: docker compose --env-file backend/.env down --volumes
+        run: >-
+          docker compose --env-file backend/.env
+          -f docker-compose.yml
+          down --volumes
 
   frontend-tests:
     name: Frontend (Flutter)

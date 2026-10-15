@@ -4,6 +4,23 @@ import 'package:frontend/features/calendar/presentation/providers/staff_calendar
 import 'package:frontend/features/schedule/domain/entities/schedule.dart';
 
 void main() {
+  test('default state has no filters and copyWith can restore one setting', () {
+    const defaults = StaffCalendarFilterState();
+    const filtered = StaffCalendarFilterState(
+      patientId: 11,
+      patientName: 'Ana Pérez',
+      showSchedules: false,
+    );
+
+    expect(defaults.hasFilters, isFalse);
+    expect(filtered.hasFilters, isTrue);
+
+    final updated = filtered.copyWith(clearPatient: true, showSchedules: true);
+    expect(updated.patientId, isNull);
+    expect(updated.patientName, isNull);
+    expect(updated.hasFilters, isFalse);
+  });
+
   group('time range overlap', () {
     test('does not filter when both fields are empty', () {
       const filters = StaffCalendarFilterState();

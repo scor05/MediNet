@@ -260,7 +260,16 @@ class _PatientCalendarFilterDialogState
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Filtrar por:'),
+      title: Row(
+        children: [
+          const Expanded(child: Text('Filtrar por:')),
+          IconButton(
+            tooltip: 'Cerrar',
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.close),
+          ),
+        ],
+      ),
       content: SizedBox(
         width: 380,
         child: SingleChildScrollView(
@@ -331,8 +340,9 @@ class _PatientCalendarFilterDialogState
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancelar'),
+          onPressed: () =>
+              Navigator.pop(context, const PatientCalendarFilterState()),
+          child: const Text('Limpiar Filtros'),
         ),
         FilledButton(onPressed: _apply, child: const Text('Aplicar')),
       ],

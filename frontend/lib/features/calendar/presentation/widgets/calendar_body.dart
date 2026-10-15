@@ -22,6 +22,7 @@ class CalendarBody extends ConsumerStatefulWidget {
   final void Function(Appointment)? onBlockadeTap;
   final void Function(Schedule)? onScheduleTap;
   final bool Function(Schedule)? scheduleFilter;
+  final Widget? legendLeading;
 
   const CalendarBody({
     super.key,
@@ -39,6 +40,7 @@ class CalendarBody extends ConsumerStatefulWidget {
     this.onBlockadeTap,
     this.onScheduleTap,
     this.scheduleFilter,
+    this.legendLeading,
   });
 
   @override
@@ -91,6 +93,7 @@ class _CalendarBodyState extends ConsumerState<CalendarBody> {
                 onAppointmentTap: widget.onAppointmentTap,
                 onBlockadeTap: widget.onBlockadeTap,
                 onScheduleTap: widget.onScheduleTap,
+                legendLeading: widget.legendLeading,
               ),
 
               if (widget.calendarAsync.isLoading)
