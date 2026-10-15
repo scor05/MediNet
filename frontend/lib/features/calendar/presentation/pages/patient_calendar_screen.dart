@@ -8,9 +8,9 @@ import 'package:frontend/features/calendar/presentation/dialogs/patient_calendar
 import 'package:frontend/features/calendar/presentation/providers/patient_calendar_filter_provider.dart';
 import 'package:frontend/features/calendar/presentation/providers/patient_calendar_provider.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_body.dart';
+import 'package:frontend/features/calendar/presentation/widgets/calendar_filter_summary.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_shell.dart';
 import 'package:frontend/features/patient_profile/presentation/pages/patient_profile_screen.dart';
-import 'package:frontend/theme/app_theme.dart';
 
 class PatientCalendarScreen extends ConsumerStatefulWidget {
   final int patientId;
@@ -115,33 +115,6 @@ class _PatientCalendarScreenState extends ConsumerState<PatientCalendarScreen> {
             tooltip: 'Ajustes',
             onPressed: _openSettings,
           ),
-          SizedBox(
-            width: 48,
-            height: 48,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.filter_alt_outlined),
-                  tooltip: 'Filtrar',
-                  onPressed: _openFilterDialog,
-                ),
-                if (filters.hasFilters)
-                  Positioned(
-                    right: 6,
-                    top: 6,
-                    child: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: AppColors.secondary,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
           IconButton(
             icon: const Icon(Icons.chevron_left),
             onPressed: () => ref
@@ -163,6 +136,13 @@ class _PatientCalendarScreenState extends ConsumerState<PatientCalendarScreen> {
             .read(patientCalendarNotifierProvider(widget.patientId).notifier)
             .refresh,
         showDoctor: true,
+        legendLeading: CalendarFilterSummary.forPatient(
+          filters: filters,
+          onOpenFilters: _openFilterDialog,
+          onChanged: (updated) => ref
+              .read(patientCalendarFilterProvider.notifier)
+              .setFilters(updated),
+        ),
         onAppointmentTap: _openAppointmentDetail,
       ),
     );

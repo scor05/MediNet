@@ -17,6 +17,7 @@ class WeekView extends StatelessWidget {
   final int? highlightedBlockadeId;
   final ScrollController? verticalScrollController;
   final bool compact;
+  final Widget? legendLeading;
   final void Function(Appointment)? onAppointmentTap;
   final void Function(Appointment)? onBlockadeTap;
   final void Function(Schedule)? onScheduleTap;
@@ -33,6 +34,7 @@ class WeekView extends StatelessWidget {
     this.highlightedBlockadeId,
     this.verticalScrollController,
     this.compact = false,
+    this.legendLeading,
     this.onAppointmentTap,
     this.onBlockadeTap,
     this.onScheduleTap,
@@ -55,7 +57,7 @@ class WeekView extends StatelessWidget {
             : constraints.maxWidth;
         return Column(
           children: [
-            const CalendarItemLegend(),
+            CalendarItemLegend(leading: legendLeading),
             Expanded(
               child: LayoutBuilder(
                 builder: (context, calendarConstraints) =>

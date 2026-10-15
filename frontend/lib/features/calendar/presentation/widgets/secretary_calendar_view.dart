@@ -19,6 +19,7 @@ class SecretaryCalendarView extends StatelessWidget {
   final int? highlightedBlockadeId;
   final ScrollController? verticalScrollController;
   final ValueChanged<List<SecretaryCalendarItem>> onItemsTap;
+  final Widget? legendLeading;
 
   const SecretaryCalendarView({
     super.key,
@@ -29,6 +30,7 @@ class SecretaryCalendarView extends StatelessWidget {
     this.highlightedBlockadeId,
     this.verticalScrollController,
     required this.onItemsTap,
+    this.legendLeading,
   });
 
   static const startHour = 6;
@@ -47,7 +49,7 @@ class SecretaryCalendarView extends StatelessWidget {
             : constraints.maxWidth;
         return Column(
           children: [
-            const CalendarItemLegend(),
+            CalendarItemLegend(leading: legendLeading),
             Expanded(
               child: LayoutBuilder(
                 builder: (context, calendarConstraints) => SingleChildScrollView(

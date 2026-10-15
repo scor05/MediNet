@@ -18,6 +18,7 @@ import 'package:frontend/features/calendar/presentation/utils/appointment_time_u
 import 'package:frontend/features/calendar/presentation/utils/calendar_dialog_helpers.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_app_bar.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_fab_menu.dart';
+import 'package:frontend/features/calendar/presentation/widgets/calendar_filter_summary.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_shell.dart';
 import 'package:frontend/features/calendar/presentation/widgets/secretary_calendar_view.dart';
 import 'package:frontend/features/schedule/domain/entities/schedule.dart';
@@ -297,6 +298,14 @@ class _SecretaryCalendarScreenState
           highlightedAppointmentId: _highlightedAppointmentId,
           highlightedBlockadeId: _highlightedBlockadeId,
           verticalScrollController: _calendarScrollController,
+          legendLeading: CalendarFilterSummary.forStaff(
+            filters: filters,
+            showDoctorFilter: true,
+            onOpenFilters: _openFilterDialog,
+            onChanged: (updated) => ref
+                .read(secretaryCalendarFilterProvider.notifier)
+                .setFilters(updated),
+          ),
           onItemsTap: _openCalendarItems,
         ),
         if (calendarAsync.isLoading || schedulesAsync.isLoading)
@@ -324,13 +333,6 @@ class _SecretaryCalendarScreenState
           onPressed: () =>
               CalendarShellNavigation.maybeOf(context)?.onOpenSettings(),
         ),
-        extraActions: [
-          IconButton(
-            icon: const Icon(Icons.filter_alt_outlined),
-            tooltip: 'Filtrar',
-            onPressed: _openFilterDialog,
-          ),
-        ],
         onPreviousWeek: () => ref
             .read(secretaryWeekStartProvider.notifier)
             .update((d) => d.subtract(const Duration(days: 7))),

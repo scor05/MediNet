@@ -432,7 +432,16 @@ class _StaffCalendarFilterDialogState
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Filtrar calendario'),
+      title: Row(
+        children: [
+          const Expanded(child: Text('Filtrar calendario')),
+          IconButton(
+            tooltip: 'Cerrar',
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.close),
+          ),
+        ],
+      ),
       content: SizedBox(
         width: 430,
         child: SingleChildScrollView(
@@ -466,27 +475,36 @@ class _StaffCalendarFilterDialogState
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
                 const SizedBox(height: 8),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: _TimeFilterButton(
-                        label: 'Desde',
-                        value: _startTime,
-                        onPressed: () => _pickTime(isStart: true),
-                        onClear: () => _clearTime(isStart: true),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _TimeFilterButton(
-                        label: 'Hasta',
-                        value: _endTime,
-                        onPressed: () => _pickTime(isStart: false),
-                        onClear: () => _clearTime(isStart: false),
-                      ),
-                    ),
-                  ],
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final start = _TimeFilterButton(
+                      label: 'Desde',
+                      value: _startTime,
+                      onPressed: () => _pickTime(isStart: true),
+                      onClear: () => _clearTime(isStart: true),
+                    );
+                    final end = _TimeFilterButton(
+                      label: 'Hasta',
+                      value: _endTime,
+                      onPressed: () => _pickTime(isStart: false),
+                      onClear: () => _clearTime(isStart: false),
+                    );
+
+                    if (constraints.maxWidth < 340) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [start, const SizedBox(height: 10), end],
+                      );
+                    }
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: start),
+                        const SizedBox(width: 12),
+                        Expanded(child: end),
+                      ],
+                    );
+                  },
                 ),
                 if (_timeError != null) ...[
                   const SizedBox(height: 6),
@@ -600,8 +618,9 @@ class _StaffCalendarFilterDialogState
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancelar'),
+          onPressed: () =>
+              Navigator.pop(context, const StaffCalendarFilterState()),
+          child: const Text('Limpiar Filtros'),
         ),
         FilledButton(onPressed: _apply, child: const Text('Aplicar')),
       ],
@@ -660,7 +679,12 @@ class _TimeFilterButton extends StatelessWidget {
                   ),
                   onPressed: onPressed,
                   icon: const Icon(Icons.access_time, size: 18),
-                  label: Text(formatted),
+                  label: Text(
+                    formatted,
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ),
               if (value != null) ...[

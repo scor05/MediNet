@@ -122,6 +122,106 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('stacks time filters with single-line values on mobile', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(360, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      _filterHost(
+        allowDoctorFilter: false,
+        initialFilters: const StaffCalendarFilterState(
+          startTime: '08:00',
+          endTime: '12:00',
+        ),
+      ),
+    );
+    await tester.tap(find.text('Abrir'));
+    await tester.pumpAndSettle();
+
+    final startButton = find.widgetWithText(OutlinedButton, '08:00');
+    final endButton = find.widgetWithText(OutlinedButton, '12:00');
+    expect(startButton, findsOneWidget);
+    expect(endButton, findsOneWidget);
+    expect(
+      tester.getCenter(startButton).dy,
+      lessThan(tester.getCenter(endButton).dy),
+    );
+    expect(tester.getSize(find.text('08:00')).height, lessThan(24));
+    expect(tester.getSize(find.text('12:00')).height, lessThan(24));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('clear filters returns the complete default state', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(900, 1000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    StaffCalendarFilterState? applied;
+
+    await tester.pumpWidget(
+      _filterHost(
+        allowDoctorFilter: true,
+        initialFilters: const StaffCalendarFilterState(
+          patientId: 10,
+          patientName: 'Paciente',
+          doctorId: 20,
+          doctorName: 'Doctor',
+          filterDoctor: true,
+          clinicId: 30,
+          clinicName: 'Clínica',
+          filterClinic: true,
+          startTime: '08:00',
+          endTime: '12:00',
+          showSchedules: false,
+          showBlockades: false,
+          showAppointments: false,
+          showCancelled: false,
+        ),
+        onApplied: (filters) => applied = filters,
+      ),
+    );
+    await tester.tap(find.text('Abrir'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Limpiar Filtros'));
+    await tester.pumpAndSettle();
+
+    expect(applied, isNotNull);
+    expect(applied!.hasFilters, isFalse);
+    expect(applied!.patientId, isNull);
+    expect(applied!.doctorId, isNull);
+    expect(applied!.clinicId, isNull);
+    expect(applied!.startTime, isNull);
+    expect(applied!.endTime, isNull);
+    expect(applied!.showSchedules, isTrue);
+    expect(applied!.showBlockades, isTrue);
+    expect(applied!.showAppointments, isTrue);
+    expect(applied!.showCancelled, isTrue);
+  });
+
+  testWidgets('close button dismisses without applying changes', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(900, 1000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    StaffCalendarFilterState? applied;
+
+    await tester.pumpWidget(
+      _filterHost(
+        allowDoctorFilter: false,
+        onApplied: (filters) => applied = filters,
+      ),
+    );
+    await tester.tap(find.text('Abrir'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Cerrar'));
+    await tester.pumpAndSettle();
+
+    expect(applied, isNull);
+    expect(find.text('Filtrar calendario'), findsNothing);
+  });
 }
 
 Widget _filterHost({

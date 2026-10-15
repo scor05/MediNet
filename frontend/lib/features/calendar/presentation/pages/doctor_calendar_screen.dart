@@ -17,6 +17,7 @@ import 'package:frontend/features/calendar/presentation/utils/calendar_dialog_he
 import 'package:frontend/features/calendar/presentation/widgets/calendar_app_bar.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_body.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_fab_menu.dart';
+import 'package:frontend/features/calendar/presentation/widgets/calendar_filter_summary.dart';
 import 'package:frontend/features/calendar/presentation/widgets/calendar_shell.dart';
 import 'package:frontend/features/schedule/domain/entities/schedule.dart';
 import 'package:frontend/features/schedule_blockade/domain/entities/schedule_blockade.dart';
@@ -254,13 +255,6 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
           onPressed: () =>
               CalendarShellNavigation.maybeOf(context)?.onOpenSettings(),
         ),
-        extraActions: [
-          IconButton(
-            icon: const Icon(Icons.filter_alt_outlined),
-            tooltip: 'Filtrar',
-            onPressed: _openFilterDialog,
-          ),
-        ],
         onPreviousWeek: () => ref
             .read(doctorWeekStartProvider.notifier)
             .update((d) => d.subtract(const Duration(days: 7))),
@@ -285,6 +279,14 @@ class _DoctorCalendarScreenState extends ConsumerState<DoctorCalendarScreen> {
             highlightedAppointmentId: _highlightedAppointmentId,
             highlightedBlockadeId: _highlightedBlockadeId,
             verticalScrollController: _calendarScrollController,
+            legendLeading: CalendarFilterSummary.forStaff(
+              filters: filters,
+              showDoctorFilter: false,
+              onOpenFilters: _openFilterDialog,
+              onChanged: (updated) => ref
+                  .read(doctorCalendarFilterProvider.notifier)
+                  .setFilters(updated),
+            ),
             onAppointmentTap: _openAppointmentDetail,
             onBlockadeTap: _onBlockadeTap,
             onScheduleTap: _openScheduleDetail,

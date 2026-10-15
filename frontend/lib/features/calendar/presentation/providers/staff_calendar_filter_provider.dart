@@ -35,6 +35,56 @@ class StaffCalendarFilterState {
     this.showCancelled = true,
   });
 
+  bool get hasFilters =>
+      patientId != null ||
+      (filterDoctor && doctorId != null) ||
+      (filterClinic && clinicId != null) ||
+      startTime != null ||
+      endTime != null ||
+      !showSchedules ||
+      !showBlockades ||
+      !showAppointments ||
+      !showCancelled;
+
+  StaffCalendarFilterState copyWith({
+    int? patientId,
+    String? patientName,
+    int? doctorId,
+    String? doctorName,
+    bool? filterDoctor,
+    int? clinicId,
+    String? clinicName,
+    bool? filterClinic,
+    String? startTime,
+    String? endTime,
+    bool? showSchedules,
+    bool? showBlockades,
+    bool? showAppointments,
+    bool? showCancelled,
+    bool clearPatient = false,
+    bool clearDoctor = false,
+    bool clearClinic = false,
+    bool clearStartTime = false,
+    bool clearEndTime = false,
+  }) {
+    return StaffCalendarFilterState(
+      patientId: clearPatient ? null : patientId ?? this.patientId,
+      patientName: clearPatient ? null : patientName ?? this.patientName,
+      doctorId: clearDoctor ? null : doctorId ?? this.doctorId,
+      doctorName: clearDoctor ? null : doctorName ?? this.doctorName,
+      filterDoctor: clearDoctor ? false : filterDoctor ?? this.filterDoctor,
+      clinicId: clearClinic ? null : clinicId ?? this.clinicId,
+      clinicName: clearClinic ? null : clinicName ?? this.clinicName,
+      filterClinic: clearClinic ? false : filterClinic ?? this.filterClinic,
+      startTime: clearStartTime ? null : startTime ?? this.startTime,
+      endTime: clearEndTime ? null : endTime ?? this.endTime,
+      showSchedules: showSchedules ?? this.showSchedules,
+      showBlockades: showBlockades ?? this.showBlockades,
+      showAppointments: showAppointments ?? this.showAppointments,
+      showCancelled: showCancelled ?? this.showCancelled,
+    );
+  }
+
   bool overlapsTimeRange({
     required int itemStartMinute,
     required int itemEndMinute,
