@@ -1,7 +1,11 @@
+# Ignore the complete Flutter project by default.
 **
+
+# Files required by the frontend Dockerfile.
 !Dockerfile
 !nginx.conf
+
+# Compiled Flutter web application.
 !build/
-build/*
 !build/web/
 !build/web/**
