@@ -1,0 +1,71 @@
+name: Deploy a VM de GC
+
+on:
+    push:
+        branches: [main]
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+jobs:
+    deploy:
+        name: Compilar docker images, clonar repo y reconstruír contenedores
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Instalar flutter
+              uses: subosito/flutter-action@v2
+              with:
+                  channel: stable
+                  cache: true
+
+            - name: Compilar build web de frontend
+              working-directory: frontend
+              run: |
+                  flutter pub get
+                  flutter build web --release --pwa-strategy=none --dart-define=API_URL=https://medinet.lat/api --dart-define=REVERB_WS_HOST=medinet.lat --dart-define=REVERB_WS_PORT=443 --dart-define=REVERB_WS_SCHEME=wss --dart-define=REVERB_APP_KEY=4e836df03ccf5c509e2b22c46f29daa58152ce10
+
+            - name: Compilar imagen de docker para backend
+              run: |
+                  docker build -t medinet-backend:latest ./backend
+
+            - name: Compilar imagen de docker para frontend 
+              run: |
+                  docker build -t medinet-frontend:latest ./frontend
+
+            - name: Configurar ssh
+              env: 
+                SSH_PRIVATE_KEY: ${{ secrets.CLOUD_SSH }}
+                SSH_KNOWN_HOSTS: ${{ secrets.CLOUD_KNOWN_HOSTS }}
+              run: | 
+                  install -m 700 -d ~/.ssh
+                  printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+                  chmod 600 ~/.ssh/id_ed25519
+                  printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+                  chmod 600 ~/.ssh/known_hosts
+
+            - name: Subir imagenes de docker a la VM
+              env: 
+                CLOUD_HOST: ${{ secrets.CLOUD_HOST }}
+                CLOUD_USER: ${{ secrets.CLOUD_USER }}
+              run: |
+                  set -o pipefail
+                  docker save medinet-backend:latest medinet-frontend:latest | gzip -1 | ssh -i ~/.ssh/id_ed25519 "$CLOUD_USER@$CLOUD_HOST" 'gzip -dc | docker load'
+
+            - name: Conectar a VM y cargar archivos
+              uses: appleboy/ssh-action@v1.2.5
+              with: 
+                host: ${{ secrets.CLOUD_HOST }}
+                username: ${{ secrets.CLOUD_USER }}
+                key: ${{ secrets.CLOUD_SSH }}
+                script: |
+                    set -euo pipefail
+                    cd /home/medinet/MediNet
+                    git pull --ff-only
+
+                    docker compose --env-file ./backend/.env -f docker-compose.yml -f docker-compose.prod.yml up frontend backend queue reverb scheduler --no-build --force-recreate -d
