@@ -5,6 +5,7 @@ use App\Models\User;
 use App\Services\PublicService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Mockery\MockInterface;
 
 it('rejects public appointment creation without an access token', function () {
@@ -19,15 +20,16 @@ it('rejects public appointment creation without an access token', function () {
 });
 
 it('uses the authenticated patient identity instead of client supplied identity fields', function () {
+    $suffix = Str::lower(Str::random(12));
     $doctorId = DB::table('users')->insertGetId([
         'name' => 'Doctor de Prueba',
-        'email' => 'public-appointment-doctor@example.test',
+        'email' => "public-appointment-doctor-{$suffix}@example.test",
         'is_active' => true,
         'created_at' => now(),
         'updated_at' => now(),
     ]);
     $clientId = DB::table('clients')->insertGetId([
-        'nit' => 'SEC-PUBLIC-APPOINTMENT',
+        'nit' => "SEC-PUBLIC-{$suffix}",
         'name' => 'Cliente de Prueba',
         'is_active' => true,
         'created_at' => now(),
@@ -36,8 +38,8 @@ it('uses the authenticated patient identity instead of client supplied identity 
     $clinicId = DB::table('clinics')->insertGetId([
         'name' => 'Clínica de Prueba',
         'address' => 'Dirección de prueba',
-        'phone' => '5555-0101',
-        'email' => 'public-appointment-clinic@example.test',
+        'phone' => "SEC-{$suffix}",
+        'email' => "public-appointment-clinic-{$suffix}@example.test",
         'id_client' => $clientId,
         'is_active' => true,
         'created_at' => now(),

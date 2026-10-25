@@ -7,10 +7,27 @@ use Illuminate\Support\Facades\DB;
 
 class AppointmentRepository
 {
-    // Se obtienen todas las citas
-    public function findAll()
+    // Se obtienen únicamente las citas visibles para el usuario autenticado.
+    public function findVisibleTo(int $actorId)
     {
-        return Appointment::all();
+        return Appointment::query()
+            ->join('schedules AS s', 's.id', '=', 'appointments.id_schedule')
+            ->join('clinics AS c', 'c.id', '=', 's.id_clinic')
+            ->where(function ($query) use ($actorId) {
+                $query->where('appointments.id_patient', $actorId)
+                    ->orWhere('s.id_doctor', $actorId)
+                    ->orWhereExists(function ($subquery) use ($actorId) {
+                        $subquery->selectRaw('1')
+                            ->from('client_users AS cu')
+                            ->whereColumn('cu.id_client', 'c.id_client')
+                            ->where('cu.id_user', $actorId)
+                            ->where('cu.role', 2)
+                            ->where('cu.is_active', true);
+                    });
+            })
+            ->select('appointments.*')
+            ->distinct()
+            ->get();
     }
 
     // Se obtiene una cita por su id

@@ -20,10 +20,10 @@ class AppointmentService
         private AppointmentRealtimeService $realtimeService,
     ) {}
 
-    // Se obtienen todas las citas
-    public function getAll()
+    // Se obtienen las citas visibles para el usuario autenticado
+    public function getAllVisibleTo(int $actorId)
     {
-        return $this->repository->findAll();
+        return $this->repository->findVisibleTo($actorId);
     }
 
     // Se obtiene una cita por su id
@@ -84,6 +84,21 @@ class AppointmentService
 
         $date = $data['date'] ?? $appointment->date;
         $startTime = $data['start_time'] ?? $appointment->start_time;
+
+        if (
+            ($data['status'] ?? null) === 'cancelled'
+            && ! in_array($appointment->status, [
+                'requested',
+                'accepted',
+                'rescheduled',
+                'backup_pending',
+                'backup_accepted',
+            ], true)
+        ) {
+            throw ValidationException::withMessages([
+                'status' => ['Esta cita ya no puede cancelarse.'],
+            ]);
+        }
 
         if (
             ($data['status'] ?? null) === 'cancelled'
