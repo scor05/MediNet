@@ -13,7 +13,7 @@ Route::prefix('waitlists')->group(function () {
     Route::post(
         '/',
         [WaitlistController::class, 'store']
-    );
+    )->middleware('throttle:creation');
 
     Route::get(
         '/patient/{patientId}',
@@ -33,7 +33,7 @@ Route::prefix('waitlists')->group(function () {
     Route::post(
         '/{id}/backup',
         [WaitlistController::class, 'storeBackup']
-    );
+    )->middleware('throttle:creation');
 
     Route::post(
         '/{id}/backup/decline',

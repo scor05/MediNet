@@ -1,14 +1,15 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\Route;
 
 // Rutas públicas
-Route::post('/auth/register', [AuthController::class, 'register']);
-require __DIR__ . '/api/public.php';
+Route::post('/auth/register', [AuthController::class, 'register'])
+    ->middleware('throttle:registration');
+require __DIR__.'/api/public.php';
 
 Route::get('/ping', function () {
     return response()->json([
@@ -17,20 +18,24 @@ Route::get('/ping', function () {
 });
 
 // Rutas protegidas por autenticación
-Route::middleware('supabase.auth')->group(function () {
+Route::middleware([
+    'throttle:token-validation',
+    'supabase.auth',
+    'throttle:authenticated',
+])->group(function () {
 
-    require __DIR__ . '/api/clients.php';
-    require __DIR__ . '/api/specialties.php';
-    require __DIR__ . '/api/users.php';
-    require __DIR__ . '/api/clinics.php';
-    require __DIR__ . '/api/schedules.php';
-    require __DIR__ . '/api/appointments.php';
-    require __DIR__ . '/api/calendar.php';
-    require __DIR__ . '/api/notifications.php';
-    require __DIR__ . '/api/notification_preferences.php';
-    require __DIR__ . '/api/schedule_blockades.php';
-    require __DIR__ . '/api/patient.php';
-    require __DIR__ . '/api/waitlists.php';
+    require __DIR__.'/api/clients.php';
+    require __DIR__.'/api/specialties.php';
+    require __DIR__.'/api/users.php';
+    require __DIR__.'/api/clinics.php';
+    require __DIR__.'/api/schedules.php';
+    require __DIR__.'/api/appointments.php';
+    require __DIR__.'/api/calendar.php';
+    require __DIR__.'/api/notifications.php';
+    require __DIR__.'/api/notification_preferences.php';
+    require __DIR__.'/api/schedule_blockades.php';
+    require __DIR__.'/api/patient.php';
+    require __DIR__.'/api/waitlists.php';
 
     // Usuario autenticado
     Route::get('/profile', [UserController::class, 'profile']);

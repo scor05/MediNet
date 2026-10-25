@@ -9,7 +9,8 @@ Route::prefix('appointments')->group(function () {
     Route::post('/{id}/decision', [AppointmentController::class, 'decide']);
     Route::patch('/{id}/reschedule', [AppointmentController::class, 'reschedule']);
     Route::get('/{id}', [AppointmentController::class, 'show']);
-    Route::post('/', [AppointmentController::class, 'store']);
+    Route::post('/', [AppointmentController::class, 'store'])
+        ->middleware('throttle:creation');
     Route::patch('/{id}', [AppointmentController::class, 'update']);
     Route::delete('/{id}', [AppointmentController::class, 'destroy']);
 });

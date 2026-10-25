@@ -32,7 +32,7 @@ jobs:
 
             - name: Compilar imagen de docker para backend
               run: |
-                  docker build -t medinet-backend:latest ./backend
+                  docker build --pull --no-cache -t medinet-backend:latest ./backend
 
             - name: Compilar imagen de docker para frontend 
               run: |
@@ -69,6 +69,8 @@ jobs:
                     git pull --ff-only
 
                     docker compose --env-file ./backend/.env -f docker-compose.yml -f docker-compose.prod.yml up frontend backend queue reverb scheduler --no-build --force-recreate -d
+                    
+                    docker compose --env-file ./backend/.env exec -T backend php artisan migrate --force
 
                     docker image prune -f
                     docker container prune -f

@@ -26,6 +26,11 @@ return Application::configure(basePath: dirname(__DIR__))
         ],
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // In production the backend is only reachable through the Caddy
+        // container. Trust its forwarded headers so IP-based limits identify
+        // the originating client instead of grouping everyone under Caddy.
+        $middleware->trustProxies(at: '*');
+
         $middleware->append(HandleCors::class);
 
         $middleware->alias([
