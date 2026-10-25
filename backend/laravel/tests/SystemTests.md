@@ -18,7 +18,8 @@ mocks.
 |---|---|---|
 | El endpoint público de salud conserva `{"message":"pong"}` | Cambiar la respuesta de la ruta o apuntar `/api` al servicio incorrecto | HTTP 200 y el JSON exacto |
 | Las rutas directas de Flutter usan el fallback SPA de nginx | Eliminar `try_files ... /index.html` de `frontend/nginx.conf` | `/register` entrega el mismo shell HTML que `/`, no un 404 |
-| Las solicitudes autenticadas conservan un preflight CORS válido | Restringir métodos/headers necesarios o eliminar `HandleCors` | `OPTIONS /api/profile` devuelve 204 y permite `GET`, `Authorization`, `Content-Type`, `Cache-Control` y `Pragma` |
+| Las solicitudes autenticadas conservan un preflight CORS válido | Restringir métodos/headers necesarios o eliminar `HandleCors` | `OPTIONS /api/profile` devuelve 204 para `SYSTEM_BROWSER_ORIGIN` y permite `GET`, `Authorization`, `Content-Type`, `Cache-Control` y `Pragma` |
+| Los orígenes externos no reciben autorización CORS | Volver a permitir `*` o agregar patrones demasiado amplios | Un preflight desde `https://attacker.example` no recibe `Access-Control-Allow-Origin` |
 
 ## Ejecución con Compose
 

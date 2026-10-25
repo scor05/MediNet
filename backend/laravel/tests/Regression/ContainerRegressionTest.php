@@ -50,13 +50,30 @@ it('preserves CORS preflight support for authenticated API requests', function (
         $response->getHeaders(),
         'Access-Control-Allow-Headers',
     ));
-    $validAllowedOrigins = ['*', SystemEnvironment::browserOrigin()];
-
     expect($response->getStatusCode())->toBe(204)
-        ->and($validAllowedOrigins)->toContain($allowOrigin)
+        ->and($allowOrigin)->toBe(SystemEnvironment::browserOrigin())
         ->and($allowMethods)->toContain('get');
 
     foreach (explode(',', $requestedHeaders) as $header) {
         expect($allowHeaders)->toContain($header);
     }
+});
+
+it('rejects CORS preflight requests from unapproved origins', function () {
+    $response = SystemEnvironment::http()->request(
+        'OPTIONS',
+        SystemEnvironment::backendUrl('/api/profile'),
+        [
+            'headers' => [
+                'Access-Control-Request-Headers' => 'authorization,content-type',
+                'Access-Control-Request-Method' => 'GET',
+                'Origin' => 'https://attacker.example',
+            ],
+        ],
+    );
+
+    expect(SystemEnvironment::header(
+        $response->getHeaders(),
+        'Access-Control-Allow-Origin',
+    ))->toBeNull();
 });

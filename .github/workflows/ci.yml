@@ -75,19 +75,27 @@ jobs:
       - name: Ejecutar migraciones
         run: php artisan migrate:fresh --force
 
-      - name: Ejecutar pruebas unitarias y funcionales
-        # Pest is installed for the separate container-system suites, but the
-        # legacy PHPUnit suite contains tests marked RunInSeparateProcess.
-        # Artisan auto-selects Pest and those child processes cannot bootstrap
-        # PHPUnit's configuration registry, so invoke PHPUnit explicitly here.
-        run: php vendor/bin/phpunit --log-junit storage/test-results/phpunit.xml
+      - name: Ejecutar pruebas unitarias con PHPUnit
+        # Estas clases usan RunInSeparateProcess y deben ejecutarse directamente
+        # con PHPUnit para que cada proceso cargue su registro de configuración.
+        run: >-
+          php vendor/bin/phpunit tests/Unit
+          --log-junit storage/test-results/phpunit-unit.xml
+
+      - name: Ejecutar pruebas funcionales con Pest
+        # Feature contiene tanto pruebas Pest con it(...) como clases PHPUnit;
+        # Pest puede ejecutar ambos formatos sin incluir los tests unitarios
+        # aislados mediante RunInSeparateProcess.
+        run: >-
+          php vendor/bin/pest tests/Feature
+          --log-junit storage/test-results/pest-feature.xml
 
       - name: Guardar reporte del backend
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: reporte-backend-${{ github.run_number }}
-          path: backend/laravel/storage/test-results/phpunit.xml
+          path: backend/laravel/storage/test-results/*.xml
           if-no-files-found: warn
           retention-days: 30
 
@@ -99,6 +107,13 @@ jobs:
     steps:
       - name: Descargar el código
         uses: actions/checkout@v4
+
+      - name: Validar configuración de Caddy
+        run: >-
+          docker run --rm
+          -v "${{ github.workspace }}/deploy/Caddyfile:/etc/caddy/Caddyfile:ro"
+          caddy:2-alpine
+          caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
 
       - name: Flutter
         uses: subosito/flutter-action@v2

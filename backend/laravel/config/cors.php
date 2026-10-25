@@ -17,17 +17,35 @@ return [
 
     'paths' => ['api/*', 'sanctum/csrf-cookie'],
 
-    'allowed_methods' => ['*'],
+    'allowed_methods' => ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 
-    'allowed_origins' => ['*'],
+    'allowed_origins' => array_values(array_filter(array_map(
+        'trim',
+        explode(',', (string) env(
+            'CORS_ALLOWED_ORIGINS',
+            'https://medinet.lat,http://localhost:3055,http://127.0.0.1:3055'
+        ))
+    ))),
 
     'allowed_origins_patterns' => [],
 
-    'allowed_headers' => ['*'],
+    'allowed_headers' => [
+        'Accept',
+        'Authorization',
+        'Cache-Control',
+        'Content-Type',
+        'Origin',
+        'Pragma',
+        'X-Requested-With',
+    ],
 
-    'exposed_headers' => [],
+    'exposed_headers' => [
+        'Retry-After',
+        'X-RateLimit-Limit',
+        'X-RateLimit-Remaining',
+    ],
 
-    'max_age' => 0,
+    'max_age' => 600,
 
     'supports_credentials' => false,
 
