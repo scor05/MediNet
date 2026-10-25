@@ -3,6 +3,7 @@
 namespace Tests\Unit\Services;
 
 use App\Exceptions\AppointmentUnavailableException;
+use App\Models\User;
 use App\Repositories\AppointmentRepository;
 use App\Repositories\PublicRepository;
 use App\Services\AppointmentAvailabilityService;
@@ -20,7 +21,9 @@ class PublicServiceTest extends TestCase
         $notificationService = $this->createStub(NotificationService::class);
         $availabilityService = $this->createMock(AppointmentAvailabilityService::class);
 
-        $availabilityService->method('ensureAvailable')
+        $availabilityService->expects($this->once())
+            ->method('ensureAvailable')
+            ->with(4, '2026-08-10', '09:00', null, 9)
             ->willThrowException(new AppointmentUnavailableException(
                 AppointmentUnavailableException::BLOCKED
             ));
@@ -37,12 +40,18 @@ class PublicServiceTest extends TestCase
         $this->expectException(AppointmentUnavailableException::class);
         $this->expectExceptionMessage(AppointmentUnavailableException::BLOCKED);
 
+        $patient = new User;
+        $patient->id = 9;
+        $patient->name = 'Paciente';
+
         $service->createAppointment([
             'id_schedule' => 4,
-            'id_patient' => 9,
-            'name_patient' => 'Paciente',
+            'id_patient' => 999,
+            'name_patient' => 'Paciente Suplantado',
+            'created_by' => 999,
+            'updated_by' => 999,
             'date' => '2026-08-10',
             'start_time' => '09:00',
-        ]);
+        ], $patient);
     }
 }

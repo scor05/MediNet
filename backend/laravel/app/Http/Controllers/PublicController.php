@@ -51,12 +51,13 @@ class PublicController extends Controller
     {
         $validated = $request->validate([
             'id_schedule' => 'required|integer|exists:schedules,id',
-            'id_patient' => 'required|integer|exists:users,id',
-            'name_patient' => 'required|string',
             'date' => 'required|date',
             'start_time' => 'required|date_format:H:i',
         ]);
 
-        return response()->json($this->service->createAppointment($validated), 201);
+        return response()->json(
+            $this->service->createAppointment($validated, $request->user()),
+            201,
+        );
     }
 }

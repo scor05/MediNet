@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/core/utils/time_format.dart';
-import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
 import 'package:frontend/features/calendar/domain/entities/public_slot.dart';
 import 'package:frontend/features/calendar/domain/providers/public_calendar_domain_providers.dart';
 import 'package:frontend/features/calendar/presentation/widgets/keyboard_aware_bottom_sheet.dart';
 import 'package:frontend/features/clinic/domain/entities/clinic.dart';
-import 'package:frontend/features/user/domain/entities/patient_profile.dart';
 import 'package:frontend/features/user/domain/entities/user.dart';
 import 'package:frontend/features/user/domain/providers/user_domain_providers.dart';
 import 'package:frontend/features/waitlist/presentation/dialogs/join_waitlist_dialog.dart';
@@ -44,7 +42,6 @@ class _PublicCreateAppointmentDialogState
   DateTime _selectedDate = DateTime.now();
   PublicSlot? _selectedSlot;
 
-  PatientProfile? _patientProfile;
   bool _loadingProfile = false;
   bool _isProfileLoaded = false;
   String? _profileError;
@@ -117,7 +114,6 @@ class _PublicCreateAppointmentDialogState
       if (!mounted) return;
 
       setState(() {
-        _patientProfile = profile;
         if (!_isProfileLoaded) {
           _nameCtrl.text = profile.name;
           _phoneCtrl.text = profile.phone;
@@ -273,16 +269,10 @@ class _PublicCreateAppointmentDialogState
         return;
       }
 
-      final patientId =
-          _patientProfile?.id ??
-          (await ref.read(getProfileUsecaseProvider).call()).id;
-
       await ref
           .read(createPublicAppointmentRequestUsecaseProvider)
           .call(
             scheduleId: selectedSlot.scheduleId,
-            patientId: patientId,
-            patientName: _nameCtrl.text.trim(),
             date: _selectedDate,
             startTime: selectedSlot.startTime,
           );
@@ -456,8 +446,9 @@ class _PublicCreateAppointmentDialogState
 
                     TextFormField(
                       controller: _nameCtrl,
+                      readOnly: true,
                       decoration: const InputDecoration(
-                        labelText: 'Nombre del paciente *',
+                        labelText: 'Nombre del paciente (solo lectura)',
                         prefixIcon: Icon(Icons.person_outline, size: 20),
                       ),
                     ),

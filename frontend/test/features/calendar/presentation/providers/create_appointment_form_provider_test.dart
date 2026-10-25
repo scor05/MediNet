@@ -149,8 +149,6 @@ class _PublicCalendarRepository implements PublicCalendarRepository {
   @override
   Future<void> createAppointmentRequest({
     required int scheduleId,
-    required int patientId,
-    required String patientName,
     required DateTime date,
     required String startTime,
   }) => throw UnimplementedError();

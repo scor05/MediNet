@@ -19,8 +19,6 @@ abstract class PublicCalendarRepository {
   // Crea una solicitud pública de cita
   Future<void> createAppointmentRequest({
     required int scheduleId,
-    required int patientId,
-    required String patientName,
     required DateTime date,
     required String startTime,
   });

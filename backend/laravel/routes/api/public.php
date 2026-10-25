@@ -11,5 +11,10 @@ Route::prefix('public')->group(function () {
     Route::get('/slots', [PublicController::class, 'slots'])
         ->middleware('throttle:public-slots');
     Route::post('/appointments', [PublicController::class, 'appointments'])
-        ->middleware('throttle:creation');
+        ->middleware([
+            'throttle:token-validation',
+            'supabase.auth',
+            'throttle:authenticated',
+            'throttle:creation',
+        ]);
 });

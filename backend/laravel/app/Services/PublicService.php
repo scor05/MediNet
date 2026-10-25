@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\User;
 use App\Repositories\AppointmentRepository;
 use App\Repositories\PublicRepository;
 use Illuminate\Support\Facades\DB;
@@ -36,8 +37,15 @@ class PublicService
     }
 
     // Se crea una solicitud pública de cita
-    public function createAppointment(array $data)
+    public function createAppointment(array $data, User $patient)
     {
+        // La identidad y la auditoría siempre provienen del token autenticado.
+        // Cualquier valor homónimo enviado por el cliente se sobrescribe aquí.
+        $data['id_patient'] = (int) $patient->id;
+        $data['name_patient'] = (string) $patient->name;
+        $data['created_by'] = (int) $patient->id;
+        $data['updated_by'] = (int) $patient->id;
+
         $this->availabilityService->ensureAvailable(
             $data['id_schedule'],
             $data['date'],
@@ -47,8 +55,6 @@ class PublicService
         );
 
         $data['status'] = 'requested';
-        $data['created_by'] = $data['id_patient'];
-        $data['updated_by'] = $data['id_patient'];
 
         $appointment = DB::transaction(function () use ($data) {
             $appointment = $this->repository->createAppointment($data);

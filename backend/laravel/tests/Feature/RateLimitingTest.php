@@ -87,12 +87,17 @@ it('attaches the expected limiters to sensitive API routes', function (string $m
 ]);
 
 it('rate limits Supabase token validation before protected endpoints', function () {
-    $route = app('router')->getRoutes()->match(Request::create('/api/profile', 'GET'));
-    $middleware = $route->gatherMiddleware();
+    foreach ([
+        ['GET', '/api/profile'],
+        ['POST', '/api/public/appointments'],
+    ] as [$method, $uri]) {
+        $route = app('router')->getRoutes()->match(Request::create($uri, $method));
+        $middleware = $route->gatherMiddleware();
 
-    expect($middleware)->toContain('throttle:token-validation')
-        ->and(array_search('throttle:token-validation', $middleware, true))
-        ->toBeLessThan(array_search('supabase.auth', $middleware, true))
-        ->and(array_search('supabase.auth', $middleware, true))
-        ->toBeLessThan(array_search('throttle:authenticated', $middleware, true));
+        expect($middleware)->toContain('throttle:token-validation')
+            ->and(array_search('throttle:token-validation', $middleware, true))
+            ->toBeLessThan(array_search('supabase.auth', $middleware, true))
+            ->and(array_search('supabase.auth', $middleware, true))
+            ->toBeLessThan(array_search('throttle:authenticated', $middleware, true));
+    }
 });
