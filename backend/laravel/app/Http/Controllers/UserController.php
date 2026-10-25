@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\AvailableUsersRequest;
+use App\Models\User;
 use App\Services\UserService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class UserController extends Controller
 {
@@ -12,24 +14,28 @@ class UserController extends Controller
     public function __construct(private UserService $service) {}
 
     // Se obtienen todos los usuarios
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json($this->service->getAll());
+        Gate::forUser($request->user())->authorize('viewAny', User::class);
+
+        return response()->json($this->service->getAllVisibleTo($request->user()));
     }
 
     // Se obtiene un usuario por su ID
-    public function show($id)
+    public function show(Request $request, int $id)
     {
-        if (! is_numeric($id)) {
-            return response()->json(['error' => 'El ID debe ser un número.'], 400);
-        }
+        $user = $this->service->getById($id);
+        Gate::forUser($request->user())->authorize('view', $user);
 
-        return response()->json($this->service->getById($id));
+        return response()->json($this->safeUserData($user));
     }
 
     // Se actualiza un usuario
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id)
     {
+        $user = $this->service->getById($id);
+        Gate::forUser($request->user())->authorize('update', $user);
+
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
             'email' => 'sometimes|email|unique:users,email,'.$id,
@@ -39,7 +45,13 @@ class UserController extends Controller
             'email.unique' => 'Este correo ya está registrado.',
         ]);
 
-        return response()->json($this->service->update($id, $validated));
+        if (array_intersect_key($validated, array_flip(['email', 'is_active'])) !== []) {
+            Gate::forUser($request->user())->authorize('updateSensitive', $user);
+        }
+
+        $updatedUser = $this->service->update($id, $validated);
+
+        return response()->json($this->safeUserData($updatedUser));
     }
 
     // Se guarda el token FCM del usuario
@@ -58,8 +70,11 @@ class UserController extends Controller
     }
 
     // Se elimina un usuario
-    public function destroy($id)
+    public function destroy(Request $request, int $id)
     {
+        $user = $this->service->getById($id);
+        Gate::forUser($request->user())->authorize('delete', $user);
+
         $this->service->delete($id);
 
         return response()->json(null, 204);
@@ -115,5 +130,16 @@ class UserController extends Controller
                 trim($request->validated('search', ''))
             )
         );
+    }
+
+    private function safeUserData(User $user): array
+    {
+        return $user->only([
+            'id',
+            'name',
+            'email',
+            'phone',
+            'is_active',
+        ]);
     }
 }

@@ -67,7 +67,7 @@ jobs:
                     set -euo pipefail
                     cd /home/medinet/MediNet
                     git pull --ff-only
-                    cp ./backend/.env.example ./backend/.env
+                    sudo -n install -m 640 -o medinetrepo -g medinet ./backend/.env.example ./backend/.env
 
                     docker compose --env-file ./backend/.env -f docker-compose.yml -f docker-compose.prod.yml up frontend backend queue reverb scheduler --no-build --force-recreate -d
                     

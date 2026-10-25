@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\User;
 use App\Repositories\UserRepository;
 
 class UserService
@@ -9,10 +10,10 @@ class UserService
     // Se inyecta el repositorio
     public function __construct(private UserRepository $repository) {}
 
-    // Se obtienen todos los usuarios
-    public function getAll()
+    // Se obtienen los usuarios dentro del alcance administrativo del actor.
+    public function getAllVisibleTo(User $actor)
     {
-        return $this->repository->findAll();
+        return $this->repository->findVisibleTo($actor);
     }
 
     // Se obtiene un usuario por su ID

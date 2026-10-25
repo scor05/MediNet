@@ -8,10 +8,34 @@ use Illuminate\Support\Facades\DB;
 
 class UserRepository
 {
-    // Se obtienen todos los usuarios
-    public function findAll()
+    // Se obtienen únicamente los usuarios dentro del alcance administrativo.
+    public function findVisibleTo(User $actor)
     {
-        return User::all();
+        $query = User::query()->select([
+            'users.id',
+            'users.name',
+            'users.email',
+            'users.is_active',
+        ]);
+
+        if (Superadmin::where('id_user', $actor->id)->exists()) {
+            return $query->orderBy('users.name')->get();
+        }
+
+        return $query
+            ->whereExists(function ($membership) use ($actor) {
+                $membership->selectRaw('1')
+                    ->from('client_users AS member')
+                    ->join('client_users AS administrator', 'administrator.id_client', '=', 'member.id_client')
+                    ->join('clients', 'clients.id', '=', 'member.id_client')
+                    ->whereColumn('member.id_user', 'users.id')
+                    ->where('administrator.id_user', $actor->id)
+                    ->where('administrator.is_admin', true)
+                    ->where('administrator.is_active', true)
+                    ->where('clients.is_active', true);
+            })
+            ->orderBy('users.name')
+            ->get();
     }
 
     // Se obtiene un usuario por su ID

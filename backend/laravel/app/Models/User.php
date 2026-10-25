@@ -2,8 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\ClientUser;
-use App\Models\DoctorSpecialty;
 use Illuminate\Database\Eloquent\Model;
 
 class User extends Model
@@ -20,6 +18,11 @@ class User extends Model
     // Columnas que deben ser convertidas a boolean
     protected $casts = [
         'is_active' => 'boolean',
+    ];
+
+    // Nunca exponer tokens de dispositivos al serializar un usuario.
+    protected $hidden = [
+        'fcm_token',
     ];
 
     public function clientUsers()
