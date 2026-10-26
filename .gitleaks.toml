@@ -1,0 +1,8 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Ignorar .env.example"
+paths = [
+    '''^backend/\.env\.example$''',
+]

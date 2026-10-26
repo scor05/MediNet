@@ -1,0 +1,303 @@
+name: SecOps
+
+on:
+    workflow_run:
+        workflows: ["Pruebas automatizadas"]
+        types: [completed]
+        branches: [main]
+
+permissions:
+    contents: read
+
+concurrency:
+    group: security-${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    verificar-pruebas:
+        name: Verificar resultado de las pruebas
+        runs-on: ubuntu-latest
+
+        steps:
+          - name: Ver si pasaron las pruebas automatizadas del otro workflow
+            env:
+              TEST_RESULT: ${{ github.event.workflow_run.conclusion }}
+            run: |
+              if [[ "$TEST_RESULT" != "success" ]]; then
+                echo "Las pruebas terminaron con resultado: $TEST_RESULT"
+                exit 1
+              fi
+
+    gitleaks:
+        needs: verificar-pruebas
+        name: Ejecutar gitleaks para buscar claves/secretos
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v6
+              with:
+                  ref: ${{ github.event.workflow_run.head_sha }}
+                  fetch-depth: 0
+
+            - name: Correr gitleaks
+              uses: gitleaks/gitleaks-action@v3
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GITLEAKS_CONFIG: .gitleaks.toml
+                  GITLEAKS_ENABLE_COMMENTS: 'false'
+                  GITLEAKS_ENABLE_SUMMARY: 'true'
+                  GITLEAKS_ENABLE_UPLOAD_ARTIFACT: 'true'
+
+    audit:
+        needs: verificar-pruebas
+        name: Auditar dependencias de php
+        runs-on: ubuntu-latest
+        timeout-minutes: 4
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v6
+              with:
+                  ref: ${{ github.event.workflow_run.head_sha }}
+
+            - name: Instalar composer y php
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.3.36'
+                  tools: composer:v2
+                  coverage: none
+
+            - name: Auditar deps
+              working-directory: backend/laravel
+              run: composer audit --locked --no-interaction --abandoned=report
+
+    semgrep:
+        needs: verificar-pruebas
+        name: Buscar patrones inseguros con semgrep
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+
+        container:
+            image: semgrep/semgrep
+
+        steps: 
+            - name: Checkout
+              uses: actions/checkout@v6
+              with:
+                  ref: ${{ github.event.workflow_run.head_sha }}
+
+            - name: Scannear con respecto a owasp top 10 y generar reporte
+              run: >
+                  semgrep scan
+                  --config p/php
+                  --config p/owasp-top-ten
+                  --severity ERROR
+                  --error
+                  --sarif-output semgrep-results.sarif
+                  .
+            
+            - name: Guardar reporte
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: semgrep-report-${{ github.run_number }}
+                  path: semgrep-results.sarif
+                  if-no-files-found: warn
+                  retention-days: 30
+
+
+    trivy:
+        needs: verificar-pruebas
+        name: Buscar vulnerabilidades en docker con trivy
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+
+        steps: 
+            - name: Checkout
+              uses: actions/checkout@v6
+              with:
+                  ref: ${{ github.event.workflow_run.head_sha }}
+
+            - name: Descargar flutter
+              uses: subosito/flutter-action@v2
+              with:
+                  channel: stable
+                  cache: true
+
+            - name: Compilar build de flutter
+              working-directory: frontend
+              run: |
+                  flutter pub get
+                  flutter build web --release \
+                    --pwa-strategy=none \
+                    --dart-define=API_URL=https://medinet.lat/api \
+                    --dart-define=REVERB_WS_HOST=medinet.lat \
+                    --dart-define=REVERB_WS_PORT=443 \
+                    --dart-define=REVERB_WS_SCHEME=wss \
+                    --dart-define=REVERB_APP_KEY=4e836df03ccf5c509e2b22c46f29daa58152ce10
+
+            - name: Compilar imágenes de docker
+              run: |
+                  docker build --pull -t medinet-backend:security ./backend
+                  docker build --pull -t medinet-frontend:security ./frontend
+
+            - name: Analizar imagen del backend
+              id: trivy-backend
+              continue-on-error: true
+              uses: aquasecurity/trivy-action@v0.36.0
+              with:
+                  image-ref: medinet-backend:security
+                  scanners: vuln
+                  vuln-type: os,library
+                  severity: HIGH,CRITICAL
+                  format: sarif
+                  output: trivy-backend.sarif
+                  exit-code: '1'
+
+            - name: Analizar imagen del frontend 
+              id: trivy-frontend
+              continue-on-error: true
+              uses: aquasecurity/trivy-action@v0.36.0
+              with:
+                  image-ref: medinet-frontend:security
+                  scanners: vuln
+                  vuln-type: os,library
+                  severity: HIGH,CRITICAL
+                  format: sarif
+                  output: trivy-frontend.sarif
+                  exit-code: '1'
+
+            - name: Guardar reportes de Trivy
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: trivy-report-${{ github.run_number }}
+                  path: |
+                      trivy-backend.sarif
+                      trivy-frontend.sarif
+                  if-no-files-found: warn
+                  retention-days: 30
+
+            - name: Detectar si hubieron errores
+              if: always()
+              env:
+                  BACKEND_RESULT: ${{ steps.trivy-backend.outcome }}
+                  FRONTEND_RESULT: ${{ steps.trivy-frontend.outcome }}
+              run: |
+                  failed=()
+
+                  if [[ "$BACKEND_RESULT" != "success" ]]; then
+                    failed+=("backend")
+                  fi
+    
+                  if [[ "$FRONTEND_RESULT" != "success" ]]; then
+                    failed+=("frontend")
+                  fi
+
+                  if (( ${#failed[@]} > 0 )); then
+                    echo "Trivy encontró vulnerabilidades en: ${failed[*]}"
+                    exit 1
+                  fi
+
+                  echo "Trivy no encontró vulnerabilidades."
+
+    zap:
+        needs: verificar-pruebas
+        name: Analizar la aplicación en ejecución con ZAP
+        runs-on: ubuntu-latest
+        timeout-minutes: 35
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v6
+              with:
+                  ref: ${{ github.event.workflow_run.head_sha }}
+
+            - name: Descargar Flutter
+              uses: subosito/flutter-action@v2
+              with:
+                  channel: stable
+                  cache: true
+
+            - name: Compilar frontend para el entorno de zap 
+              working-directory: frontend
+              run: |
+                  flutter pub get
+                  flutter build web --release \
+                    --pwa-strategy=none \
+                    --dart-define=API_URL=http://security-proxy:8080/api \
+                    --dart-define=REVERB_WS_HOST=security-proxy \
+                    --dart-define=REVERB_WS_PORT=8080 \
+                    --dart-define=REVERB_WS_SCHEME=ws \
+                    --dart-define=REVERB_APP_KEY=medinet-ci-key
+
+            - name: Preparar configuración temporal
+              run: |
+                  cp .github/ci/backend.env backend/.env
+                  mkdir -p zap-reports
+                  cp security/zap/rules.tsv zap-reports/rules.tsv
+                  chmod 0777 zap-reports
+
+            - name: Construir e iniciar el entorno de seguridad
+              run: >-
+                  docker compose --env-file backend/.env
+                  -f docker-compose.yml
+                  -f docker-compose.security.yml
+                  up -d --build --wait --wait-timeout 120
+                  db backend reverb frontend security-proxy
+
+            - name: Correr migraciones
+              run: >-
+                  docker compose --env-file backend/.env
+                  -f docker-compose.yml
+                  -f docker-compose.security.yml
+                  exec -T backend php artisan migrate:fresh --force
+
+            - name: Verificar que la aplicación responde
+              run: >-
+                  curl --fail --show-error --silent
+                  --retry 12 --retry-delay 5 --retry-all-errors
+                  http://127.0.0.1:8090/api/ping
+
+            - name: Ejecutar ZAP Baseline
+              run: >-
+                  docker compose --env-file backend/.env
+                  -f docker-compose.yml
+                  -f docker-compose.security.yml
+                  run --rm zap
+                  zap-baseline.py
+                  -t http://security-proxy:8080
+                  -j
+                  -m 2
+                  -I
+                  -c /zap/wrk/rules.tsv
+                  -r zap-report.html
+                  -J zap-report.json
+                  -w zap-report.md
+
+            - name: Guardar reporte de ZAP
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: zap-report-${{ github.run_number }}
+                  path: zap-reports/zap-report.*
+                  if-no-files-found: warn
+                  retention-days: 30
+
+            - name: Mostrar logs si hubo un fallo
+              if: failure()
+              run: >-
+                  docker compose --env-file backend/.env
+                  -f docker-compose.yml
+                  -f docker-compose.security.yml
+                  logs --no-color
+
+            - name: Detener el entorno de seguridad
+              if: always()
+              run: >-
+                  docker compose --env-file backend/.env
+                  -f docker-compose.yml
+                  -f docker-compose.security.yml
+                  down --volumes --remove-orphans

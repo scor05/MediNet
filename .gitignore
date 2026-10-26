@@ -16,6 +16,7 @@ Thumbs.db
 
 # Docker (opcional)
 docker-data/
+/zap-reports/
 medinet-backend*.tar.gz
 medinet-frontend*.tar.gz
 #config de supabase

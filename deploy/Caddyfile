@@ -1,4 +1,4 @@
-medinet.lat {
+{$CADDY_SITE_ADDRESS:medinet.lat} {
 	encode zstd gzip
 
 	# Security headers for the Flutter application, API and WebSocket handshake.

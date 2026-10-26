@@ -1,0 +1,28 @@
+services:
+  security-proxy:
+    image: caddy:2-alpine
+    environment:
+      CADDY_SITE_ADDRESS: ":8080"
+    ports:
+      - "127.0.0.1:8090:8080"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      backend:
+        condition: service_started
+      frontend:
+        condition: service_started
+      reverb:
+        condition: service_healthy
+    restart: "no"
+
+  zap:
+    image: ghcr.io/zaproxy/zaproxy:stable
+    volumes:
+      - ./zap-reports:/zap/wrk:rw
+    depends_on:
+      security-proxy:
+        condition: service_started
+    profiles:
+      - security-tools
+

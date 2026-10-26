@@ -1,15 +1,21 @@
 name: Deploy a VM de GC
 
 on:
-    push:
+    workflow_run:
+        workflows: ["SecOps"]
         branches: [main]
-    workflow_dispatch:
+        types: [completed]
+
+concurrency:
+    group: deploy-prod
+    cancel-in-progress: false
 
 permissions:
     contents: read
 
 jobs:
     deploy:
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
         name: Compilar docker images, clonar repo y reconstruír contenedores
         runs-on: ubuntu-latest
         timeout-minutes: 30
@@ -17,6 +23,8 @@ jobs:
         steps:
             - name: Checkout
               uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.event.workflow_run.head_sha }}
 
             - name: Instalar flutter
               uses: subosito/flutter-action@v2
@@ -59,19 +67,32 @@ jobs:
 
             - name: Conectar a VM y cargar archivos
               uses: appleboy/ssh-action@v1.2.5
+              env:
+                DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
               with: 
                 host: ${{ secrets.CLOUD_HOST }}
                 username: ${{ secrets.CLOUD_USER }}
                 key: ${{ secrets.CLOUD_SSH }}
+                envs: DEPLOY_SHA
                 script: |
                     set -euo pipefail
                     cd /home/medinet/MediNet
-                    git pull --ff-only
+
+                    git fetch --prune origin main
+                    git switch main
+                    git merge --ff-only "$DEPLOY_SHA"
+
+                    CURRENT_SHA="$(git rev-parse HEAD)"
+                    if [[ "$CURRENT_SHA" != "$DEPLOY_SHA" ]]; then
+                        echo "La VM quedó en $CURRENT_SHA, pero debía quedar en $DEPLOY_SHA"
+                        exit 1
+                    fi
+
                     sudo -n install -m 640 -o medinetrepo -g medinet ./backend/.env.example ./backend/.env
 
                     docker compose --env-file ./backend/.env -f docker-compose.yml -f docker-compose.prod.yml up frontend backend queue reverb scheduler --no-build --force-recreate -d
                     
-                    docker compose --env-file ./backend/.env exec -T backend php artisan migrate --force
+                    docker compose --env-file ./backend/.env -f docker-compose.yml -f docker-compose.prod.yml exec -T backend php artisan migrate --force
 
                     docker image prune -f
                     docker container prune -f
