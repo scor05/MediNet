@@ -1,0 +1,10 @@
+# Composer debe instalar las dependencias dentro de la imagen. No copiar el
+# vendor local evita builds distintos entre una computadora y GitHub Actions.
+laravel/vendor/
+
+# No incluir configuración local ni artefactos generados en la imagen.
+laravel/.env
+laravel/.phpunit.cache/
+laravel/storage/logs/*
+laravel/storage/test-results/
+laravel/bootstrap/cache/*.php

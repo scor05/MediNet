@@ -24,6 +24,10 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # Carpeta de trabajo
 WORKDIR /app
 
+# WORKDIR crea /app como root. Composer debe poder crear vendor/ cuando la
+# imagen se construye desde un checkout limpio (como ocurre en GitHub Actions).
+RUN chown laravel:laravel /app
+
 # Copiar el proyecto Laravel con permisos para el usuario de la aplicación.
 COPY --chown=laravel:laravel laravel/ .
 
