@@ -71,6 +71,19 @@ El frontend queda disponible en `http://localhost:3055`, la API en
 docker compose --env-file ./backend/.env logs -f reverb queue
 ```
 
+### Actualizar la imagen del backend
+
+El backend usa la imagen base `php:8.3.36-cli`, que corrige las
+vulnerabilidades CVE-2026-109618 y CVE-2026-109619. Cuando cambia el
+`backend/Dockerfile` se debe reconstruir la imagen; con `up -d --no-build` se
+seguiría usando la versión anterior:
+
+```bash
+docker compose --env-file ./backend/.env build backend
+docker compose --env-file ./backend/.env up -d
+docker compose --env-file ./backend/.env exec backend php -v
+```
+
 ### Vincular usuarios existentes con Supabase
 
 El backend identifica a cada usuario por su identificador de Supabase Auth
