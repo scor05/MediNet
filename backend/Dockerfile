@@ -11,6 +11,11 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install curl pdo pdo_pgsql opcache pcntl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Los procesos de Laravel, Reverb, queue y scheduler heredan este
+# usuario porque todos utilizan esta imagen.
+RUN groupadd --gid 1000 laravel \
+    && useradd --uid 1000 --gid laravel --create-home --shell /usr/sbin/nologin laravel
+
 COPY opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 
 # Instalar Composer
@@ -19,10 +24,12 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # Carpeta de trabajo
 WORKDIR /app
 
-# Copiar el proyecto laravel
-COPY laravel/ .
+# Copiar el proyecto Laravel con permisos para el usuario de la aplicación.
+COPY --chown=laravel:laravel laravel/ .
 
-# Instalar dependencias PHP
+# Composer y los scripts de Artisan se ejecutan sin privilegios; esto también
+# deja vendor, storage y bootstrap/cache con propietarios correctos.
+USER laravel
 RUN composer install --no-interaction --prefer-dist
 
 # Exponer puerto
