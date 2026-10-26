@@ -22,6 +22,18 @@ class UserService
         return $this->repository->findById($id);
     }
 
+    // Se obtiene un usuario por su identificador de Supabase Auth
+    public function getBySupabaseId(string $supabaseId): ?User
+    {
+        return $this->repository->findBySupabaseId($supabaseId);
+    }
+
+    // Se obtienen los usuarios que aún no están vinculados con Supabase Auth
+    public function getWithoutSupabaseId()
+    {
+        return $this->repository->findWithoutSupabaseId();
+    }
+
     // Retorna el client_id al que pertenece un usuario.
     public function getClientIdForUser(int $userId): ?int
     {

@@ -4,15 +4,18 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 use App\Services\AuthService;
-use App\Models\User;
+use App\Services\UserService;
 
 class SupabaseAuth
 {
-    // Se inyecta el servicio
-    public function __construct(private AuthService $authService)
-    {
+    // Se inyectan los servicios
+    public function __construct(
+        private AuthService $authService,
+        private UserService $userService
+    ) {
     }
 
     public function handle(Request $request, Closure $next): Response
@@ -41,20 +44,26 @@ class SupabaseAuth
             ], 401);
         }
 
-        // Buscar el usuario local en tabla users usando el email
-        $email = $supabaseUser['email'] ?? null;
+        // Buscar el usuario local en tabla users usando el identificador (sub) de Supabase
+        $supabaseId = $supabaseUser['id'] ?? null;
 
-        if (!$email) {
+        if (!is_string($supabaseId) || !Str::isUuid($supabaseId)) {
             return response()->json([
                 'message' => 'No se pudo identificar el usuario autenticado'
             ], 401);
         }
 
-        $localUser = User::where('email', $email)->first();
+        $localUser = $this->userService->getBySupabaseId($supabaseId);
 
         if (!$localUser) {
             return response()->json([
                 'message' => 'Usuario no registrado en el sistema'
+            ], 403);
+        }
+
+        if (!$localUser->is_active) {
+            return response()->json([
+                'message' => 'Usuario inactivo'
             ], 403);
         }
 

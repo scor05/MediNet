@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use App\Exceptions\RegistrationException;
 
 class AuthService
@@ -23,12 +24,22 @@ class AuthService
     public function register(array $data): array
     {
         // Crear usuario en Supabase Auth
-        $this->createSupabaseUser($data['email'], $data['password']);
+        $supabaseUser = $this->createSupabaseUser($data['email'], $data['password']);
 
-        // Crear usuario en tabla users local
+        $supabaseId = $supabaseUser['id'] ?? null;
+
+        if (!is_string($supabaseId) || !Str::isUuid($supabaseId)) {
+            throw new RegistrationException(
+                'Error al crear usuario.',
+                500
+            );
+        }
+
+        // Crear usuario en tabla users local vinculado por el identificador de Supabase
         $this->userService->create([
             'name' => $data['name'],
             'email' => $data['email'],
+            'supabase_id' => $supabaseId,
             'phone' => $data['phone'] ?? null,
         ]);
 
@@ -67,6 +78,103 @@ class AuthService
                 500
             );
         });
+    }
+
+    // Vincular usuarios locales sin supabase_id con su cuenta de Supabase Auth usando el correo.
+    // Sin $apply solo se reporta lo que se haría, sin modificar la base de datos.
+    public function linkExistingAccounts(bool $apply): array
+    {
+        $supabaseIdsByEmail = [];
+        $duplicatedEmails = [];
+
+        foreach ($this->listSupabaseUsers() as $supabaseUser) {
+            $email = Str::lower(trim((string) ($supabaseUser['email'] ?? '')));
+            $supabaseId = $supabaseUser['id'] ?? null;
+
+            if ($email === '' || !is_string($supabaseId) || !Str::isUuid($supabaseId)) {
+                continue;
+            }
+
+            if (isset($supabaseIdsByEmail[$email])) {
+                $duplicatedEmails[$email] = true;
+            }
+
+            $supabaseIdsByEmail[$email] = $supabaseId;
+        }
+
+        $report = ['linked' => [], 'not_found' => [], 'conflicts' => []];
+        $claimedIds = [];
+
+        foreach ($this->userService->getWithoutSupabaseId() as $user) {
+            $email = Str::lower(trim($user->email));
+
+            if (isset($duplicatedEmails[$email])) {
+                $report['conflicts'][] = [$user->id, $user->email, 'Correo repetido en Supabase'];
+                continue;
+            }
+
+            $supabaseId = $supabaseIdsByEmail[$email] ?? null;
+
+            if (!$supabaseId) {
+                $report['not_found'][] = [$user->id, $user->email];
+                continue;
+            }
+
+            $ownerId = $claimedIds[$supabaseId] ?? $this->userService->getBySupabaseId($supabaseId)?->id;
+
+            if ($ownerId) {
+                $report['conflicts'][] = [$user->id, $user->email, "Identificador ya vinculado al usuario {$ownerId}"];
+                continue;
+            }
+
+            if ($apply) {
+                $user->forceFill(['supabase_id' => $supabaseId])->save();
+            }
+
+            $claimedIds[$supabaseId] = $user->id;
+
+            $report['linked'][] = [$user->id, $user->email, $supabaseId];
+        }
+
+        return $report;
+    }
+
+    // Listar todos los usuarios de Supabase Auth recorriendo las páginas de la API de administración
+    private function listSupabaseUsers(): array
+    {
+        $users = [];
+        $perPage = 200;
+
+        for ($page = 1; ; $page++) {
+            try {
+                $response = Http::timeout(15)->withHeaders([
+                    'Authorization' => 'Bearer ' . $this->serviceRoleKey,
+                    'apikey' => $this->serviceRoleKey,
+                ])->get($this->url . '/auth/v1/admin/users', [
+                    'page' => $page,
+                    'per_page' => $perPage,
+                ]);
+            } catch (\Throwable $e) {
+                throw new RegistrationException(
+                    'No se pudo comunicar con el servidor para listar los usuarios.',
+                    500
+                );
+            }
+
+            if (!$response->successful()) {
+                throw new RegistrationException(
+                    'Error al listar los usuarios de Supabase.',
+                    500
+                );
+            }
+
+            $pageUsers = $response->json('users') ?? [];
+            $users = array_merge($users, $pageUsers);
+
+            if (count($pageUsers) < $perPage) {
+                return $users;
+            }
+        }
     }
 
     // Crear un nuevo usuario en Supabase Auth

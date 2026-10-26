@@ -10,6 +10,7 @@ class User extends Model
     protected $fillable = [
         'name',
         'email',
+        'supabase_id',
         'phone',
         'fcm_token',
         'is_active',
@@ -20,9 +21,10 @@ class User extends Model
         'is_active' => 'boolean',
     ];
 
-    // Nunca exponer tokens de dispositivos al serializar un usuario.
+    // Nunca exponer tokens de dispositivos ni el identificador de Supabase al serializar un usuario.
     protected $hidden = [
         'fcm_token',
+        'supabase_id',
     ];
 
     public function clientUsers()

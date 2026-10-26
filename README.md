@@ -70,3 +70,25 @@ El frontend queda disponible en `http://localhost:3055`, la API en
 ```bash
 docker compose --env-file ./backend/.env logs -f reverb queue
 ```
+
+### Vincular usuarios existentes con Supabase
+
+El backend identifica a cada usuario por su identificador de Supabase Auth
+(columna `users.supabase_id`), no por el correo. Los usuarios registrados desde
+la app se vinculan automáticamente, pero los que ya existían en la base deben
+vincularse una sola vez por cada base de datos (local de cada integrante y
+producción), después de ejecutar las migraciones. Mientras no estén vinculados,
+reciben 403 al iniciar sesión.
+
+```bash
+# Muestra qué usuarios se vincularían, sin modificar la base
+docker compose --env-file ./backend/.env exec backend php artisan users:link-supabase
+
+# Guarda los cambios
+docker compose --env-file ./backend/.env exec backend php artisan users:link-supabase --apply
+```
+
+El comando empareja por correo (sin distinguir mayúsculas) y no vincula a nadie
+cuando el correo está repetido en Supabase o cuando el identificador ya
+pertenece a otro usuario; esos casos se muestran como conflictos para
+revisarlos manualmente.

@@ -44,6 +44,18 @@ class UserRepository
         return User::findOrFail($id);
     }
 
+    // Se obtiene un usuario por su identificador de Supabase Auth
+    public function findBySupabaseId(string $supabaseId): ?User
+    {
+        return User::where('supabase_id', $supabaseId)->first();
+    }
+
+    // Se obtienen los usuarios que aún no están vinculados con Supabase Auth
+    public function findWithoutSupabaseId()
+    {
+        return User::whereNull('supabase_id')->orderBy('id')->get();
+    }
+
     // Se crea un nuevo usuario
     public function create($data)
     {
