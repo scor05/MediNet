@@ -101,7 +101,7 @@ class _JoinWaitlistDialogState extends ConsumerState<JoinWaitlistDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: _saving ? null : () => Navigator.of(context).pop(false),
+          onPressed: _saving ? null : () => Navigator.of(context).pop(),
           child: const Text('Cancelar'),
         ),
         FilledButton(

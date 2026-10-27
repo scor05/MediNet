@@ -3,16 +3,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/exceptions/api_exception.dart';
 import 'package:frontend/core/widgets/error_view.dart';
 import 'package:frontend/features/calendar/presentation/providers/public_calendar_provider.dart';
-import 'package:frontend/features/calendar/presentation/widgets/public_calendar/public_calendar_filter_bar.dart';
 import 'package:frontend/features/calendar/presentation/widgets/week_view.dart';
 import 'package:frontend/features/appointment/domain/entities/appointment.dart';
 import 'package:frontend/features/calendar/presentation/dialogs/appointment_detail_dialog.dart';
+import 'package:frontend/features/schedule/domain/entities/schedule.dart';
 
 class PublicCalendarScreen extends ConsumerStatefulWidget {
   final int? doctorId;
-  final int? clinicId;
+  final String? doctorName;
+  final void Function(Schedule schedule, DateTime date)? onScheduleTap;
 
-  const PublicCalendarScreen({super.key, this.doctorId, this.clinicId});
+  const PublicCalendarScreen({
+    super.key,
+    this.doctorId,
+    this.doctorName,
+    this.onScheduleTap,
+  });
 
   @override
   ConsumerState<PublicCalendarScreen> createState() =>
@@ -32,9 +38,7 @@ class _PublicCalendarScreenState extends ConsumerState<PublicCalendarScreen> {
     super.didUpdateWidget(oldWidget);
 
     final doctorChanged = oldWidget.doctorId != widget.doctorId;
-    final clinicChanged = oldWidget.clinicId != widget.clinicId;
-
-    if (doctorChanged || clinicChanged) {
+    if (doctorChanged) {
       Future.microtask(_setInitialFilters);
     }
   }
@@ -42,10 +46,7 @@ class _PublicCalendarScreenState extends ConsumerState<PublicCalendarScreen> {
   void _setInitialFilters() {
     ref
         .read(publicCalendarFilterProvider.notifier)
-        .setInitialFilters(
-          doctorId: widget.doctorId,
-          clinicId: widget.clinicId,
-        );
+        .setInitialFilters(doctorId: widget.doctorId, clinicId: null);
   }
 
   void _openAppointmentDetail(Appointment appointment) {
@@ -68,38 +69,31 @@ class _PublicCalendarScreenState extends ConsumerState<PublicCalendarScreen> {
         .update((weekStart) => weekStart.add(const Duration(days: 7)));
   }
 
+  void _openSchedule(Schedule schedule) {
+    final weekStart = ref.read(publicWeekStartProvider);
+    final date = weekStart.add(Duration(days: schedule.dayOfWeek));
+    final today = DateUtils.dateOnly(DateTime.now());
+
+    if (date.isBefore(today)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No puedes agendar una cita en el pasado.'),
+        ),
+      );
+      return;
+    }
+
+    widget.onScheduleTap?.call(schedule, date);
+  }
+
   @override
   Widget build(BuildContext context) {
     final allAppointmentsAsync = ref.watch(publicCalendarNotifierProvider);
-    final filters = ref.watch(publicCalendarFilterProvider);
     final weekStart = ref.watch(publicWeekStartProvider);
     final schedulesAsync = ref.watch(publicSchedulesProvider);
 
     return Column(
       children: [
-        allAppointmentsAsync.when(
-          loading: () => const SizedBox.shrink(),
-          error: (_, _) => const SizedBox.shrink(),
-          data: (appointments) {
-            return PublicCalendarFilterBar(
-              lockedDoctorId: widget.doctorId,
-              lockedClinicId: widget.clinicId,
-              appointments: appointments,
-              filters: filters,
-              onDoctorChanged: (doctorId) {
-                ref
-                    .read(publicCalendarFilterProvider.notifier)
-                    .selectDoctor(doctorId);
-              },
-              onClinicChanged: (clinicId) {
-                ref
-                    .read(publicCalendarFilterProvider.notifier)
-                    .selectClinic(clinicId);
-              },
-            );
-          },
-        ),
-
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 6, 12, 4),
           child: Row(
@@ -145,7 +139,16 @@ class _PublicCalendarScreenState extends ConsumerState<PublicCalendarScreen> {
                 appointments: appointments,
                 schedules: schedules,
                 compact: true,
+                showScheduleClinic: true,
+                legendLeading: widget.doctorName == null
+                    ? null
+                    : Text(
+                        'Mostrando horario del doctor: ${widget.doctorName}',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w700),
+                      ),
                 onAppointmentTap: _openAppointmentDetail,
+                onScheduleTap: _openSchedule,
               );
             },
           ),
@@ -154,4 +157,3 @@ class _PublicCalendarScreenState extends ConsumerState<PublicCalendarScreen> {
     );
   }
 }
-

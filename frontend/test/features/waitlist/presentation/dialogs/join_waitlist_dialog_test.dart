@@ -59,6 +59,49 @@ class _CountingPatientWaitlistNotifier extends PatientWaitlistNotifier {
 }
 
 void main() {
+  testWidgets('returns null when the patient cancels joining the waitlist', (
+    tester,
+  ) async {
+    Waitlist? dialogResult;
+    var dialogCompleted = false;
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => TextButton(
+                onPressed: () async {
+                  dialogResult = await showDialog<Waitlist>(
+                    context: context,
+                    builder: (_) => JoinWaitlistDialog(
+                      scheduleId: 3,
+                      doctorName: 'Ana López',
+                      clinicName: 'Zona 15',
+                      date: DateTime(2026, 8, 20),
+                      startTime: '09:30',
+                    ),
+                  );
+                  dialogCompleted = true;
+                },
+                child: const Text('Abrir'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Abrir'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cancelar'));
+    await tester.pumpAndSettle();
+
+    expect(dialogCompleted, isTrue);
+    expect(dialogResult, isNull);
+    expect(find.text('Cita de respaldo'), findsNothing);
+  });
+
   testWidgets('refreshes the patient waitlist after a successful join', (
     tester,
   ) async {

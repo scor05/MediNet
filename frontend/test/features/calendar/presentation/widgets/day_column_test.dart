@@ -102,6 +102,52 @@ void main() {
       expect(find.text('Dr. Ruiz'), findsNothing);
     },
   );
+
+  testWidgets('public schedule shows its clinic and remains tappable', (
+    tester,
+  ) async {
+    const schedule = Schedule(
+      id: 9,
+      dayOfWeek: 0,
+      startTime: '08:00:00',
+      endTime: '10:00:00',
+      duration: 30,
+      doctorId: 3,
+      doctorName: 'Dr. Ruiz',
+      clinicId: 2,
+      clinicName: 'Clínica Central',
+    );
+    Schedule? tappedSchedule;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 300,
+            height: 960,
+            child: DayColumn(
+              dayIndex: 0,
+              appointments: const [],
+              schedules: const [schedule],
+              showDoctor: false,
+              showPatient: false,
+              showScheduleClinic: true,
+              startHour: 6,
+              endHour: 18,
+              hourHeight: 40,
+              onScheduleTap: (value) => tappedSchedule = value,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Horario en clínica Clínica Central'), findsOneWidget);
+
+    await tester.tap(find.text('Horario en clínica Clínica Central'));
+
+    expect(tappedSchedule, same(schedule));
+  });
 }
 
 Appointment _appointment({

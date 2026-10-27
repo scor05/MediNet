@@ -35,7 +35,7 @@ class SearchFormState {
     this.error,
   });
 
-  bool get canSearch => selectedDoctor != null && selectedClinic != null;
+  bool get canSearch => selectedDoctor != null;
 
   SearchFormState copyWith({
     List<DoctorSearchResult>? doctorResults,
@@ -311,7 +311,7 @@ class SearchFormNotifier extends AutoDisposeNotifier<SearchFormState> {
 
     state = state.copyWith(
       submittedDoctor: state.selectedDoctor,
-      submittedClinic: state.selectedClinic,
+      clearSubmittedClinic: true,
       clearDoctorResults: true,
       clearClinicResults: true,
       hasSearched: true,

@@ -15,11 +15,13 @@ import 'package:frontend/features/waitlist/domain/entities/waitlist.dart';
 class PublicCreateAppointmentDialog extends ConsumerStatefulWidget {
   final int? initialDoctorId;
   final int? initialClinicId;
+  final DateTime? initialDate;
 
   const PublicCreateAppointmentDialog({
     super.key,
     this.initialDoctorId,
     this.initialClinicId,
+    this.initialDate,
   });
 
   @override
@@ -51,12 +53,14 @@ class _PublicCreateAppointmentDialogState
   bool _saving = false;
   String? _error;
   String? _slotsError;
+  String? _clinicError;
 
   @override
   void initState() {
     super.initState();
     _selectedDoctorId = widget.initialDoctorId;
     _selectedClinicId = widget.initialClinicId;
+    _selectedDate = DateUtils.dateOnly(widget.initialDate ?? DateTime.now());
     Future.microtask(_loadInitialData);
   }
 
@@ -149,7 +153,7 @@ class _PublicCreateAppointmentDialogState
       return clinicId;
     }
 
-    return _clinics.isNotEmpty ? _clinics.first.id : null;
+    return null;
   }
 
   Future<void> _loadSlots() async {
@@ -194,7 +198,12 @@ class _PublicCreateAppointmentDialogState
   }
 
   Future<void> _onDoctorChanged(int? doctorId) async {
-    setState(() => _selectedDoctorId = doctorId);
+    setState(() {
+      _selectedDoctorId = doctorId;
+      _selectedClinicId = null;
+      _selectedSlot = null;
+      _clinicError = null;
+    });
 
     final clinics = await ref
         .read(getPublicClinicsUsecaseProvider)
@@ -204,14 +213,17 @@ class _PublicCreateAppointmentDialogState
 
     setState(() {
       _clinics = clinics;
-      _selectedClinicId = _validClinicId(_selectedClinicId);
     });
 
     await _loadSlots();
   }
 
   Future<void> _onClinicChanged(int? clinicId) async {
-    setState(() => _selectedClinicId = clinicId);
+    setState(() {
+      _selectedClinicId = clinicId;
+      _selectedSlot = null;
+      _clinicError = null;
+    });
 
     final doctors = await ref
         .read(getPublicDoctorsUsecaseProvider)
@@ -247,6 +259,11 @@ class _PublicCreateAppointmentDialogState
 
   Future<void> _confirmAppointment() async {
     final selectedSlot = _selectedSlot;
+
+    if (_selectedClinicId == null) {
+      setState(() => _clinicError = 'Debes seleccionar una clínica.');
+      return;
+    }
 
     if (selectedSlot == null) {
       setState(() => _error = 'Selecciona un horario.');
@@ -498,7 +515,10 @@ class _PublicCreateAppointmentDialogState
                     DropdownButtonFormField<int>(
                       key: ValueKey('clinic-${_selectedClinicId ?? 0}'),
                       initialValue: _selectedClinicId,
-                      decoration: const InputDecoration(labelText: 'Clínica'),
+                      decoration: InputDecoration(
+                        labelText: 'Clínica',
+                        errorText: _clinicError,
+                      ),
                       items: _clinics
                           .map(
                             (clinic) => DropdownMenuItem(
@@ -527,7 +547,12 @@ class _PublicCreateAppointmentDialogState
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                     const SizedBox(height: 10),
-                    if (_loadingSlots)
+                    if (_selectedClinicId == null)
+                      const Text(
+                        'Selecciona una clínica para ver los horarios disponibles.',
+                        style: TextStyle(color: Colors.grey),
+                      )
+                    else if (_loadingSlots)
                       const Center(child: CircularProgressIndicator())
                     else if (_slotsError != null)
                       Text(
@@ -601,9 +626,7 @@ class _PublicCreateAppointmentDialogState
                     width: double.infinity,
                     height: 34,
                     child: FilledButton(
-                      onPressed: (_saving || _selectedSlot == null)
-                          ? null
-                          : _confirmAppointment,
+                      onPressed: _saving ? null : _confirmAppointment,
                       child: _saving
                           ? const SizedBox(
                               height: 16,

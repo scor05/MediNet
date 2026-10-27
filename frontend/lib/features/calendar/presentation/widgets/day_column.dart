@@ -14,6 +14,7 @@ class DayColumn extends StatelessWidget {
   final bool showDoctor;
   final bool showPatient;
   final bool splitOverlappingAppointments;
+  final bool showScheduleClinic;
   final int? highlightedAppointmentId;
   final int? highlightedBlockadeId;
   final int startHour;
@@ -31,6 +32,7 @@ class DayColumn extends StatelessWidget {
     required this.showDoctor,
     required this.showPatient,
     this.splitOverlappingAppointments = false,
+    this.showScheduleClinic = false,
     this.highlightedAppointmentId,
     this.highlightedBlockadeId,
     required this.startHour,
@@ -227,20 +229,24 @@ class DayColumn extends StatelessWidget {
                             calendarItemIcon(
                               SecretaryCalendarItemType.schedule,
                             ),
-                            size: 13,
+                            size: showScheduleClinic ? 15 : 13,
                             color: CalendarColors.scheduleText,
                           ),
                           const SizedBox(width: 4),
                           Flexible(
                             child: Text(
-                              'Horario',
+                              showScheduleClinic
+                                  ? 'Horario en clínica ${schedule.clinicName}'
+                                  : 'Horario',
                               style: TextStyle(
-                                fontSize: CalendarSizes.itemFontSize,
+                                fontSize: showScheduleClinic
+                                    ? CalendarSizes.appointmentTimeFontSize
+                                    : CalendarSizes.itemFontSize,
                                 fontWeight: FontWeight.w600,
                                 color: CalendarColors.scheduleText,
                                 height: 1.2,
                               ),
-                              maxLines: 1,
+                              maxLines: showScheduleClinic ? 2 : 1,
                               overflow: TextOverflow.ellipsis,
                               textAlign: TextAlign.center,
                             ),

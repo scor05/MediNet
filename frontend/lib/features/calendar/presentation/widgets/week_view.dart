@@ -13,6 +13,7 @@ class WeekView extends StatelessWidget {
   final bool showDoctor;
   final bool showPatient;
   final bool splitOverlappingAppointments;
+  final bool showScheduleClinic;
   final int? highlightedAppointmentId;
   final int? highlightedBlockadeId;
   final ScrollController? verticalScrollController;
@@ -30,6 +31,7 @@ class WeekView extends StatelessWidget {
     this.showDoctor = false,
     this.showPatient = false,
     this.splitOverlappingAppointments = false,
+    this.showScheduleClinic = false,
     this.highlightedAppointmentId,
     this.highlightedBlockadeId,
     this.verticalScrollController,
@@ -98,6 +100,7 @@ class WeekView extends StatelessWidget {
                                         showPatient: showPatient,
                                         splitOverlappingAppointments:
                                             splitOverlappingAppointments,
+                                        showScheduleClinic: showScheduleClinic,
                                         highlightedAppointmentId:
                                             highlightedAppointmentId,
                                         highlightedBlockadeId:
