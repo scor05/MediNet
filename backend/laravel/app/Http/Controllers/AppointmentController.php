@@ -41,7 +41,7 @@ class AppointmentController extends Controller
             'id_schedule' => 'required|integer|exists:schedules,id',
             'id_patient' => 'nullable|integer|exists:users,id',
             'name_patient' => 'required_without:id_patient|string|nullable',
-            'date' => 'required|date',
+            'date' => 'required|date_format:Y-m-d',
             'start_time' => 'required|date_format:H:i',
         ], [
             'name_patient.required_without' => 'Debe ingresar el nombre del paciente cuando no seleccione un paciente existente.',
@@ -67,7 +67,7 @@ class AppointmentController extends Controller
         $validated = $request->validate([
             'id_patient' => 'sometimes|integer|exists:users,id',
             'name_patient' => 'sometimes|string',
-            'date' => 'sometimes|date',
+            'date' => 'sometimes|date_format:Y-m-d',
             'status' => ['sometimes', Rule::in(['cancelled'])],
             'start_time' => 'sometimes|date_format:H:i',
         ]);

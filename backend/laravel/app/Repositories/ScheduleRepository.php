@@ -66,17 +66,51 @@ class ScheduleRepository
         return Schedule::whereKey($id)->lockForUpdate()->firstOrFail();
     }
 
+    // Se obtienen los horarios activos de un doctor en una clínica y día, solo si la
+    // clínica y el doctor también están activos
     public function findActiveByDoctorClinicAndDay(
         int $doctorId,
         int $clinicId,
         int $dayOfWeek,
     ) {
-        return Schedule::where('id_doctor', $doctorId)
-            ->where('id_clinic', $clinicId)
-            ->where('day_of_week', $dayOfWeek)
-            ->where('is_active', true)
-            ->orderBy('start_time')
+        return Schedule::select('schedules.*')
+            ->join('clinics', 'clinics.id', '=', 'schedules.id_clinic')
+            ->join('users', 'users.id', '=', 'schedules.id_doctor')
+            ->where('schedules.id_doctor', $doctorId)
+            ->where('schedules.id_clinic', $clinicId)
+            ->where('schedules.day_of_week', $dayOfWeek)
+            ->where('schedules.is_active', true)
+            ->where('clinics.is_active', true)
+            ->where('users.is_active', true)
+            ->orderBy('schedules.start_time')
             ->get();
+    }
+
+    // Se obtiene un horario junto con el estado de su clínica para validar una cita
+    public function findBookingContext(int $scheduleId): ?object
+    {
+        return DB::table('schedules')
+            ->join('clinics', 'clinics.id', '=', 'schedules.id_clinic')
+            ->where('schedules.id', $scheduleId)
+            ->select([
+                'schedules.*',
+                'clinics.is_active as clinic_is_active',
+                'clinics.id_client as clinic_id_client',
+            ])
+            ->first();
+    }
+
+    // Se verifica que el doctor esté activo y pertenezca como doctor activo al cliente
+    public function isDoctorActiveInClient(int $doctorId, int $clientId): bool
+    {
+        return DB::table('users')
+            ->join('client_users', 'client_users.id_user', '=', 'users.id')
+            ->where('users.id', $doctorId)
+            ->where('users.is_active', true)
+            ->where('client_users.id_client', $clientId)
+            ->where('client_users.role', 1)
+            ->where('client_users.is_active', true)
+            ->exists();
     }
 
     // Crea un horario por cada día como una sola operación atómica.

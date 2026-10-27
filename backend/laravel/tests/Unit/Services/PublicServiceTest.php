@@ -22,8 +22,8 @@ class PublicServiceTest extends TestCase
         $availabilityService = $this->createMock(AppointmentAvailabilityService::class);
 
         $availabilityService->expects($this->once())
-            ->method('ensureAvailable')
-            ->with(4, '2026-08-10', '09:00', null, 9)
+            ->method('ensureBookable')
+            ->with(4, '2026-08-10', '09:00', 9)
             ->willThrowException(new AppointmentUnavailableException(
                 AppointmentUnavailableException::BLOCKED
             ));

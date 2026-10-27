@@ -22,8 +22,8 @@ class AppointmentAvailabilityServiceTest extends TestCase
     public function test_it_rejects_an_appointment_that_overlaps_a_blockade(): void
     {
         $appointmentRepository = $this->createMock(AppointmentRepository::class);
-        $blockadeRepository = $this->createMock(ScheduleBlockadeRepository::class);
-        $scheduleRepository = $this->createMock(ScheduleRepository::class);
+        $blockadeRepository = $this->createStub(ScheduleBlockadeRepository::class);
+        $scheduleRepository = $this->createStub(ScheduleRepository::class);
 
         $scheduleRepository->method('findById')->willReturn((object) [
             'duration' => 30,
@@ -49,9 +49,9 @@ class AppointmentAvailabilityServiceTest extends TestCase
 
     public function test_it_rejects_an_appointment_that_overlaps_an_active_request(): void
     {
-        $appointmentRepository = $this->createMock(AppointmentRepository::class);
-        $blockadeRepository = $this->createMock(ScheduleBlockadeRepository::class);
-        $scheduleRepository = $this->createMock(ScheduleRepository::class);
+        $appointmentRepository = $this->createStub(AppointmentRepository::class);
+        $blockadeRepository = $this->createStub(ScheduleBlockadeRepository::class);
+        $scheduleRepository = $this->createStub(ScheduleRepository::class);
 
         $scheduleRepository->method('findById')->willReturn((object) [
             'duration' => 30,
@@ -76,9 +76,9 @@ class AppointmentAvailabilityServiceTest extends TestCase
 
     public function test_it_accepts_adjacent_non_overlapping_intervals(): void
     {
-        $appointmentRepository = $this->createMock(AppointmentRepository::class);
-        $blockadeRepository = $this->createMock(ScheduleBlockadeRepository::class);
-        $scheduleRepository = $this->createMock(ScheduleRepository::class);
+        $appointmentRepository = $this->createStub(AppointmentRepository::class);
+        $blockadeRepository = $this->createStub(ScheduleBlockadeRepository::class);
+        $scheduleRepository = $this->createStub(ScheduleRepository::class);
 
         $scheduleRepository->method('findById')->willReturn((object) [
             'duration' => 30,
@@ -135,7 +135,7 @@ class AppointmentAvailabilityServiceTest extends TestCase
 
     public function test_it_rejects_a_patient_with_an_overlapping_appointment(): void
     {
-        $appointmentRepository = $this->createMock(AppointmentRepository::class);
+        $appointmentRepository = $this->createStub(AppointmentRepository::class);
         $blockadeRepository = $this->createStub(ScheduleBlockadeRepository::class);
         $scheduleRepository = $this->createStub(ScheduleRepository::class);
         $blockadeRepository->method('findByScheduleAndDate')
@@ -263,7 +263,7 @@ class AppointmentAvailabilityServiceTest extends TestCase
         CarbonImmutable::setTestNow('2026-09-03 10:30:00 America/Guatemala');
         $appointmentRepository = $this->createMock(AppointmentRepository::class);
         $blockadeRepository = $this->createMock(ScheduleBlockadeRepository::class);
-        $scheduleRepository = $this->createMock(ScheduleRepository::class);
+        $scheduleRepository = $this->createStub(ScheduleRepository::class);
         $schedule = (object) [
             'id' => 9,
             'id_doctor' => 3,

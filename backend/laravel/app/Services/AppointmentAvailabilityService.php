@@ -17,6 +17,67 @@ class AppointmentAvailabilityService
         private string $timezone = 'America/Guatemala',
     ) {}
 
+    // Reglas de dominio para crear una cita nueva: fecha futura, horario, clínica y
+    // médico activos, día y rango del horario, alineación con la duración y ausencia
+    // de bloqueos o solapamientos.
+    public function ensureBookable(
+        int $scheduleId,
+        string $date,
+        string $startTime,
+        ?int $patientId = null,
+    ): void {
+        $requested = $this->parseDateTime($date, $startTime);
+
+        if ($requested->lt(CarbonImmutable::now($this->timezone)->startOfMinute())) {
+            throw new AppointmentUnavailableException(
+                AppointmentUnavailableException::PAST_BOOKING
+            );
+        }
+
+        $schedule = $this->scheduleRepository->findBookingContext($scheduleId);
+
+        if ($schedule === null || ! (bool) $schedule->is_active) {
+            throw new AppointmentUnavailableException(
+                AppointmentUnavailableException::INACTIVE_SCHEDULE
+            );
+        }
+
+        if (! (bool) $schedule->clinic_is_active) {
+            throw new AppointmentUnavailableException(
+                AppointmentUnavailableException::INACTIVE_CLINIC
+            );
+        }
+
+        if (! $this->scheduleRepository->isDoctorActiveInClient(
+            (int) $schedule->id_doctor,
+            (int) $schedule->clinic_id_client,
+        )) {
+            throw new AppointmentUnavailableException(
+                AppointmentUnavailableException::INACTIVE_DOCTOR
+            );
+        }
+
+        if ((int) $schedule->day_of_week !== $requested->dayOfWeekIso - 1) {
+            throw new AppointmentUnavailableException(
+                AppointmentUnavailableException::WRONG_DAY
+            );
+        }
+
+        if (! $this->isWithinRange($schedule, $startTime)) {
+            throw new AppointmentUnavailableException(
+                AppointmentUnavailableException::OUTSIDE_RANGE
+            );
+        }
+
+        if (! $this->isAligned($schedule, $startTime)) {
+            throw new AppointmentUnavailableException(
+                AppointmentUnavailableException::MISALIGNED
+            );
+        }
+
+        $this->ensureAvailable($scheduleId, $date, $startTime, null, $patientId);
+    }
+
     public function ensureAvailable(
         int $scheduleId,
         string $date,
@@ -229,14 +290,42 @@ class AppointmentAvailabilityService
 
     private function fitsSchedule(object $schedule, string $startTime): bool
     {
-        $start = $this->timeToMinutes($startTime);
-        $scheduleStart = $this->timeToMinutes($schedule->start_time);
-        $scheduleEnd = $this->timeToMinutes($schedule->end_time);
-        $duration = (int) $schedule->duration;
+        return $this->isWithinRange($schedule, $startTime)
+            && $this->isAligned($schedule, $startTime);
+    }
 
-        return $start >= $scheduleStart
-            && $start + $duration <= $scheduleEnd
-            && ($start - $scheduleStart) % $duration === 0;
+    // La cita completa (inicio + duración) debe quedar dentro del horario
+    private function isWithinRange(object $schedule, string $startTime): bool
+    {
+        $start = $this->timeToMinutes($startTime);
+
+        return $start >= $this->timeToMinutes($schedule->start_time)
+            && $start + (int) $schedule->duration <= $this->timeToMinutes($schedule->end_time);
+    }
+
+    // La cita debe empezar en un múltiplo de la duración desde el inicio del horario
+    private function isAligned(object $schedule, string $startTime): bool
+    {
+        $duration = (int) $schedule->duration;
+        $offset = $this->timeToMinutes($startTime) - $this->timeToMinutes($schedule->start_time);
+
+        return $duration > 0 && $offset % $duration === 0;
+    }
+
+    private function parseDateTime(string $date, string $startTime): CarbonImmutable
+    {
+        $value = $date.' '.substr($startTime, 0, 5);
+        $requested = CarbonImmutable::createFromFormat('Y-m-d H:i', $value, $this->timezone);
+
+        // createFromFormat acepta fechas desbordadas como 2026-02-31; se exige que
+        // el valor interpretado coincida exactamente con el recibido.
+        if ($requested === false || $requested->format('Y-m-d H:i') !== $value) {
+            throw new AppointmentUnavailableException(
+                AppointmentUnavailableException::INVALID_DATE
+            );
+        }
+
+        return $requested->startOfMinute();
     }
 
     private function overlaps(int $start, int $end, int $otherStart, int $otherEnd): bool

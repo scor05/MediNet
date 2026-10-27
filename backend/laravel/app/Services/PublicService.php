@@ -46,11 +46,10 @@ class PublicService
         $data['created_by'] = (int) $patient->id;
         $data['updated_by'] = (int) $patient->id;
 
-        $this->availabilityService->ensureAvailable(
+        $this->availabilityService->ensureBookable(
             $data['id_schedule'],
             $data['date'],
             $data['start_time'],
-            null,
             $data['id_patient'],
         );
 

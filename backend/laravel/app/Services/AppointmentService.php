@@ -35,11 +35,10 @@ class AppointmentService
     // Se crea una nueva cita
     public function create($data)
     {
-        $this->availabilityService->ensureAvailable(
+        $this->availabilityService->ensureBookable(
             $data['id_schedule'],
             $data['date'],
             $data['start_time'],
-            null,
             $data['id_patient'] ?? null,
         );
 

@@ -38,8 +38,8 @@ class AppointmentServiceTest extends TestCase
         ];
 
         $availabilityService->expects($this->once())
-            ->method('ensureAvailable')
-            ->with(11, '2026-07-21', '09:00')
+            ->method('ensureBookable')
+            ->with(11, '2026-07-21', '09:00', 7)
             ->willReturnCallback(static function (): void {});
 
         $userService->expects($this->once())
@@ -94,13 +94,13 @@ class AppointmentServiceTest extends TestCase
     {
         $repository = $this->createMock(AppointmentRepository::class);
         $userService = $this->createMock(UserService::class);
-        $availabilityService = $this->createMock(AppointmentAvailabilityService::class);
+        $availabilityService = $this->createStub(AppointmentAvailabilityService::class);
         $blockadeRepository = $this->createStub(ScheduleBlockadeRepository::class);
         $notificationService = $this->createStub(NotificationService::class);
         $waitlistPromotionService = $this->createStub(WaitlistPromotionService::class);
         $realtimeService = $this->createMock(AppointmentRealtimeService::class);
 
-        $availabilityService->method('ensureAvailable')
+        $availabilityService->method('ensureBookable')
             ->willThrowException(new AppointmentUnavailableException(
                 AppointmentUnavailableException::BLOCKED
             ));

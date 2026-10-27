@@ -51,7 +51,7 @@ class PublicController extends Controller
     {
         $validated = $request->validate([
             'id_schedule' => 'required|integer|exists:schedules,id',
-            'date' => 'required|date',
+            'date' => 'required|date_format:Y-m-d',
             'start_time' => 'required|date_format:H:i',
         ]);
 
