@@ -4,56 +4,41 @@ namespace Tests\Feature;
 
 use App\Http\Middleware\IsClientAdmin;
 use App\Models\User;
-use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class ClientUserAuthorizationTest extends TestCase
 {
+    use DatabaseTransactions;
+
+    private int $clientA;
+
+    private int $clientB;
+
     protected function setUp(): void
     {
         parent::setUp();
 
-        Schema::create('users', function (Blueprint $table): void {
-            $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->boolean('is_active')->default(true);
-            $table->timestamps();
-        });
-        Schema::create('clients', function (Blueprint $table): void {
-            $table->id();
-            $table->string('name');
-        });
-        Schema::create('client_users', function (Blueprint $table): void {
-            $table->unsignedBigInteger('id_client');
-            $table->unsignedBigInteger('id_user');
-            $table->integer('role');
-            $table->boolean('is_admin')->default(false);
-            $table->boolean('is_active')->default(true);
-            $table->primary(['id_client', 'id_user']);
-        });
-        Schema::create('superadmins', function (Blueprint $table): void {
-            $table->unsignedBigInteger('id_user')->primary();
-        });
-
-        DB::table('clients')->insert([
-            ['id' => 1, 'name' => 'Organización A'],
-            ['id' => 2, 'name' => 'Organización B'],
+        $suffix = Str::lower(Str::random(12));
+        $now = now();
+        $this->clientA = DB::table('clients')->insertGetId([
+            'nit' => "AUTH-A-{$suffix}",
+            'name' => 'Organización A',
+            'is_active' => true,
+            'created_at' => $now,
+            'updated_at' => $now,
         ]);
-    }
-
-    protected function tearDown(): void
-    {
-        Schema::dropIfExists('superadmins');
-        Schema::dropIfExists('client_users');
-        Schema::dropIfExists('clients');
-        Schema::dropIfExists('users');
-
-        parent::tearDown();
+        $this->clientB = DB::table('clients')->insertGetId([
+            'nit' => "AUTH-B-{$suffix}",
+            'name' => 'Organización B',
+            'is_active' => true,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
     }
 
     public function test_all_client_user_routes_require_client_admin_middleware(): void
@@ -73,17 +58,17 @@ class ClientUserAuthorizationTest extends TestCase
     public function test_admin_can_only_manage_the_organization_where_membership_is_active(): void
     {
         $actor = $this->createUser('admin@example.com');
-        $this->addMembership($actor->id, 1, isAdmin: true, isActive: true);
+        $this->addMembership($actor->id, $this->clientA, isAdmin: true, isActive: true);
 
-        $this->assertSame(200, $this->authorize($actor, 1)->getStatusCode());
-        $this->assertSame(403, $this->authorize($actor, 2)->getStatusCode());
+        $this->assertSame(200, $this->authorize($actor, $this->clientA)->getStatusCode());
+        $this->assertSame(403, $this->authorize($actor, $this->clientB)->getStatusCode());
 
         DB::table('client_users')
-            ->where('id_client', 1)
+            ->where('id_client', $this->clientA)
             ->where('id_user', $actor->id)
             ->update(['is_active' => false]);
 
-        $this->assertSame(403, $this->authorize($actor, 1)->getStatusCode());
+        $this->assertSame(403, $this->authorize($actor, $this->clientA)->getStatusCode());
     }
 
     public function test_superadmin_can_manage_members_without_a_client_membership(): void
@@ -91,14 +76,14 @@ class ClientUserAuthorizationTest extends TestCase
         $actor = $this->createUser('superadmin@example.com');
         DB::table('superadmins')->insert(['id_user' => $actor->id]);
 
-        $this->assertSame(200, $this->authorize($actor, 2)->getStatusCode());
+        $this->assertSame(200, $this->authorize($actor, $this->clientB)->getStatusCode());
     }
 
     public function test_common_user_cannot_promote_or_reactivate_their_own_membership(): void
     {
         $actor = $this->createUser('member@example.com');
-        $this->addMembership($actor->id, 1, isAdmin: false, isActive: true);
-        $request = $this->clientRequest($actor, 1, [
+        $this->addMembership($actor->id, $this->clientA, isAdmin: false, isActive: true);
+        $request = $this->clientRequest($actor, $this->clientA, [
             'role' => 2,
             'is_admin' => true,
             'is_active' => true,
@@ -117,7 +102,7 @@ class ClientUserAuthorizationTest extends TestCase
         $this->assertSame(403, $response->getStatusCode());
         $this->assertFalse($nextWasCalled);
         $this->assertDatabaseHas('client_users', [
-            'id_client' => 1,
+            'id_client' => $this->clientA,
             'id_user' => $actor->id,
             'role' => 0,
             'is_admin' => false,
@@ -157,9 +142,13 @@ class ClientUserAuthorizationTest extends TestCase
 
     private function createUser(string $email): User
     {
+        $uniqueEmail = Str::before($email, '@')
+            .'-'.Str::lower(Str::random(12))
+            .'@'.Str::after($email, '@');
+
         return User::create([
             'name' => 'Usuario de prueba',
-            'email' => $email,
+            'email' => $uniqueEmail,
             'is_active' => true,
         ]);
     }
