@@ -2,7 +2,18 @@
 useDefault = true
 
 [[allowlists]]
-description = "Ignorar .env.example"
+description = "Archivos de configuracion publicos requeridos por el curso"
 paths = [
     '''^backend/\.env\.example$''',
+    '''^backend/laravel/\.env\.example$''',
+    '''^backend/env \(2\)$''',
+    '''^backend/laravel/env \(3\)$''',
+]
+
+[[allowlists]]
+description = "Identificadores publicos incluidos deliberadamente en el cliente web"
+regexTarget = "line"
+regexes = [
+    '''--dart-define=REVERB_APP_KEY=[A-Za-z0-9_-]+''',
+    '''static const String supabaseAnonKey\s*=\s*['"][A-Za-z0-9._-]+['"]''',
 ]

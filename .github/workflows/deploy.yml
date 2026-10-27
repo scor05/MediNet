@@ -94,5 +94,10 @@ jobs:
                     
                     docker compose --env-file ./backend/.env -f docker-compose.yml -f docker-compose.prod.yml exec -T backend php artisan migrate --force
 
+                    # Las cuentas creadas antes de users.supabase_id deben vincularse
+                    # antes de que el middleware de autenticacion pueda reconocerlas.
+                    # El comando es idempotente: solo procesa usuarios aun no vinculados.
+                    docker compose --env-file ./backend/.env -f docker-compose.yml -f docker-compose.prod.yml exec -T backend php artisan users:link-supabase --apply
+
                     docker image prune -f
                     docker container prune -f
