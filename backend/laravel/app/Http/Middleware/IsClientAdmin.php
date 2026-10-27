@@ -2,33 +2,39 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\ClientUser;
+use App\Models\Superadmin;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use App\Models\ClientUser;
 
 class IsClientAdmin
 {
     public function handle(Request $request, Closure $next): Response
     {
-        // Obtener el usuario local del request
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
-                'message' => 'Usuario no autenticado'
+                'message' => 'Usuario no autenticado',
             ], 401);
         }
 
-        // Verificar si el usuario es admin de al menos un cliente activo
-        $isClientAdmin = ClientUser::where('id_user', $user->id)
+        if (Superadmin::where('id_user', $user->id)->exists()) {
+            return $next($request);
+        }
+
+        $clientId = $request->route('clientId');
+        $isClientAdmin = $clientId !== null && ClientUser::query()
+            ->where('id_client', $clientId)
+            ->where('id_user', $user->id)
             ->where('is_admin', true)
             ->where('is_active', true)
             ->exists();
 
-        if (!$isClientAdmin) {
+        if (! $isClientAdmin) {
             return response()->json([
-                'message' => 'Acceso denegado. No es administrador de ningún cliente.'
+                'message' => 'Acceso denegado. No es administrador activo de esta organización.',
             ], 403);
         }
 

@@ -15,11 +15,13 @@ Route::prefix('clients')->group(function () {
         Route::delete('/{clientId}', [ClientController::class, 'destroy']);
     });
 
-    Route::get('/{clientId}/users', [ClientUserController::class, 'index']);
-    Route::post('/{clientId}/users', [ClientUserController::class, 'store'])
-        ->middleware('throttle:creation');
-    Route::patch('/{clientId}/users/{userId}', [ClientUserController::class, 'update']);
-    Route::delete('/{clientId}/users/{userId}', [ClientUserController::class, 'destroy']);
+    Route::middleware('is.client.admin')->group(function () {
+        Route::get('/{clientId}/users', [ClientUserController::class, 'index']);
+        Route::post('/{clientId}/users', [ClientUserController::class, 'store'])
+            ->middleware('throttle:creation');
+        Route::patch('/{clientId}/users/{userId}', [ClientUserController::class, 'update']);
+        Route::delete('/{clientId}/users/{userId}', [ClientUserController::class, 'destroy']);
+    });
 
     Route::get('/{clientId}/clinics', [ClinicController::class, 'indexByClient']);
 });
