@@ -16,6 +16,7 @@ class BackupAppointmentService
         private AppointmentRepository $appointmentRepository,
         private UserService $userService,
         private AppointmentAvailabilityService $availabilityService,
+        private AppointmentBookingLockService $bookingLockService,
         private AppointmentRealtimeService $realtimeService,
         private WaitlistRealtimeService $waitlistRealtimeService,
     ) {}
@@ -48,6 +49,11 @@ class BackupAppointmentService
 
             $target = $this->appointmentRepository->findById(
                 $waitlist->id_target_appointment
+            );
+            $this->bookingLockService->acquire(
+                (int) $target->id_schedule,
+                (string) $data['date'],
+                $patientId,
             );
             $schedule = $this->availabilityService->resolveAlternative(
                 $target,

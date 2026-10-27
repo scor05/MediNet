@@ -7,10 +7,11 @@ use App\Models\User;
 use App\Repositories\AppointmentRepository;
 use App\Repositories\PublicRepository;
 use App\Services\AppointmentAvailabilityService;
+use App\Services\AppointmentBookingLockService;
 use App\Services\AppointmentRealtimeService;
 use App\Services\NotificationService;
 use App\Services\PublicService;
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 
 class PublicServiceTest extends TestCase
 {
@@ -20,6 +21,11 @@ class PublicServiceTest extends TestCase
         $appointmentRepository = $this->createStub(AppointmentRepository::class);
         $notificationService = $this->createStub(NotificationService::class);
         $availabilityService = $this->createMock(AppointmentAvailabilityService::class);
+        $bookingLockService = $this->createMock(AppointmentBookingLockService::class);
+
+        $bookingLockService->expects($this->once())
+            ->method('acquire')
+            ->with(4, '2026-08-10', 9);
 
         $availabilityService->expects($this->once())
             ->method('ensureBookable')
@@ -34,6 +40,7 @@ class PublicServiceTest extends TestCase
             $appointmentRepository,
             $notificationService,
             $availabilityService,
+            $bookingLockService,
             $this->createStub(AppointmentRealtimeService::class),
         );
 

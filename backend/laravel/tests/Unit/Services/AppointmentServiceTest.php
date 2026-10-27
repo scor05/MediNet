@@ -7,12 +7,13 @@ use App\Models\Appointment;
 use App\Repositories\AppointmentRepository;
 use App\Repositories\ScheduleBlockadeRepository;
 use App\Services\AppointmentAvailabilityService;
+use App\Services\AppointmentBookingLockService;
 use App\Services\AppointmentRealtimeService;
 use App\Services\AppointmentService;
 use App\Services\NotificationService;
 use App\Services\UserService;
 use App\Services\WaitlistPromotionService;
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 
 class AppointmentServiceTest extends TestCase
 {
@@ -21,6 +22,7 @@ class AppointmentServiceTest extends TestCase
         $repository = $this->createMock(AppointmentRepository::class);
         $userService = $this->createMock(UserService::class);
         $availabilityService = $this->createMock(AppointmentAvailabilityService::class);
+        $bookingLockService = $this->createMock(AppointmentBookingLockService::class);
         $blockadeRepository = $this->createStub(ScheduleBlockadeRepository::class);
         $notificationService = $this->createMock(NotificationService::class);
         $waitlistPromotionService = $this->createStub(WaitlistPromotionService::class);
@@ -41,6 +43,9 @@ class AppointmentServiceTest extends TestCase
             ->method('ensureBookable')
             ->with(11, '2026-07-21', '09:00', 7)
             ->willReturnCallback(static function (): void {});
+        $bookingLockService->expects($this->once())
+            ->method('acquire')
+            ->with(11, '2026-07-21', 7);
 
         $userService->expects($this->once())
             ->method('getById')
@@ -84,6 +89,7 @@ class AppointmentServiceTest extends TestCase
             $notificationService,
             $waitlistPromotionService,
             $availabilityService,
+            $bookingLockService,
             $realtimeService,
         );
 
@@ -95,6 +101,7 @@ class AppointmentServiceTest extends TestCase
         $repository = $this->createMock(AppointmentRepository::class);
         $userService = $this->createMock(UserService::class);
         $availabilityService = $this->createStub(AppointmentAvailabilityService::class);
+        $bookingLockService = $this->createMock(AppointmentBookingLockService::class);
         $blockadeRepository = $this->createStub(ScheduleBlockadeRepository::class);
         $notificationService = $this->createStub(NotificationService::class);
         $waitlistPromotionService = $this->createStub(WaitlistPromotionService::class);
@@ -104,6 +111,9 @@ class AppointmentServiceTest extends TestCase
             ->willThrowException(new AppointmentUnavailableException(
                 AppointmentUnavailableException::BLOCKED
             ));
+        $bookingLockService->expects($this->once())
+            ->method('acquire')
+            ->with(11, '2026-07-21', null);
 
         $repository->expects($this->never())->method('create');
         $userService->expects($this->never())->method('getById');
@@ -116,6 +126,7 @@ class AppointmentServiceTest extends TestCase
             $notificationService,
             $waitlistPromotionService,
             $availabilityService,
+            $bookingLockService,
             $realtimeService,
         );
 
@@ -134,6 +145,7 @@ class AppointmentServiceTest extends TestCase
         $repository = $this->createMock(AppointmentRepository::class);
         $userService = $this->createMock(UserService::class);
         $availabilityService = $this->createStub(AppointmentAvailabilityService::class);
+        $bookingLockService = $this->createMock(AppointmentBookingLockService::class);
         $blockadeRepository = $this->createStub(ScheduleBlockadeRepository::class);
         $notificationService = $this->createMock(NotificationService::class);
         $waitlistPromotionService = $this->createStub(WaitlistPromotionService::class);
@@ -148,6 +160,10 @@ class AppointmentServiceTest extends TestCase
             'status' => 'accepted',
         ];
         $createdAppointment = new Appointment;
+
+        $bookingLockService->expects($this->once())
+            ->method('acquire')
+            ->with(11, '2026-07-21', null);
 
         $userService->expects($this->never())->method('getById');
         $repository->expects($this->once())
@@ -167,6 +183,7 @@ class AppointmentServiceTest extends TestCase
             $notificationService,
             $waitlistPromotionService,
             $availabilityService,
+            $bookingLockService,
             $realtimeService,
         );
 

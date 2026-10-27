@@ -15,6 +15,7 @@ class WaitlistPromotionService
         private UserService $userService,
         private NotificationService $notificationService,
         private AppointmentAvailabilityService $availabilityService,
+        private AppointmentBookingLockService $bookingLockService,
         private AppointmentRealtimeService $realtimeService,
         private WaitlistRealtimeService $waitlistRealtimeService,
     ) {}
@@ -35,6 +36,11 @@ class WaitlistPromotionService
         }
 
         try {
+            $this->bookingLockService->acquire(
+                (int) $oldAppointment->id_schedule,
+                (string) $oldAppointment->date,
+                (int) $waitlist->id_patient,
+            );
             $this->availabilityService->ensureAvailable(
                 $oldAppointment->id_schedule,
                 (string) $oldAppointment->date,

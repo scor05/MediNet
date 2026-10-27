@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Services\AppointmentRealtimeService;
 use App\Services\NotificationService;
 use Carbon\CarbonImmutable;
+use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -233,6 +234,157 @@ it('creates a valid staff appointment with the status derived by the backend', f
 
     expect(DB::table('appointments')->where('id', $response->json('id'))->value('status'))
         ->toBe('accepted');
+});
+
+it('creates only one appointment when two requests reserve the same slot concurrently', function () {
+    if (! function_exists('pcntl_fork')) {
+        $this->markTestSkipped('La prueba concurrente requiere la extensión pcntl.');
+    }
+    if (DB::connection()->getDriverName() !== 'pgsql') {
+        $this->markTestSkipped('La prueba concurrente requiere PostgreSQL.');
+    }
+
+    $fixture = appointmentDomainFixture();
+    appointmentDomainAuthenticate($fixture['secretary']);
+    $this->mock(AppointmentRealtimeService::class)->shouldIgnoreMissing();
+
+    $suffix = Str::lower(Str::random(8));
+    $function = "test_delay_appointment_{$suffix}";
+    $trigger = "test_delay_appointment_{$suffix}";
+    $directory = sys_get_temp_dir().DIRECTORY_SEPARATOR."medinet-{$suffix}";
+    mkdir($directory);
+
+    DB::unprepared(<<<SQL
+        CREATE FUNCTION {$function}() RETURNS trigger AS \$\$
+        BEGIN
+            PERFORM pg_sleep(0.75);
+            RETURN NEW;
+        END;
+        \$\$ LANGUAGE plpgsql
+        SQL);
+    DB::unprepared(<<<SQL
+        CREATE TRIGGER {$trigger}
+        BEFORE INSERT ON appointments
+        FOR EACH ROW EXECUTE FUNCTION {$function}()
+        SQL);
+
+    $payload = [
+        'id_schedule' => $fixture['schedule'],
+        'name_patient' => 'Paciente concurrente',
+        'date' => $fixture['date']->toDateString(),
+        'start_time' => '10:30',
+    ];
+    $children = [];
+
+    try {
+        foreach ([1, 2] as $number) {
+            $pid = pcntl_fork();
+            if ($pid === -1) {
+                throw new RuntimeException('No se pudo iniciar el proceso concurrente.');
+            }
+
+            if ($pid === 0) {
+                DB::purge();
+                DB::reconnect();
+                touch("{$directory}/ready-{$number}");
+
+                while (! file_exists("{$directory}/start")) {
+                    usleep(10_000);
+                }
+
+                try {
+                    $request = Request::create(
+                        '/api/appointments',
+                        'POST',
+                        server: [
+                            'HTTP_ACCEPT' => 'application/json',
+                            'HTTP_AUTHORIZATION' => 'Bearer valid-test-token',
+                            'CONTENT_TYPE' => 'application/json',
+                        ],
+                        content: json_encode($payload, JSON_THROW_ON_ERROR),
+                    );
+                    $kernel = app(Kernel::class);
+                    $response = $kernel->handle($request);
+                    $kernel->terminate($request, $response);
+                    $result = [
+                        'status' => $response->getStatusCode(),
+                        'body' => $response->getContent(),
+                    ];
+                } catch (Throwable $exception) {
+                    $result = [
+                        'status' => 599,
+                        'body' => $exception->getMessage(),
+                    ];
+                }
+
+                file_put_contents(
+                    "{$directory}/result-{$number}.json",
+                    json_encode($result, JSON_THROW_ON_ERROR),
+                );
+                exit(0);
+            }
+
+            $children[] = $pid;
+        }
+
+        $deadline = microtime(true) + 5;
+        while (
+            (! file_exists("{$directory}/ready-1")
+                || ! file_exists("{$directory}/ready-2"))
+            && microtime(true) < $deadline
+        ) {
+            usleep(10_000);
+        }
+
+        $bothChildrenAreReady = file_exists("{$directory}/ready-1")
+            && file_exists("{$directory}/ready-2");
+        touch("{$directory}/start");
+        expect($bothChildrenAreReady)->toBeTrue();
+
+        foreach ($children as $pid) {
+            pcntl_waitpid($pid, $status);
+            expect(pcntl_wifexited($status))->toBeTrue()
+                ->and(pcntl_wexitstatus($status))->toBe(0);
+        }
+
+        $results = collect([1, 2])->map(
+            fn (int $number) => json_decode(
+                file_get_contents("{$directory}/result-{$number}.json"),
+                true,
+                flags: JSON_THROW_ON_ERROR,
+            )
+        );
+
+        DB::purge();
+        DB::reconnect();
+
+        expect($results->pluck('status')->sort()->values()->all())
+            ->toBe([201, 422]);
+        expect(DB::table('appointments')
+            ->where('id_schedule', $fixture['schedule'])
+            ->where('date', $fixture['date']->toDateString())
+            ->where('start_time', '10:30')
+            ->count())->toBe(1);
+    } finally {
+        if (is_dir($directory)) {
+            touch("{$directory}/start");
+        }
+        foreach ($children as $pid) {
+            pcntl_waitpid($pid, $status);
+        }
+
+        DB::purge();
+        DB::reconnect();
+        DB::unprepared("DROP TRIGGER IF EXISTS {$trigger} ON appointments");
+        DB::unprepared("DROP FUNCTION IF EXISTS {$function}()");
+
+        foreach (glob("{$directory}/*") ?: [] as $file) {
+            unlink($file);
+        }
+        if (is_dir($directory)) {
+            rmdir($directory);
+        }
+    }
 });
 
 it('rejects rescheduling an appointment to a past date', function () {

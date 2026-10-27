@@ -7,34 +7,22 @@ use App\Models\Waitlist;
 use App\Repositories\AppointmentRepository;
 use App\Repositories\WaitlistRepository;
 use App\Services\AppointmentAvailabilityService;
+use App\Services\AppointmentBookingLockService;
 use App\Services\AppointmentRealtimeService;
 use App\Services\BackupAppointmentService;
 use App\Services\UserService;
 use App\Services\WaitlistRealtimeService;
-use Illuminate\Support\Facades\DB;
-use Mockery;
-use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
-use PHPUnit\Framework\Attributes\PreserveGlobalState;
-use PHPUnit\Framework\Attributes\RunInSeparateProcess;
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 
 class BackupAppointmentServiceTest extends TestCase
 {
-    use MockeryPHPUnitIntegration;
-
-    #[RunInSeparateProcess]
-    #[PreserveGlobalState(false)]
     public function test_create_persists_and_links_a_pending_backup_atomically(): void
     {
-        $db = Mockery::mock('alias:'.DB::class);
-        $db->shouldReceive('transaction')
-            ->once()
-            ->andReturnUsing(fn (callable $callback) => $callback());
-
         $waitlistRepository = $this->createMock(WaitlistRepository::class);
         $appointmentRepository = $this->createMock(AppointmentRepository::class);
         $userService = $this->createMock(UserService::class);
         $availabilityService = $this->createMock(AppointmentAvailabilityService::class);
+        $bookingLockService = $this->createMock(AppointmentBookingLockService::class);
         $realtimeService = $this->createMock(AppointmentRealtimeService::class);
         $waitlistRealtimeService = $this->createMock(WaitlistRealtimeService::class);
 
@@ -72,6 +60,9 @@ class BackupAppointmentServiceTest extends TestCase
             ->method('resolveAlternative')
             ->with($target, '2026-10-06', '10:00')
             ->willReturn($schedule);
+        $bookingLockService->expects($this->once())
+            ->method('acquire')
+            ->with(8, '2026-10-06', 19);
         $userService->expects($this->once())
             ->method('getById')
             ->with(19)
@@ -105,6 +96,7 @@ class BackupAppointmentServiceTest extends TestCase
             $appointmentRepository,
             $userService,
             $availabilityService,
+            $bookingLockService,
             $realtimeService,
             $waitlistRealtimeService,
         ))->create(5, 19, [

@@ -17,6 +17,7 @@ class AppointmentService
         private NotificationService $notificationService,
         private WaitlistPromotionService $waitlistPromotionService,
         private AppointmentAvailabilityService $availabilityService,
+        private AppointmentBookingLockService $bookingLockService,
         private AppointmentRealtimeService $realtimeService,
     ) {}
 
@@ -35,18 +36,30 @@ class AppointmentService
     // Se crea una nueva cita
     public function create($data)
     {
-        $this->availabilityService->ensureBookable(
-            $data['id_schedule'],
-            $data['date'],
-            $data['start_time'],
-            $data['id_patient'] ?? null,
-        );
+        $appointment = DB::transaction(function () use ($data) {
+            $patientId = isset($data['id_patient'])
+                ? (int) $data['id_patient']
+                : null;
 
-        if (isset($data['id_patient'])) {
-            $data['name_patient'] = $this->userService->getById($data['id_patient'])?->name;
-        }
+            $this->bookingLockService->acquire(
+                (int) $data['id_schedule'],
+                (string) $data['date'],
+                $patientId,
+            );
+            $this->availabilityService->ensureBookable(
+                (int) $data['id_schedule'],
+                (string) $data['date'],
+                (string) $data['start_time'],
+                $patientId,
+            );
 
-        $appointment = $this->repository->create($data);
+            if ($patientId !== null) {
+                $data['name_patient'] = $this->userService
+                    ->getById($patientId)?->name;
+            }
+
+            return $this->repository->create($data);
+        });
 
         if (isset($data['id_patient'])) {
             $this->notifyCreatedAppointment($appointment->id, $data['id_patient']);
@@ -78,77 +91,95 @@ class AppointmentService
     // Se actualiza una cita
     public function update(int $id, array $data)
     {
-        $appointment = $this->repository->findById($id);
-        $oldAppointment = clone $appointment;
+        return DB::transaction(function () use ($id, $data) {
+            $appointment = $this->repository->findByIdForUpdate($id);
+            $oldAppointment = clone $appointment;
+            $date = (string) ($data['date'] ?? $appointment->date);
+            $startTime = (string) ($data['start_time'] ?? $appointment->start_time);
+            $patientId = $appointment->id_patient === null
+                ? null
+                : (int) $appointment->id_patient;
 
-        $date = $data['date'] ?? $appointment->date;
-        $startTime = $data['start_time'] ?? $appointment->start_time;
+            if (
+                ($data['status'] ?? null) === 'cancelled'
+                && ! in_array($appointment->status, [
+                    'requested',
+                    'accepted',
+                    'rescheduled',
+                    'backup_pending',
+                    'backup_accepted',
+                ], true)
+            ) {
+                throw ValidationException::withMessages([
+                    'status' => ['Esta cita ya no puede cancelarse.'],
+                ]);
+            }
 
-        if (
-            ($data['status'] ?? null) === 'cancelled'
-            && ! in_array($appointment->status, [
-                'requested',
+            if (
+                ($data['status'] ?? null) === 'cancelled'
+                && in_array($appointment->status, [
+                    'backup_pending',
+                    'backup_accepted',
+                ], true)
+            ) {
+                $data['status'] = 'backup_cancelled';
+            }
+
+            if (
+                str_starts_with((string) $appointment->status, 'backup_')
+                && array_key_exists('status', $data)
+                && ! $this->isValidBackupTransition(
+                    (string) $appointment->status,
+                    (string) $data['status'],
+                )
+            ) {
+                throw ValidationException::withMessages([
+                    'status' => ['La transición de la cita de respaldo no es válida.'],
+                ]);
+            }
+
+            if (array_key_exists('date', $data) || array_key_exists('start_time', $data)) {
+                $this->bookingLockService->acquireMany([
+                    [
+                        'schedule_id' => (int) $appointment->id_schedule,
+                        'date' => (string) $appointment->date,
+                        'patient_id' => $patientId,
+                    ],
+                    [
+                        'schedule_id' => (int) $appointment->id_schedule,
+                        'date' => $date,
+                        'patient_id' => $patientId,
+                    ],
+                ]);
+                $schedule = $this->availabilityService->resolveReschedule(
+                    $appointment,
+                    $date,
+                    $startTime,
+                );
+                $data['id_schedule'] = $schedule->id;
+            } elseif (in_array(($data['status'] ?? null), [
                 'accepted',
-                'rescheduled',
-                'backup_pending',
                 'backup_accepted',
-            ], true)
-        ) {
-            throw ValidationException::withMessages([
-                'status' => ['Esta cita ya no puede cancelarse.'],
-            ]);
-        }
+            ], true)) {
+                $this->bookingLockService->acquire(
+                    (int) $appointment->id_schedule,
+                    $date,
+                    $patientId,
+                );
+                $this->availabilityService->ensureAvailable(
+                    (int) $appointment->id_schedule,
+                    $date,
+                    $startTime,
+                    $id,
+                    $patientId,
+                );
+            }
 
-        if (
-            ($data['status'] ?? null) === 'cancelled'
-            && in_array($appointment->status, [
-                'backup_pending',
-                'backup_accepted',
-            ], true)
-        ) {
-            $data['status'] = 'backup_cancelled';
-        }
+            if (array_key_exists('id_patient', $data)) {
+                $data['name_patient'] = $this->userService
+                    ->getById($data['id_patient'])?->name;
+            }
 
-        if (
-            str_starts_with((string) $appointment->status, 'backup_')
-            && array_key_exists('status', $data)
-            && ! $this->isValidBackupTransition(
-                (string) $appointment->status,
-                (string) $data['status'],
-            )
-        ) {
-            throw ValidationException::withMessages([
-                'status' => ['La transición de la cita de respaldo no es válida.'],
-            ]);
-        }
-
-        if (array_key_exists('date', $data) || array_key_exists('start_time', $data)) {
-            $schedule = $this->availabilityService->resolveReschedule(
-                $appointment,
-                (string) $date,
-                (string) $startTime,
-            );
-            $data['id_schedule'] = $schedule->id;
-        } elseif (in_array(($data['status'] ?? null), [
-            'accepted',
-            'backup_accepted',
-        ], true)) {
-            $this->availabilityService->ensureAvailable(
-                $appointment->id_schedule,
-                $date,
-                $startTime,
-                $id,
-                $appointment->id_patient === null
-                    ? null
-                    : (int) $appointment->id_patient,
-            );
-        }
-
-        if (array_key_exists('id_patient', $data)) {
-            $data['name_patient'] = $this->userService->getById($data['id_patient'])?->name;
-        }
-
-        $appointment = DB::transaction(function () use ($id, $data, $oldAppointment) {
             $appointment = $this->repository->update($id, $data);
             $this->notifyUpdatedAppointment($oldAppointment, $appointment);
             $this->waitlistPromotionService->promoteIfFreed(
@@ -159,8 +190,6 @@ class AppointmentService
 
             return $appointment;
         });
-
-        return $appointment;
     }
 
     public function decide(int $id, string $decision, int $actorId)
@@ -228,8 +257,23 @@ class AppointmentService
             $startTime,
             $updatedBy,
         ) {
-            $appointment = $this->repository->findById($id);
+            $appointment = $this->repository->findByIdForUpdate($id);
             $oldAppointment = clone $appointment;
+            $patientId = $appointment->id_patient === null
+                ? null
+                : (int) $appointment->id_patient;
+            $this->bookingLockService->acquireMany([
+                [
+                    'schedule_id' => (int) $appointment->id_schedule,
+                    'date' => (string) $appointment->date,
+                    'patient_id' => $patientId,
+                ],
+                [
+                    'schedule_id' => (int) $appointment->id_schedule,
+                    'date' => $date,
+                    'patient_id' => $patientId,
+                ],
+            ]);
             $schedule = $this->availabilityService->resolveReschedule(
                 $appointment,
                 $date,

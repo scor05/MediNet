@@ -7,6 +7,7 @@ use App\Models\Waitlist;
 use App\Repositories\AppointmentRepository;
 use App\Repositories\WaitlistRepository;
 use App\Services\AppointmentAvailabilityService;
+use App\Services\AppointmentBookingLockService;
 use App\Services\AppointmentRealtimeService;
 use App\Services\NotificationService;
 use App\Services\UserService;
@@ -23,6 +24,7 @@ class WaitlistPromotionServiceTest extends TestCase
         $userService = $this->createMock(UserService::class);
         $notificationService = $this->createMock(NotificationService::class);
         $availabilityService = $this->createMock(AppointmentAvailabilityService::class);
+        $bookingLockService = $this->createMock(AppointmentBookingLockService::class);
         $realtimeService = $this->createMock(AppointmentRealtimeService::class);
 
         $oldAppointment = $this->appointment([
@@ -52,6 +54,9 @@ class WaitlistPromotionServiceTest extends TestCase
         $availabilityService->expects($this->once())
             ->method('ensureAvailable')
             ->with(8, '2026-08-24', '10:30', 44);
+        $bookingLockService->expects($this->once())
+            ->method('acquire')
+            ->with(8, '2026-08-24', 19);
         $userService->expects($this->once())
             ->method('getById')
             ->with(19)
@@ -109,6 +114,7 @@ class WaitlistPromotionServiceTest extends TestCase
             $userService,
             $notificationService,
             $availabilityService,
+            $bookingLockService,
             $realtimeService,
         )->promoteIfFreed($oldAppointment, $cancelledAppointment);
 
@@ -184,6 +190,7 @@ class WaitlistPromotionServiceTest extends TestCase
         UserService $userService,
         NotificationService $notificationService,
         AppointmentAvailabilityService $availabilityService,
+        ?AppointmentBookingLockService $bookingLockService = null,
         ?AppointmentRealtimeService $realtimeService = null,
     ): WaitlistPromotionService {
         return new WaitlistPromotionService(
@@ -192,6 +199,7 @@ class WaitlistPromotionServiceTest extends TestCase
             $userService,
             $notificationService,
             $availabilityService,
+            $bookingLockService ?? $this->createStub(AppointmentBookingLockService::class),
             $realtimeService ?? $this->createStub(AppointmentRealtimeService::class),
             $this->createStub(WaitlistRealtimeService::class),
         );

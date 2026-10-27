@@ -15,6 +15,7 @@ class PublicService
         private AppointmentRepository $appointmentRepository,
         private NotificationService $notificationService,
         private AppointmentAvailabilityService $availabilityService,
+        private AppointmentBookingLockService $bookingLockService,
         private AppointmentRealtimeService $realtimeService,
     ) {}
 
@@ -46,22 +47,26 @@ class PublicService
         $data['created_by'] = (int) $patient->id;
         $data['updated_by'] = (int) $patient->id;
 
-        $this->availabilityService->ensureBookable(
-            $data['id_schedule'],
-            $data['date'],
-            $data['start_time'],
-            $data['id_patient'],
-        );
-
         $data['status'] = 'requested';
 
         $appointment = DB::transaction(function () use ($data) {
-            $appointment = $this->repository->createAppointment($data);
-            $this->notifyRequestedAppointment($appointment->id);
-            $this->realtimeService->created($appointment);
+            $this->bookingLockService->acquire(
+                (int) $data['id_schedule'],
+                (string) $data['date'],
+                (int) $data['id_patient'],
+            );
+            $this->availabilityService->ensureBookable(
+                (int) $data['id_schedule'],
+                (string) $data['date'],
+                (string) $data['start_time'],
+                (int) $data['id_patient'],
+            );
 
-            return $appointment;
+            return $this->repository->createAppointment($data);
         });
+
+        $this->notifyRequestedAppointment($appointment->id);
+        $this->realtimeService->created($appointment);
 
         return $appointment;
     }
