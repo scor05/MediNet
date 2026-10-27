@@ -7,7 +7,7 @@ import 'package:frontend/core/network/api_exception_handler.dart';
 class NotificationPreferenceRemoteDatasource {
   final _supabase = Supabase.instance.client;
 
-  Future<List<String>> getPreferences(int userId) async {
+  Future<List<String>> getPreferences() async {
     final session = _supabase.auth.currentSession;
 
     if (session == null) {
@@ -16,7 +16,7 @@ class NotificationPreferenceRemoteDatasource {
 
     final response = await http
         .get(
-          Uri.parse('${AppConfig.apiUrl}/notification-preferences/$userId'),
+          Uri.parse('${AppConfig.apiUrl}/notification-preferences'),
           headers: {
             'Accept': 'application/json',
             'Authorization': 'Bearer ${session.accessToken}',
@@ -39,10 +39,7 @@ class NotificationPreferenceRemoteDatasource {
     throw handleApiError(response);
   }
 
-  Future<void> updatePreferences({
-    required int userId,
-    required List<String> channels,
-  }) async {
+  Future<void> updatePreferences({required List<String> channels}) async {
     final session = _supabase.auth.currentSession;
 
     if (session == null) {
@@ -51,7 +48,7 @@ class NotificationPreferenceRemoteDatasource {
 
     final response = await http
         .put(
-          Uri.parse('${AppConfig.apiUrl}/notification-preferences/$userId'),
+          Uri.parse('${AppConfig.apiUrl}/notification-preferences'),
           headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',

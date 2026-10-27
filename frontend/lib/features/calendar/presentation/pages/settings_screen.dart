@@ -51,9 +51,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _loadNotificationPreferences() async {
     try {
-      final channels = await _notificationDatasource.getPreferences(
-        widget.profile.id,
-      );
+      final channels = await _notificationDatasource.getPreferences();
 
       if (!mounted) return;
 
@@ -108,7 +106,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     try {
       await _notificationDatasource.updatePreferences(
-        userId: widget.profile.id,
         channels: _selectedChannels.toList(),
       );
 

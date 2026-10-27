@@ -26,6 +26,11 @@ class WaitlistService
         return $this->repository->findAll();
     }
 
+    public function getVisibleTo(int $userId)
+    {
+        return $this->repository->findVisibleTo($userId);
+    }
+
     public function getById(int $id)
     {
         return $this->repository->findById($id);

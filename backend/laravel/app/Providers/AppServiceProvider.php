@@ -3,9 +3,13 @@
 namespace App\Providers;
 
 use App\Models\Appointment;
+use App\Models\Notification;
 use App\Models\User;
+use App\Models\Waitlist;
 use App\Policies\AppointmentPolicy;
+use App\Policies\NotificationPolicy;
 use App\Policies\UserPolicy;
+use App\Policies\WaitlistPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -28,7 +32,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::policy(Appointment::class, AppointmentPolicy::class);
+        Gate::policy(Notification::class, NotificationPolicy::class);
         Gate::policy(User::class, UserPolicy::class);
+        Gate::policy(Waitlist::class, WaitlistPolicy::class);
 
         RateLimiter::for('registration', function (Request $request) {
             return $this->perMinuteLimit(

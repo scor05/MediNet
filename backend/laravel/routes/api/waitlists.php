@@ -15,10 +15,7 @@ Route::prefix('waitlists')->group(function () {
         [WaitlistController::class, 'store']
     )->middleware('throttle:creation');
 
-    Route::get(
-        '/patient/{patientId}',
-        [WaitlistController::class, 'indexByPatient']
-    );
+    Route::get('/mine', [WaitlistController::class, 'indexMine']);
 
     Route::get(
         '/{id}',

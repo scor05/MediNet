@@ -22,6 +22,35 @@ class WaitlistRepository
             ->get();
     }
 
+    public function findVisibleTo(int $userId)
+    {
+        return Waitlist::with(self::RELATIONS)
+            ->where(function ($query) use ($userId) {
+                $query->where('id_patient', $userId)
+                    ->orWhereExists(function ($subquery) use ($userId) {
+                        $subquery->selectRaw('1')
+                            ->from('appointments AS a')
+                            ->join('schedules AS s', 's.id', '=', 'a.id_schedule')
+                            ->join('clinics AS c', 'c.id', '=', 's.id_clinic')
+                            ->whereColumn('a.id', 'waitlists.id_target_appointment')
+                            ->where(function ($access) use ($userId) {
+                                $access->where('s.id_doctor', $userId)
+                                    ->orWhereExists(function ($membership) use ($userId) {
+                                        $membership->selectRaw('1')
+                                            ->from('client_users AS cu')
+                                            ->whereColumn('cu.id_client', 'c.id_client')
+                                            ->where('cu.id_user', $userId)
+                                            ->where('cu.role', 2)
+                                            ->where('cu.is_active', true);
+                                    });
+                            });
+                    });
+            })
+            ->orderBy('created_at')
+            ->orderBy('id')
+            ->get();
+    }
+
     public function findById(int $id): ?Waitlist
     {
         return Waitlist::with(self::RELATIONS)->find($id);

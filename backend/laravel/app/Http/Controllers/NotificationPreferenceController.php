@@ -8,32 +8,37 @@ use Illuminate\Validation\Rule;
 
 class NotificationPreferenceController extends Controller
 {
-    // Se inyecta el servicio
     public function __construct(private NotificationPreferenceService $service)
     {
     }
 
-    // Se obtienen las preferencias de notificación de un usuario
-    public function index(int $userId)
+    public function index(Request $request)
     {
-        return response()->json($this->service->getByUser($userId));
+        return response()->json(
+            $this->service->getByUser((int) $request->user()->id)
+        );
     }
 
-    // Se actualizan las preferencias de notificación de un usuario
-    public function update(Request $request, int $userId)
+    public function update(Request $request)
     {
         $validated = $request->validate([
-            'channels'   => 'required|array',
-            'channels.*' => ['required', Rule::in(['email', 'sms', 'push', 'whatsapp'])],
+            'channels' => 'required|array',
+            'channels.*' => [
+                'required',
+                Rule::in(['email', 'sms', 'push', 'whatsapp']),
+            ],
         ]);
 
-        return response()->json($this->service->updatePreferences($userId, $validated['channels']));
+        return response()->json($this->service->updatePreferences(
+            (int) $request->user()->id,
+            $validated['channels'],
+        ));
     }
 
-    // Se eliminan las preferencias de notificación de un usuario
-    public function destroy(int $userId)
+    public function destroy(Request $request)
     {
-        $this->service->deleteByUser($userId);
+        $this->service->deleteByUser((int) $request->user()->id);
+
         return response()->json(null, 204);
     }
 }

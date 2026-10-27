@@ -9,11 +9,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class WaitlistRemoteDatasource {
   static const _defaultTimeout = Duration(seconds: 10);
 
-  // Obtiene los waitlists de un paciente
-  Future<List<WaitlistModel>> getPatientWaitlists(int patientId) async {
+  // Obtiene los waitlists del paciente autenticado.
+  Future<List<WaitlistModel>> getPatientWaitlists() async {
     final token = Supabase.instance.client.auth.currentSession?.accessToken;
 
-    final uri = Uri.parse('${AppConfig.apiUrl}/waitlists/patient/$patientId');
+    final uri = Uri.parse('${AppConfig.apiUrl}/waitlists/mine');
 
     final response = await http
         .get(

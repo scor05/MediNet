@@ -2,52 +2,41 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Notification;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Gate;
 
 class NotificationController extends Controller
 {
-    // Se inyecta el servicio
     public function __construct(private NotificationService $service)
     {
     }
 
-    // Se obtienen todas las notificaciones
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json($this->service->getAll());
+        Gate::forUser($request->user())->authorize('viewAny', Notification::class);
+
+        return response()->json(
+            $this->service->getByUser((int) $request->user()->id)
+        );
     }
 
-    // Se obtiene una notificación por su id
-    public function show(int $id)
+    public function show(Request $request, int $id)
     {
-        return response()->json($this->service->getById($id));
+        $notification = $this->service->getById($id);
+        Gate::forUser($request->user())->authorize('view', $notification);
+
+        return response()->json($notification);
     }
 
-    // Se obtienen las notificaciones de un usuario
-    public function indexByUser(int $userId)
+    public function destroy(Request $request, int $id)
     {
-        return response()->json($this->service->getByUser($userId));
-    }
+        $notification = $this->service->getById($id);
+        Gate::forUser($request->user())->authorize('delete', $notification);
 
-    // Se crea una nueva notificación
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'id_user' => 'required|integer|exists:users,id',
-            'type'    => ['required', Rule::in(['reminder', 'cancellation', 'reschedule', 'acceptance', 'rejection', 'waitlist_alert'])],
-            'message' => 'required|string',
-            'channel' => ['required', Rule::in(['email', 'sms', 'push', 'whatsapp'])],
-        ]);
-
-        return response()->json($this->service->create($validated), 201);
-    }
-
-    // Se elimina una notificación
-    public function destroy(int $id)
-    {
         $this->service->delete($id);
+
         return response()->json(null, 204);
     }
 }
