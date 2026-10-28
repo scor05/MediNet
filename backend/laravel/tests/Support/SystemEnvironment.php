@@ -23,6 +23,11 @@ final class SystemEnvironment
         return self::url('SYSTEM_REVERB_URL', 'http://reverb:8080', $path);
     }
 
+    public static function proxyUrl(string $path = ''): string
+    {
+        return self::url('SYSTEM_PROXY_URL', 'http://security-proxy:8080', $path);
+    }
+
     public static function expectedApiUrl(): string
     {
         return rtrim(self::environment('SYSTEM_EXPECTED_API_URL', 'https://medinet.lat/api'), '/');

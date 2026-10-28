@@ -140,13 +140,15 @@ jobs:
         run: >-
           docker compose --env-file backend/.env
           -f docker-compose.yml
+          -f docker-compose.security.yml
           up -d --build --wait --wait-timeout 120
-          db backend reverb frontend
+          db backend reverb frontend security-proxy
 
       - name: Preparar la base de datos
         run: >-
           docker compose --env-file backend/.env
           -f docker-compose.yml
+          -f docker-compose.security.yml
           exec -T backend
           php artisan migrate:fresh --force
 
@@ -157,6 +159,7 @@ jobs:
         run: >-
           docker compose --env-file backend/.env
           -f docker-compose.yml
+          -f docker-compose.security.yml
           exec -T backend
           php vendor/bin/pest --configuration=phpunit.system.xml
           --log-junit=storage/test-results/system-tests.xml
@@ -167,8 +170,10 @@ jobs:
         run: |
           mkdir -p backend/laravel/storage/test-results
           if docker compose --env-file backend/.env -f docker-compose.yml \
+            -f docker-compose.security.yml \
             exec -T backend test -f storage/test-results/system-tests.xml; then
             docker compose --env-file backend/.env -f docker-compose.yml \
+              -f docker-compose.security.yml \
               cp backend:/app/storage/test-results/system-tests.xml \
               backend/laravel/storage/test-results/system-tests.xml
           fi
@@ -187,6 +192,7 @@ jobs:
         run: >-
           docker compose --env-file backend/.env
           -f docker-compose.yml
+          -f docker-compose.security.yml
           logs --no-color
 
       - name: Detener los servicios
@@ -194,7 +200,8 @@ jobs:
         run: >-
           docker compose --env-file backend/.env
           -f docker-compose.yml
-          down --volumes
+          -f docker-compose.security.yml
+          down --volumes --remove-orphans
 
   frontend-tests:
     name: Frontend (Flutter)
